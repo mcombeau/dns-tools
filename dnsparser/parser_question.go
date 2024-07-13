@@ -5,9 +5,9 @@ import "errors"
 const questionOffset int = 12 //header ends at 12 bytes
 
 type DNSQuestion struct {
-	Name  string
-	Qtype uint16
-	// Class uint16
+	Name   string
+	QType  uint16
+	QClass uint16
 }
 
 func parseDNSQuestion(data []byte) (*DNSQuestion, int, error) {
@@ -19,8 +19,9 @@ func parseDNSQuestion(data []byte) (*DNSQuestion, int, error) {
 	}
 
 	question := DNSQuestion{
-		Name:  name,
-		Qtype: parseUint16(data, offset),
+		Name:   name,
+		QType:  parseUint16(data, offset),
+		QClass: parseUint16(data, offset+2),
 	}
 
 	return &question, offset, nil

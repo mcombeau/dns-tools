@@ -41,5 +41,6 @@ func TestParseQuestion(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, want.Name, got.Name)
-	assert.Equal(t, want.Qtype, got.Qtype)
+	assert.Equal(t, want.Qtype, got.QType)
+	assert.Equal(t, want.Qclass, got.QClass)
 }
