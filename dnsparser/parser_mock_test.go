@@ -30,6 +30,9 @@ func mockDNSResponse() []byte {
 	msg.Answer = []dns.RR{rr}
 
 	response, _ := msg.Pack()
+	// Manually set the DO bit in the packed response
+	response[3] |= 0x40 // Set the DO bit (6th bit of the 3rd byte)
+
 	return response
 }
 
@@ -49,6 +52,33 @@ func TestParseTransactionID(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestParseFlags(t *testing.T) {
+	mockResponse := mockDNSResponse()
+
+	var unpackedMockResponse dns.Msg
+	err := unpackedMockResponse.Unpack(mockResponse)
+
+	if err != nil {
+		t.Fatalf("Failed to unpack mock response: %v\n", err)
+	}
+
+	want := unpackedMockResponse
+	got, err := ParseDNSHeader(mockResponse)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, want.Response, got.Response)
+	assert.Equal(t, int(want.Opcode), int(got.Opcode))
+	assert.Equal(t, want.Authoritative, got.Authoritative)
+	assert.Equal(t, want.Truncated, got.Truncated)
+	assert.Equal(t, want.RecursionDesired, got.RecursionDesired)
+	assert.Equal(t, want.RecursionAvailable, got.RecursionAvailable)
+	assert.True(t, got.DnssecOk)
+	assert.Equal(t, want.AuthenticatedData, got.AuthenticatedData)
+	assert.Equal(t, want.CheckingDisabled, got.CheckingDisabled)
+	assert.Equal(t, int(want.Rcode), int(got.ResponseCode))
+}
+
 func TestParseHeader(t *testing.T) {
 	mockResponse := mockDNSResponse()
 
@@ -63,38 +93,15 @@ func TestParseHeader(t *testing.T) {
 	got, err := ParseDNSHeader(mockResponse)
 
 	assert.NoError(t, err)
-	assert.Equal(t, want.Id, got.TransactionID)
+	assert.Equal(t, want.Id, got.Id)
+	assert.Equal(t, want.Response, got.Response)
+	assert.Equal(t, int(want.Opcode), int(got.Opcode))
+	assert.Equal(t, want.Authoritative, got.Authoritative)
+	assert.Equal(t, want.Truncated, got.Truncated)
+	assert.Equal(t, want.RecursionDesired, got.RecursionDesired)
+	assert.Equal(t, want.RecursionAvailable, got.RecursionAvailable)
+	assert.True(t, got.DnssecOk)
+	assert.Equal(t, want.AuthenticatedData, got.AuthenticatedData)
+	assert.Equal(t, want.CheckingDisabled, got.CheckingDisabled)
+	assert.Equal(t, int(want.Rcode), int(got.ResponseCode))
 }
-
-// func viewtMockDNSResponse(t *testing.T) {
-// 	mockResponse := mockDNSResponse()
-
-// 	fmt.Println("------------------")
-
-// 	fmt.Printf("mock: %s\n", mockResponse)
-
-// 	fmt.Println("------------------")
-
-// 	for _, n := range mockResponse {
-// 		fmt.Printf("%08b ", n)
-// 	}
-
-// 	fmt.Println("\n------------------")
-
-// 	var msg dns.Msg
-// 	err := msg.Unpack(mockResponse)
-// 	if err != nil {
-// 		t.Fatalf("Failed to unpack mock response: %v\n", err)
-// 	}
-// 	fmt.Printf("Question domain: %s\n", msg.Question[0].Name)
-// 	fmt.Printf("Answer IP: %s\n", msg.Answer[0].(*dns.A).A.String())
-// 	fmt.Printf(msg.String())
-
-// 	fmt.Println("------------------")
-
-// 	// parsedResponse, err := ParseDNSResponse(mockResponse)
-
-// 	// assert.NoError(t, err)
-// 	// assert.Equal(t, "example.com.", parsedResponse.Question[0].Name)
-// 	// assert.Equal(t, "93.184.216.34", parsedResponse.Answer[0].(*dns.A).A.String())
-// }
