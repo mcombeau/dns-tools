@@ -30,4 +30,5 @@ func TestParseResourceRecord(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, want.Header().Name, got.Name)
+	assert.Equal(t, want.Header().Rrtype, got.RType)
 }

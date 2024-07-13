@@ -3,9 +3,9 @@ package dnsparser
 import "errors"
 
 type DNSResourceRecord struct {
-	Name string
-	// Type     uint16
-	// Class    uint16
+	Name  string
+	RType uint16
+	// RClass    uint16
 	// TTL      int32
 	// RDLength uint16
 	// RData    []byte
@@ -20,7 +20,8 @@ func parseDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, e
 	}
 
 	record := DNSResourceRecord{
-		Name: name,
+		Name:  name,
+		RType: parseUint16(data, offset),
 	}
 
 	return &record, offset, nil
