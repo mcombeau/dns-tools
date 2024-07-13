@@ -1,6 +1,7 @@
 package dnsparser
 
 import (
+	"net"
 	"testing"
 
 	"github.com/miekg/dns"
@@ -34,5 +35,10 @@ func TestParseResourceRecord(t *testing.T) {
 	assert.Equal(t, want.Header().Class, got.RClass)
 	assert.Equal(t, want.Header().Ttl, got.TTL)
 	assert.Equal(t, want.Header().Rdlength, got.RDLength)
-
+	if aRecord, ok := want.(*dns.A); ok {
+		assert.Equal(t, aRecord.A.String(), net.IP(got.RData).String())
+	}
+	// if aRecord, ok := want.(*dns.A); ok {
+	// 	assert.Equal(t, aRecord.A.String(), string(got.RData))
+	// }
 }

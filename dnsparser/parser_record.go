@@ -8,7 +8,7 @@ type DNSResourceRecord struct {
 	RClass   uint16
 	TTL      uint32
 	RDLength uint16
-	// RData    []byte
+	RData    []byte
 }
 
 func parseDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, error) {
@@ -26,6 +26,14 @@ func parseDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, e
 		TTL:      parseUint32(data, offset+4),
 		RDLength: parseUint16(data, offset+8),
 	}
+	offset += 10
 
-	return &record, offset + 10, nil
+	if len(data) < offset+int(record.RDLength) {
+		return &DNSResourceRecord{}, 0, errors.New("invalid DNS resource record RDATA length")
+	}
+
+	record.RData = data[offset : offset+int(record.RDLength)]
+	offset += int(record.RDLength)
+
+	return &record, offset, nil
 }
