@@ -53,25 +53,6 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 	return &header, nil
 }
 
-/*
-parse header sections:
-"Concatenate" two bytes of header into int16.
-
-Ex. TransactionId = 1234:
-
-data[0]: 0x12:	00010010
-data[1]: 0x34:	00110100
-
-uint16(data[0]):	00000000 00010010
-uint16(data[1]):	00000000 00110100
-
-data[0] << 8:		00010010 00000000
-uint16(data[1]):	00000000 00110100
-|:					00010010 00110100
-
-hex:				0x12	 0x34		: 0x1234
-*/
-
 func parseTransactionID(data []byte) uint16 {
 	return parseUint16(data, 0)
 }
