@@ -1,18 +1,30 @@
 package dnsparser
 
-// const questionOffset byte = 12
+import "errors"
+
+const questionOffset int = 12 //header ends at 12 bytes
 
 type DNSQuestion struct {
 	Name  string
-	Type  uint16
-	Class uint16
+	Qtype uint16
+	// Class uint16
 }
 
-// func parseDNSQuestion(data []byte) (DNSQuestion, int, error) {
-// 	name, offset := parseDomainName(data, questionOffset)
-// 	offset += questionOffset
+func parseDNSQuestion(data []byte) (*DNSQuestion, int, error) {
+	name, offset := parseDomainName(data, questionOffset)
+	offset += questionOffset
 
-// }
+	if len(data) < offset+4 {
+		return &DNSQuestion{}, 0, errors.New("invalid DNS question")
+	}
+
+	question := DNSQuestion{
+		Name:  name,
+		Qtype: parseUint16(data, offset),
+	}
+
+	return &question, offset, nil
+}
 
 /*
 Domain name in DNS encoded with labels, each label prefixed with length:
