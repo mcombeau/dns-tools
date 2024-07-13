@@ -36,7 +36,7 @@ func TestParseQuestion(t *testing.T) {
 	}
 
 	want := unpackedMockResponse.Question[0]
-	got, gotOffset, err := parseDNSQuestion(mockResponse)
+	got, gotOffset, err := parseDNSQuestion(mockResponse, 12)
 
 	assert.NoError(t, err)
 

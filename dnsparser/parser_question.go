@@ -2,17 +2,15 @@ package dnsparser
 
 import "errors"
 
-const questionOffset int = 12 //header ends at 12 bytes
-
 type DNSQuestion struct {
 	Name   string
 	QType  uint16
 	QClass uint16
 }
 
-func parseDNSQuestion(data []byte) (*DNSQuestion, int, error) {
-	name, offset := parseDomainName(data, questionOffset)
-	offset += questionOffset
+func parseDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
+	name, newOffset := parseDomainName(data, offset)
+	offset += newOffset
 
 	if len(data) < offset+4 {
 		return &DNSQuestion{}, 0, errors.New("invalid DNS question")

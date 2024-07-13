@@ -20,7 +20,7 @@ func TestParseResourceRecord(t *testing.T) {
 
 	want := unpackedMockResponse.Answer[0]
 
-	_, offset, err := parseDNSQuestion(mockResponse)
+	_, offset, err := parseDNSQuestion(mockResponse, 12)
 
 	if err != nil {
 		t.Fatalf("Failed to parse DNS question: %v\n", err)
@@ -35,10 +35,17 @@ func TestParseResourceRecord(t *testing.T) {
 	assert.Equal(t, want.Header().Class, got.RClass)
 	assert.Equal(t, want.Header().Ttl, got.TTL)
 	assert.Equal(t, want.Header().Rdlength, got.RDLength)
-	if aRecord, ok := want.(*dns.A); ok {
-		assert.Equal(t, aRecord.A.String(), net.IP(got.RData).String())
+
+	switch record := want.(type) {
+	case *dns.A:
+		assert.Equal(t, record.A.String(), net.IP(got.RData).String())
+	case *dns.AAAA:
+		assert.Equal(t, record.AAAA.String(), net.IP(got.RData).String())
+	case *dns.CNAME:
+		assert.Equal(t, record.Target, string(got.RData))
+	case *dns.MX:
+		assert.Equal(t, record.Mx, string(got.RData))
+	default:
+		t.Fatalf("unsupported DNS record type: %T", record)
 	}
-	// if aRecord, ok := want.(*dns.A); ok {
-	// 	assert.Equal(t, aRecord.A.String(), string(got.RData))
-	// }
 }
