@@ -21,6 +21,7 @@ type DNSHeader struct {
 	AuthenticatedData  bool // RFC 4035
 	CheckingDisabled   bool // RFC 4035
 	ResponseCode       uint16
+	QuestionCount      uint16
 }
 
 func ParseDNSHeader(data []byte) (*DNSHeader, error) {
@@ -67,6 +68,15 @@ hex:				0x12	 0x34		: 0x1234
 func parseTransactionID(data []byte) uint16 {
 	return uint16(data[0])<<8 | uint16(data[1])
 }
+
+func parseQuestionCount(data []byte) uint16 {
+	return uint16(data[4])<<8 | uint16(data[5])
+}
+
+/*
+Parse flag section of header:
+flag section is 2 bytes, need to pick the correct bytes
+*/
 
 func parseResponseFlag(data []byte) bool {
 	// QR (Query/Response): Bit 15 (0x8000)

@@ -52,6 +52,22 @@ func TestParseTransactionID(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestParseQuestionCount(t *testing.T) {
+	mockResponse := mockDNSResponse()
+
+	var unpackedMockResponse dns.Msg
+	err := unpackedMockResponse.Unpack(mockResponse)
+
+	if err != nil {
+		t.Fatalf("Failed to unpack mock response: %v\n", err)
+	}
+
+	want := uint16(len(unpackedMockResponse.Question))
+	got := parseQuestionCount(mockResponse)
+
+	assert.Equal(t, want, got)
+}
+
 func TestParseFlags(t *testing.T) {
 	mockResponse := mockDNSResponse()
 
