@@ -10,7 +10,15 @@ import "errors"
 // bytes 8-9: Number of Authority (nameserver) RRs
 // bytes 10-11: Number of Additional RRs
 type DNSHeader struct {
-	Id                 uint16
+	Id                uint16
+	Flags             *DNSFlags
+	QuestionCount     uint16
+	AnswerRRCount     uint16
+	NameserverRRCount uint16
+	AdditionalRRCount uint16
+}
+
+type DNSFlags struct {
 	Response           bool
 	Opcode             uint16
 	Authoritative      bool
@@ -21,10 +29,6 @@ type DNSHeader struct {
 	AuthenticatedData  bool // RFC 4035
 	CheckingDisabled   bool // RFC 4035
 	ResponseCode       uint16
-	QuestionCount      uint16
-	AnswerRRCount      uint16
-	NameserverRRCount  uint16
-	AdditionalRRCount  uint16
 }
 
 func ParseDNSHeader(data []byte) (*DNSHeader, error) {
@@ -33,97 +37,38 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 	}
 
 	header := DNSHeader{
-		Id:                 parseTransactionID(data),
-		Response:           parseResponseFlag(data),
-		Opcode:             parseOpcode(data),
-		Authoritative:      parseAuthoritativeFlag(data),
-		Truncated:          parseTruncatedFlag(data),
-		RecursionDesired:   parseRecursionDesiredFlag(data),
-		RecursionAvailable: parseRecursionAvailableFlag(data),
-		DnssecOk:           parseDnssecOKFlag(data),
-		AuthenticatedData:  parseAuthenticatedDataFlag(data),
-		CheckingDisabled:   parseCheckingDisabledFlag(data),
-		ResponseCode:       parseResponseCode(data),
-		QuestionCount:      parseQuestionCount(data),
-		AnswerRRCount:      parseAnswerRRCount(data),
-		NameserverRRCount:  parseNameserverRRCount(data),
-		AdditionalRRCount:  parseAdditionalRRCount(data),
+		Id:                parseUint16(data, 0),
+		Flags:             parseDNSFlags(data),
+		QuestionCount:     parseUint16(data, 4),
+		AnswerRRCount:     parseUint16(data, 6),
+		NameserverRRCount: parseUint16(data, 8),
+		AdditionalRRCount: parseUint16(data, 10),
 	}
 
 	return &header, nil
 }
 
-func parseTransactionID(data []byte) uint16 {
-	return parseUint16(data, 0)
-}
-
-func parseQuestionCount(data []byte) uint16 {
-	return parseUint16(data, 4)
-}
-
-func parseAnswerRRCount(data []byte) uint16 {
-	return parseUint16(data, 6)
-}
-
-func parseNameserverRRCount(data []byte) uint16 {
-	return parseUint16(data, 8)
-}
-
-func parseAdditionalRRCount(data []byte) uint16 {
-	return parseUint16(data, 10)
-}
-
-/*
-Parse flag section of header:
-flag section is 2 bytes, need to pick the correct bits
-*/
-
-func parseResponseFlag(data []byte) bool {
-	// QR (Query/Response): Bit 15 (0x8000)
-	return data[2]&0x80 != 0
-}
-
-func parseOpcode(data []byte) uint16 {
-	// Opcode: Bits 11-14 (0x7800)
-	return (uint16(data[2]) >> 3) & 0x0F
-}
-
-func parseAuthoritativeFlag(data []byte) bool {
-	// AA (Authoritative Answer): Bit 10 (0x0400)
-	return data[2]&0x04 != 0
-}
-
-func parseTruncatedFlag(data []byte) bool {
-	// TC (Truncated): Bit 9 (0x0200)
-	return data[2]&0x02 != 0
-}
-
-func parseRecursionDesiredFlag(data []byte) bool {
-	// RD (Recursion Desired): Bit 8 (0x0100)
-	return data[2]&0x01 != 0
-}
-
-func parseRecursionAvailableFlag(data []byte) bool {
-	// RA (Recursion Available): Bit 7 (0x0080)
-	return data[3]&0x80 != 0
-}
-
-func parseDnssecOKFlag(data []byte) bool {
-	// DO (DNSSEC OK): Bit 6 (0x0040)
-	return data[3]&0x40 != 0
-}
-
-func parseAuthenticatedDataFlag(data []byte) bool {
-	// AD (Authenticated Data): Bit 5 (0x0020)
-	return data[3]&0x20 != 0
-}
-
-func parseCheckingDisabledFlag(data []byte) bool {
-	// CD (Checking Disabled): Bit 4 (0x0010)
-	return data[3]&0x10 != 0
-}
-
-func parseResponseCode(data []byte) uint16 {
-	// Rcode (Response Code): Bits 0-3 (0x000F)
-	return uint16(data[3]) & 0x0F
+func parseDNSFlags(data []byte) *DNSFlags {
+	return &DNSFlags{
+		// QR (Query/Response): Bit 15 (0x8000)
+		Response: data[2]&0x80 != 0,
+		// Opcode: Bits 11-14 (0x7800)
+		Opcode: (uint16(data[2]) >> 3) & 0x0F,
+		// AA (Authoritative Answer): Bit 10 (0x0400)
+		Authoritative: data[2]&0x04 != 0,
+		// TC (Truncated): Bit 9 (0x0200)
+		Truncated: data[2]&0x02 != 0,
+		// RD (Recursion Desired): Bit 8 (0x0100)
+		RecursionDesired: data[2]&0x01 != 0,
+		// RA (Recursion Available): Bit 7 (0x0080)
+		RecursionAvailable: data[3]&0x80 != 0,
+		// DO (DNSSEC OK): Bit 6 (0x0040)
+		DnssecOk: data[3]&0x40 != 0,
+		// AD (Authenticated Data): Bit 5 (0x0020)
+		AuthenticatedData: data[3]&0x20 != 0,
+		// CD (Checking Disabled): Bit 4 (0x0010)
+		CheckingDisabled: data[3]&0x10 != 0,
+		// Rcode (Response Code): Bits 0-3 (0x000F)
+		ResponseCode: uint16(data[3]) & 0x0F,
+	}
 }

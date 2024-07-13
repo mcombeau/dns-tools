@@ -36,11 +36,12 @@ func TestParseQuestion(t *testing.T) {
 	}
 
 	want := unpackedMockResponse.Question[0]
-	got, _, err := parseDNSQuestion(mockResponse)
+	got, gotOffset, err := parseDNSQuestion(mockResponse)
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, want.Name, got.Name)
 	assert.Equal(t, want.Qtype, got.QType)
 	assert.Equal(t, want.Qclass, got.QClass)
+	assert.Equal(t, 12+len(want.Name)+1+4, gotOffset)
 }
