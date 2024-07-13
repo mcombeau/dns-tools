@@ -73,23 +73,23 @@ hex:				0x12	 0x34		: 0x1234
 */
 
 func parseTransactionID(data []byte) uint16 {
-	return uint16(data[0])<<8 | uint16(data[1])
+	return parseUint16(data, 0)
 }
 
 func parseQuestionCount(data []byte) uint16 {
-	return uint16(data[4])<<8 | uint16(data[5])
+	return parseUint16(data, 4)
 }
 
 func parseAnswerRRCount(data []byte) uint16 {
-	return uint16(data[6])<<8 | uint16(data[7])
+	return parseUint16(data, 6)
 }
 
 func parseNameserverRRCount(data []byte) uint16 {
-	return uint16(data[8])<<8 | uint16(data[9])
+	return parseUint16(data, 8)
 }
 
 func parseAdditionalRRCount(data []byte) uint16 {
-	return uint16(data[10])<<8 | uint16(data[11])
+	return parseUint16(data, 10)
 }
 
 /*
