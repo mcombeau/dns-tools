@@ -68,6 +68,22 @@ func TestParseQuestionCount(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestParseAnswerRRCount(t *testing.T) {
+	mockResponse := mockDNSResponse()
+
+	var unpackedMockResponse dns.Msg
+	err := unpackedMockResponse.Unpack(mockResponse)
+
+	if err != nil {
+		t.Fatalf("Failed to unpack mock response: %v\n", err)
+	}
+
+	want := uint16(len(unpackedMockResponse.Answer))
+	got := parseAnswerRRCount(mockResponse)
+
+	assert.Equal(t, want, got)
+}
+
 func TestParseFlags(t *testing.T) {
 	mockResponse := mockDNSResponse()
 
@@ -120,4 +136,6 @@ func TestParseHeader(t *testing.T) {
 	assert.Equal(t, want.AuthenticatedData, got.AuthenticatedData)
 	assert.Equal(t, want.CheckingDisabled, got.CheckingDisabled)
 	assert.Equal(t, int(want.Rcode), int(got.ResponseCode))
+	assert.Equal(t, uint16(len(want.Question)), got.QuestionCount)
+	assert.Equal(t, uint16(len(want.Answer)), got.AnswerRRCount)
 }

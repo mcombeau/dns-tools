@@ -22,6 +22,7 @@ type DNSHeader struct {
 	CheckingDisabled   bool // RFC 4035
 	ResponseCode       uint16
 	QuestionCount      uint16
+	AnswerRRCount      uint16
 }
 
 func ParseDNSHeader(data []byte) (*DNSHeader, error) {
@@ -41,6 +42,8 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 		AuthenticatedData:  parseAuthenticatedDataFlag(data),
 		CheckingDisabled:   parseCheckingDisabledFlag(data),
 		ResponseCode:       parseResponseCode(data),
+		QuestionCount:      parseQuestionCount(data),
+		AnswerRRCount:      parseAnswerRRCount(data),
 	}
 
 	return &header, nil
@@ -71,6 +74,10 @@ func parseTransactionID(data []byte) uint16 {
 
 func parseQuestionCount(data []byte) uint16 {
 	return uint16(data[4])<<8 | uint16(data[5])
+}
+
+func parseAnswerRRCount(data []byte) uint16 {
+	return uint16(data[6])<<8 | uint16(data[7])
 }
 
 /*
