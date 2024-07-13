@@ -7,7 +7,7 @@ import "errors"
 // bytes 2-3: flags
 // bytes 4-5: Number of Questions
 // bytes 6-7: Number of Answer Resource Record (RR)
-// bytes 8-9: Number of Authority RRs
+// bytes 8-9: Number of Authority (nameserver) RRs
 // bytes 10-11: Number of Additional RRs
 type DNSHeader struct {
 	Id                 uint16
@@ -23,6 +23,7 @@ type DNSHeader struct {
 	ResponseCode       uint16
 	QuestionCount      uint16
 	AnswerRRCount      uint16
+	NameserverRRCount  uint16
 }
 
 func ParseDNSHeader(data []byte) (*DNSHeader, error) {
@@ -44,6 +45,7 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 		ResponseCode:       parseResponseCode(data),
 		QuestionCount:      parseQuestionCount(data),
 		AnswerRRCount:      parseAnswerRRCount(data),
+		NameserverRRCount:  parseNameserverRRCount(data),
 	}
 
 	return &header, nil
@@ -78,6 +80,10 @@ func parseQuestionCount(data []byte) uint16 {
 
 func parseAnswerRRCount(data []byte) uint16 {
 	return uint16(data[6])<<8 | uint16(data[7])
+}
+
+func parseNameserverRRCount(data []byte) uint16 {
+	return uint16(data[8])<<8 | uint16(data[9])
 }
 
 /*
