@@ -24,6 +24,7 @@ type DNSHeader struct {
 	QuestionCount      uint16
 	AnswerRRCount      uint16
 	NameserverRRCount  uint16
+	AdditionalRRCount  uint16
 }
 
 func ParseDNSHeader(data []byte) (*DNSHeader, error) {
@@ -46,6 +47,7 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 		QuestionCount:      parseQuestionCount(data),
 		AnswerRRCount:      parseAnswerRRCount(data),
 		NameserverRRCount:  parseNameserverRRCount(data),
+		AdditionalRRCount:  parseAdditionalRRCount(data),
 	}
 
 	return &header, nil
@@ -86,9 +88,13 @@ func parseNameserverRRCount(data []byte) uint16 {
 	return uint16(data[8])<<8 | uint16(data[9])
 }
 
+func parseAdditionalRRCount(data []byte) uint16 {
+	return uint16(data[10])<<8 | uint16(data[11])
+}
+
 /*
 Parse flag section of header:
-flag section is 2 bytes, need to pick the correct bytes
+flag section is 2 bytes, need to pick the correct bits
 */
 
 func parseResponseFlag(data []byte) bool {
@@ -122,7 +128,7 @@ func parseRecursionAvailableFlag(data []byte) bool {
 }
 
 func parseDnssecOKFlag(data []byte) bool {
-	// DO (DNSSEC OK): Bit 6 (0x0040) - Defined in RFC 3225
+	// DO (DNSSEC OK): Bit 6 (0x0040)
 	return data[3]&0x40 != 0
 }
 
