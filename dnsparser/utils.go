@@ -23,6 +23,10 @@ func parseUint16(data []byte, offset int) uint16 {
 	return uint16(data[offset])<<8 | uint16(data[offset+1])
 }
 
+func parseUint32(data []byte, offset int) uint32 {
+	return uint32(data[offset])<<24 | uint32(data[offset+1])<<16 | uint32(data[offset+2])<<8 | uint32(data[offset+3])
+}
+
 /*
 Domain name in DNS encoded with labels, each label prefixed with length:
 [7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0]
