@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mcombeau/go-dns-tools/decoder"
+	"github.com/mcombeau/go-dns-tools/dns"
 	"github.com/mcombeau/go-dns-tools/encoder"
 	"github.com/mcombeau/go-dns-tools/printer"
 )
@@ -19,9 +20,27 @@ func main() {
 	}
 
 	domain := os.Args[1]
-	dnsServer := "1.1.1.1:53" // CloudFlare's public DNS resolver
+	dnsServer := "8.8.8.8:53" // Google's public DNS server
 
-	question := encoder.EncodeDNSQuestion(domain)
+	message := &dns.Message{
+		Header: &dns.Header{
+			Id:            1234,
+			Flags:         &dns.Flags{RecursionDesired: true},
+			QuestionCount: 1,
+		},
+		Questions: []dns.Question{
+			{
+				Name:   domain,
+				QType:  1, // Type A
+				QClass: 1, // Class IN
+			},
+		},
+	}
+
+	data, err := encoder.EncodeDNSMessage(message)
+	if err != nil {
+		log.Fatalf("Failed to encode DNS message: %v\n", err)
+	}
 
 	conn, err := net.Dial("udp", dnsServer)
 	if err != nil {
@@ -29,9 +48,9 @@ func main() {
 	}
 	defer conn.Close()
 
-	_, err = conn.Write(question)
+	_, err = conn.Write(data)
 	if err != nil {
-		log.Fatalf("Failed to send DNS question: %v\n", err)
+		log.Fatalf("Failed to send DNS query: %v\n", err)
 	}
 
 	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
@@ -42,12 +61,11 @@ func main() {
 		log.Fatalf("Failed to read DNS response: %v\n", err)
 	}
 
-	fmt.Println("Received DNS response:")
-
 	decodedMessage, err := decoder.DecodeDNSMessage(response[:n])
 	if err != nil {
 		log.Fatalf("Failed to decode DNS response: %v\n", err)
 	}
 
+	fmt.Println("Received DNS response:")
 	printer.PrintDNSMessage(decodedMessage)
 }
