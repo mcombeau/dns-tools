@@ -4,12 +4,13 @@ import (
 	"net"
 	"testing"
 
+	"github.com/mcombeau/go-dns-tools/testutils"
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseResourceRecord(t *testing.T) {
-	mockResponse := mockDNSResponse()
+func TestDecodeResourceRecord(t *testing.T) {
+	mockResponse := testutils.MockDNSResponse()
 
 	var unpackedMockResponse dns.Msg
 	err := unpackedMockResponse.Unpack(mockResponse)
