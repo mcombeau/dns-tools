@@ -52,27 +52,30 @@ func DecodeDNSHeader(data []byte) (*DNSHeader, error) {
 	return &header, nil
 }
 
+const (
+	QRMask     = 0b10000000_00000000 // QR: Bit 15
+	OpcodeMask = 0b01111000_00000000 // Opcode: Bits 11-14
+	AAMask     = 0b00000100_00000000 // AA: Bit 10
+	TCMask     = 0b00000010_00000000 // TC: Bit 9
+	RDMask     = 0b00000001_00000000 // RD: Bit 8
+	RAMask     = 0b00000000_10000000 // RA: Bit 7
+	DOMask     = 0b00000000_01000000 // DO: Bit 6
+	ADMask     = 0b00000000_00100000 // AD: Bit 5
+	CDMask     = 0b00000000_00010000 // CD: Bit 4
+	RCodeMask  = 0b00000000_00001111 // Rcode: Bits 0-3
+)
+
 func decodeDNSFlags(data []byte) *DNSFlags {
 	return &DNSFlags{
-		// QR (Query/Response): Bit 15 (0x8000)
-		Response: data[2]&0x80 != 0,
-		// Opcode: Bits 11-14 (0x7800)
-		Opcode: (uint16(data[2]) >> 3) & 0x0F,
-		// AA (Authoritative Answer): Bit 10 (0x0400)
-		Authoritative: data[2]&0x04 != 0,
-		// TC (Truncated): Bit 9 (0x0200)
-		Truncated: data[2]&0x02 != 0,
-		// RD (Recursion Desired): Bit 8 (0x0100)
-		RecursionDesired: data[2]&0x01 != 0,
-		// RA (Recursion Available): Bit 7 (0x0080)
-		RecursionAvailable: data[3]&0x80 != 0,
-		// DO (DNSSEC OK): Bit 6 (0x0040)
-		DnssecOk: data[3]&0x40 != 0,
-		// AD (Authenticated Data): Bit 5 (0x0020)
-		AuthenticatedData: data[3]&0x20 != 0,
-		// CD (Checking Disabled): Bit 4 (0x0010)
-		CheckingDisabled: data[3]&0x10 != 0,
-		// Rcode (Response Code): Bits 0-3 (0x000F)
-		ResponseCode: uint16(data[3]) & 0x0F,
+		Response:           data[2]&uint8(QRMask>>8) != 0,
+		Opcode:             (uint16(data[2]) >> 3) & (OpcodeMask >> 11),
+		Authoritative:      data[2]&uint8(AAMask>>8) != 0,
+		Truncated:          data[2]&uint8(TCMask>>8) != 0,
+		RecursionDesired:   data[2]&uint8(RDMask>>8) != 0,
+		RecursionAvailable: data[3]&uint8(RAMask) != 0,
+		DnssecOk:           data[3]&uint8(DOMask) != 0,
+		AuthenticatedData:  data[3]&uint8(ADMask) != 0,
+		CheckingDisabled:   data[3]&uint8(CDMask) != 0,
+		ResponseCode:       uint16(data[3]) & RCodeMask,
 	}
 }
