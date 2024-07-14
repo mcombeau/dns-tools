@@ -3,44 +3,24 @@ package decoder
 import (
 	"errors"
 
+	"github.com/mcombeau/go-dns-tools/dns"
 	"github.com/mcombeau/go-dns-tools/utils"
 )
 
-// 12 bytes long
+// DNS Header is 12 bytes long
 // bytes 0-1: transaction ID
 // bytes 2-3: flags
 // bytes 4-5: Number of Questions
 // bytes 6-7: Number of Answer Resource Record (RR)
 // bytes 8-9: Number of Authority (nameserver) RRs
 // bytes 10-11: Number of Additional RRs
-type DNSHeader struct {
-	Id                uint16
-	Flags             *DNSFlags
-	QuestionCount     uint16
-	AnswerRRCount     uint16
-	NameserverRRCount uint16
-	AdditionalRRCount uint16
-}
 
-type DNSFlags struct {
-	Response           bool
-	Opcode             uint16
-	Authoritative      bool
-	Truncated          bool
-	RecursionDesired   bool
-	RecursionAvailable bool
-	DnssecOk           bool // RFC 3225
-	AuthenticatedData  bool // RFC 4035
-	CheckingDisabled   bool // RFC 4035
-	ResponseCode       uint16
-}
-
-func DecodeDNSHeader(data []byte) (*DNSHeader, error) {
+func DecodeDNSHeader(data []byte) (*dns.Header, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS header")
 	}
 
-	header := DNSHeader{
+	header := dns.Header{
 		Id:                utils.ParseUint16(data, 0),
 		Flags:             decodeDNSFlags(data),
 		QuestionCount:     utils.ParseUint16(data, 4),
@@ -65,8 +45,8 @@ const (
 	RCodeMask  = 0b00000000_00001111 // Rcode: Bits 0-3
 )
 
-func decodeDNSFlags(data []byte) *DNSFlags {
-	return &DNSFlags{
+func decodeDNSFlags(data []byte) *dns.Flags {
+	return &dns.Flags{
 		Response:           data[2]&uint8(QRMask>>8) != 0,
 		Opcode:             (uint16(data[2]) >> 3) & (OpcodeMask >> 11),
 		Authoritative:      data[2]&uint8(AAMask>>8) != 0,

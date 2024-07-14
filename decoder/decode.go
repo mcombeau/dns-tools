@@ -3,17 +3,11 @@ package decoder
 import (
 	"errors"
 	"fmt"
+
+	"github.com/mcombeau/go-dns-tools/dns"
 )
 
-type DNSMessage struct {
-	Header      *DNSHeader
-	Questions   []DNSQuestion
-	Answers     []DNSResourceRecord
-	NameServers []DNSResourceRecord
-	Additionals []DNSResourceRecord
-}
-
-func DecodeDNSMessage(data []byte) (*DNSMessage, error) {
+func DecodeDNSMessage(data []byte) (*dns.Message, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS message: too short")
 	}
@@ -24,7 +18,7 @@ func DecodeDNSMessage(data []byte) (*DNSMessage, error) {
 	}
 	offset := 12
 
-	questions := make([]DNSQuestion, 0, header.QuestionCount)
+	questions := make([]dns.Question, 0, header.QuestionCount)
 	for i := 0; i < int(header.QuestionCount); i++ {
 		question, newOffset, err := decodeDNSQuestion(data, offset)
 		if err != nil {
@@ -49,7 +43,7 @@ func DecodeDNSMessage(data []byte) (*DNSMessage, error) {
 		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
 	}
 
-	return &DNSMessage{
+	return &dns.Message{
 		Header:      header,
 		Questions:   questions,
 		Answers:     answers,
@@ -58,8 +52,8 @@ func DecodeDNSMessage(data []byte) (*DNSMessage, error) {
 	}, nil
 }
 
-func decodeResourceRecords(data []byte, offset int, count uint16) ([]DNSResourceRecord, int, error) {
-	records := make([]DNSResourceRecord, 0, count)
+func decodeResourceRecords(data []byte, offset int, count uint16) ([]dns.ResourceRecord, int, error) {
+	records := make([]dns.ResourceRecord, 0, count)
 	for i := 0; i < int(count); i++ {
 		record, newOffset, err := decodeDNSResourceRecord(data, offset)
 		if err != nil {

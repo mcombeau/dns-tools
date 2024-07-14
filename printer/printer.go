@@ -3,10 +3,10 @@ package printer
 import (
 	"fmt"
 
-	"github.com/mcombeau/go-dns-tools/decoder"
+	"github.com/mcombeau/go-dns-tools/dns"
 )
 
-func PrintDNSMessage(message *decoder.DNSMessage) {
+func PrintDNSMessage(message *dns.Message) {
 	printDNSHeader(message.Header)
 	printDNSQuestions(message.Questions)
 	printDNSResourceRecord(message.Answers, "Answers:")
@@ -14,7 +14,7 @@ func PrintDNSMessage(message *decoder.DNSMessage) {
 	printDNSResourceRecord(message.Additionals, "Additionals:")
 }
 
-func printDNSHeader(header *decoder.DNSHeader) {
+func printDNSHeader(header *dns.Header) {
 	fmt.Printf("Transaction ID: %d\n", header.Id)
 	fmt.Println("Flags:")
 	fmt.Printf("\tResponse: %t\n", header.Flags.Response)
@@ -33,7 +33,7 @@ func printDNSHeader(header *decoder.DNSHeader) {
 	fmt.Printf("Additional RR count: %d\n", header.AdditionalRRCount)
 }
 
-func printDNSQuestions(questions []decoder.DNSQuestion) {
+func printDNSQuestions(questions []dns.Question) {
 	fmt.Println("Questions:")
 	for _, question := range questions {
 		fmt.Printf("\tName: %s\n", question.Name)
@@ -42,7 +42,7 @@ func printDNSQuestions(questions []decoder.DNSQuestion) {
 	}
 }
 
-func printDNSResourceRecord(records []decoder.DNSResourceRecord, title string) {
+func printDNSResourceRecord(records []dns.ResourceRecord, title string) {
 	fmt.Println(title)
 	for _, record := range records {
 		fmt.Printf("\tName: %s\n", record.Name)
