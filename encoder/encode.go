@@ -2,33 +2,28 @@ package encoder
 
 import (
 	"bytes"
-	"strings"
+
+	"github.com/mcombeau/go-dns-tools/dns"
 )
 
-func EncodeDNSQuestion(domain string) []byte {
-	var buf bytes.Buffer
+func EncodeDNSMessage(msg *dns.Message) ([]byte, error) {
+	buf := new(bytes.Buffer)
 
-	header := []byte{
-		0, 0, //Transaction ID
-		1, 0, //Flags: standard query, recusion desired
-		0, 1, //Questions: 1
-		0, 0, //Answer RRs
-		0, 0, //Authority (nameserver) RRs
-		0, 0, //Additional RRs
+	encodeDNSHeader(buf, msg)
+
+	for _, question := range msg.Questions {
+		encodeDNSQuestion(buf, question)
 	}
 
-	buf.Write(header)
-
-	parts := strings.Split(domain, ".")
-
-	for _, part := range parts {
-		buf.WriteByte(byte(len(part)))
-		buf.WriteString(part)
+	for _, rr := range msg.Answers {
+		encodeDNSResourceRecord(buf, rr)
+	}
+	for _, rr := range msg.NameServers {
+		encodeDNSResourceRecord(buf, rr)
+	}
+	for _, rr := range msg.Additionals {
+		encodeDNSResourceRecord(buf, rr)
 	}
 
-	buf.WriteByte(0)        //End of QNAME
-	buf.Write([]byte{0, 1}) //QTYPE: A
-	buf.Write([]byte{0, 1}) //QCLASS: IN
-
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
