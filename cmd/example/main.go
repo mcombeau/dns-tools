@@ -15,11 +15,15 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <domain>")
+		fmt.Println("Usage: go run main.go <domain> [question type]")
 		return
 	}
 
 	domain := os.Args[1]
+	var questionType uint16
+	if len(os.Args) == 3 {
+		questionType = dns.GetCodeFromTypeString(os.Args[2])
+	}
 	dnsServer := "8.8.8.8:53" // Google's public DNS server
 
 	message := &dns.Message{
@@ -31,7 +35,7 @@ func main() {
 		Questions: []dns.Question{
 			{
 				Name:   domain,
-				QType:  dns.A,
+				QType:  questionType,
 				QClass: dns.IN,
 			},
 		},
