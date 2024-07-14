@@ -10,10 +10,38 @@ import (
 )
 
 func TestDecodeDNSMessage(t *testing.T) {
-	mockResponse := testutils.MockDNSResponse()
+	mockResponse, err := testutils.MockDNSResponse()
+	if err != nil {
+		t.Fatalf("Failed to create mock response: %v\n", err)
+	}
 
 	var unpackedMockResponse dns.Msg
-	err := unpackedMockResponse.Unpack(mockResponse)
+	err = unpackedMockResponse.Unpack(mockResponse)
+
+	if err != nil {
+		t.Fatalf("Failed to unpack mock response: %v\n", err)
+	}
+
+	want := unpackedMockResponse
+	got, err := DecodeDNSMessage(mockResponse)
+
+	assert.NoError(t, err)
+
+	checkHeader(t, want, *got)
+	checkQuestions(t, want.Question, got.Questions)
+	checkResourceRecord(t, want.Answer, got.Answers)
+	checkResourceRecord(t, want.Ns, got.NameServers)
+	checkResourceRecord(t, want.Extra, got.Additionals)
+}
+
+func TestDecodeCompressedDNSMessage(t *testing.T) {
+	mockResponse, err := testutils.MockDNSCompressedResponse()
+	if err != nil {
+		t.Fatalf("Failed to create mock response: %v\n", err)
+	}
+
+	var unpackedMockResponse dns.Msg
+	err = unpackedMockResponse.Unpack(mockResponse)
 
 	if err != nil {
 		t.Fatalf("Failed to unpack mock response: %v\n", err)
