@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"errors"
+)
+
 /*
 parse uint16:
 "Concatenate" two bytes in a slice to int16.

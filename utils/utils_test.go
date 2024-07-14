@@ -36,17 +36,23 @@ func TestDecodeDomainName(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		name, length := DecodeDomainName(test.data, test.offset)
+		name, length, err := DecodeDomainName(test.data, test.offset)
+
+		assert.NoError(t, err)
+
 		assert.Equal(t, test.expected, name)
 		assert.Equal(t, test.length, length)
 	}
 }
 
 func TestDecodeDomainNameInDNSMessage(t *testing.T) {
-	mockResponse := testutils.MockDNSResponse()
+	mockResponse, err := testutils.MockDNSResponse()
+	if err != nil {
+		t.Fatalf("Failed to create mock response: %v\n", err)
+	}
 
 	var unpackedMockResponse dns.Msg
-	err := unpackedMockResponse.Unpack(mockResponse)
+	err = unpackedMockResponse.Unpack(mockResponse)
 
 	if err != nil {
 		t.Fatalf("Failed to unpack mock response: %v\n", err)

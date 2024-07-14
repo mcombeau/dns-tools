@@ -10,10 +10,13 @@ import (
 )
 
 func TestDecodeResourceRecord(t *testing.T) {
-	mockResponse := testutils.MockDNSResponse()
+	mockResponse, err := testutils.MockDNSResponse()
+	if err != nil {
+		t.Fatalf("Failed to create mock response: %v\n", err)
+	}
 
 	var unpackedMockResponse dns.Msg
-	err := unpackedMockResponse.Unpack(mockResponse)
+	err = unpackedMockResponse.Unpack(mockResponse)
 
 	if err != nil {
 		t.Fatalf("Failed to unpack mock response: %v\n", err)

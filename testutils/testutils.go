@@ -1,8 +1,10 @@
 package testutils
 
-import "github.com/miekg/dns"
+import (
+	"github.com/miekg/dns"
+)
 
-func MockDNSResponse() []byte {
+func MockDNSResponse() ([]byte, error) {
 	msg := new(dns.Msg)
 	msg.SetReply(&dns.Msg{
 		MsgHdr: dns.MsgHdr{
