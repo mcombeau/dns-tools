@@ -71,5 +71,5 @@ func main() {
 	}
 
 	fmt.Println("Received DNS response:")
-	printer.PrintDNSMessage(decodedMessage)
+	printer.PrintDNSMessage(decodedMessage, domain)
 }

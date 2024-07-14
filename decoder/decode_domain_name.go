@@ -17,7 +17,7 @@ which is right after the header (question section domain name field):
 [192, 12]
 */
 
-func decodeDomainName(data []byte, offset int) (string, int, error) {
+func DecodeDomainName(data []byte, offset int) (string, int, error) {
 	var name string
 	originalOffset := offset
 	jumped := false
