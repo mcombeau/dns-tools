@@ -1,4 +1,4 @@
-package dnsparser
+package decoder
 
 import "errors"
 
@@ -8,7 +8,7 @@ type DNSQuestion struct {
 	QClass uint16
 }
 
-func parseDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
+func decodeDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
 	name, newOffset := parseDomainName(data, offset)
 	offset += newOffset
 

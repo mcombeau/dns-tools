@@ -1,4 +1,4 @@
-package dnsparser
+package utils
 
 /*
 parse uint16:

@@ -1,6 +1,8 @@
-package dnsparser
+package decoder
 
-import "errors"
+import (
+	"errors"
+)
 
 type DNSResourceRecord struct {
 	Name     string
@@ -11,7 +13,7 @@ type DNSResourceRecord struct {
 	RData    []byte
 }
 
-func parseDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, error) {
+func decodeDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, error) {
 	name, newOffset := parseDomainName(data, offset)
 	offset += newOffset
 

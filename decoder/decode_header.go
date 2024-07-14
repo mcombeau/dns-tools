@@ -1,6 +1,8 @@
-package dnsparser
+package decoder
 
-import "errors"
+import (
+	"errors"
+)
 
 // 12 bytes long
 // bytes 0-1: transaction ID
@@ -31,14 +33,14 @@ type DNSFlags struct {
 	ResponseCode       uint16
 }
 
-func ParseDNSHeader(data []byte) (*DNSHeader, error) {
+func DecodeDNSHeader(data []byte) (*DNSHeader, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS header")
 	}
 
 	header := DNSHeader{
 		Id:                parseUint16(data, 0),
-		Flags:             parseDNSFlags(data),
+		Flags:             decodeDNSFlags(data),
 		QuestionCount:     parseUint16(data, 4),
 		AnswerRRCount:     parseUint16(data, 6),
 		NameserverRRCount: parseUint16(data, 8),
@@ -48,7 +50,7 @@ func ParseDNSHeader(data []byte) (*DNSHeader, error) {
 	return &header, nil
 }
 
-func parseDNSFlags(data []byte) *DNSFlags {
+func decodeDNSFlags(data []byte) *DNSFlags {
 	return &DNSFlags{
 		// QR (Query/Response): Bit 15 (0x8000)
 		Response: data[2]&0x80 != 0,

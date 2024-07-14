@@ -1,4 +1,4 @@
-package dnsparser
+package decoder
 
 import (
 	"testing"
@@ -18,6 +18,7 @@ func TestParseFlags(t *testing.T) {
 	}
 
 	want := unpackedMockResponse
+	// TODO: test the flag function directly
 	got, err := ParseDNSHeader(mockResponse)
 
 	assert.NoError(t, err)

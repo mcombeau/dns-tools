@@ -1,4 +1,4 @@
-package dnsparser
+package decoder
 
 import (
 	"net"
@@ -48,7 +48,7 @@ func TestParseDNSMessage(t *testing.T) {
 	}
 
 	want := unpackedMockResponse
-	got, err := ParseDNSMessage(mockResponse)
+	got, err := DecodeDNSMessage(mockResponse)
 
 	assert.NoError(t, err)
 

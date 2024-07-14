@@ -1,4 +1,4 @@
-package dnsparser
+package decoder
 
 import (
 	"net"
@@ -20,13 +20,13 @@ func TestParseResourceRecord(t *testing.T) {
 
 	want := unpackedMockResponse.Answer[0]
 
-	_, offset, err := parseDNSQuestion(mockResponse, 12)
+	_, offset, err := decodeDNSQuestion(mockResponse, 12)
 
 	if err != nil {
 		t.Fatalf("Failed to parse DNS question: %v\n", err)
 	}
 
-	got, _, err := parseDNSResourceRecord(mockResponse, offset)
+	got, _, err := decodeDNSResourceRecord(mockResponse, offset)
 
 	assert.NoError(t, err)
 

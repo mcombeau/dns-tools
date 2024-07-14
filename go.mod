@@ -1,4 +1,4 @@
-module github.com/mcombeau/go-dns-parser
+module github.com/mcombeau/go-dns-tools
 
 go 1.22.2
 

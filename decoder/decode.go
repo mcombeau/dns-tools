@@ -1,4 +1,4 @@
-package dnsparser
+package decoder
 
 import (
 	"errors"
@@ -13,12 +13,12 @@ type DNSMessage struct {
 	Additionals []DNSResourceRecord
 }
 
-func ParseDNSMessage(data []byte) (*DNSMessage, error) {
+func DecodeDNSMessage(data []byte) (*DNSMessage, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS message: too short")
 	}
 
-	header, err := ParseDNSHeader(data)
+	header, err := DecodeDNSHeader(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS header: %v", err)
 	}
@@ -26,7 +26,7 @@ func ParseDNSMessage(data []byte) (*DNSMessage, error) {
 
 	questions := make([]DNSQuestion, 0, header.QuestionCount)
 	for i := 0; i < int(header.QuestionCount); i++ {
-		question, newOffset, err := parseDNSQuestion(data, offset)
+		question, newOffset, err := decodeDNSQuestion(data, offset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DNS question: %v", err)
 		}
@@ -34,17 +34,17 @@ func ParseDNSMessage(data []byte) (*DNSMessage, error) {
 		offset = newOffset
 	}
 
-	answers, offset, err := parseResourceRecords(data, offset, header.AnswerRRCount)
+	answers, offset, err := decodeResourceRecords(data, offset, header.AnswerRRCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
 	}
 
-	nameServers, offset, err := parseResourceRecords(data, offset, header.NameserverRRCount)
+	nameServers, offset, err := decodeResourceRecords(data, offset, header.NameserverRRCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS authority name server: %v", err)
 	}
 
-	additionals, _, err := parseResourceRecords(data, offset, header.AdditionalRRCount)
+	additionals, _, err := decodeResourceRecords(data, offset, header.AdditionalRRCount)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
 	}
@@ -58,10 +58,10 @@ func ParseDNSMessage(data []byte) (*DNSMessage, error) {
 	}, nil
 }
 
-func parseResourceRecords(data []byte, offset int, count uint16) ([]DNSResourceRecord, int, error) {
+func decodeResourceRecords(data []byte, offset int, count uint16) ([]DNSResourceRecord, int, error) {
 	records := make([]DNSResourceRecord, 0, count)
 	for i := 0; i < int(count); i++ {
-		record, newOffset, err := parseDNSResourceRecord(data, offset)
+		record, newOffset, err := decodeDNSResourceRecord(data, offset)
 		if err != nil {
 			return nil, 0, err
 		}
