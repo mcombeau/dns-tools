@@ -21,12 +21,12 @@ func DecodeDNSHeader(data []byte) (*dns.Header, error) {
 	}
 
 	header := dns.Header{
-		Id:                utils.ParseUint16(data, 0),
+		Id:                utils.DecodeUint16(data, 0),
 		Flags:             decodeDNSFlags(data),
-		QuestionCount:     utils.ParseUint16(data, 4),
-		AnswerRRCount:     utils.ParseUint16(data, 6),
-		NameserverRRCount: utils.ParseUint16(data, 8),
-		AdditionalRRCount: utils.ParseUint16(data, 10),
+		QuestionCount:     utils.DecodeUint16(data, 4),
+		AnswerRRCount:     utils.DecodeUint16(data, 6),
+		NameserverRRCount: utils.DecodeUint16(data, 8),
+		AdditionalRRCount: utils.DecodeUint16(data, 10),
 	}
 
 	return &header, nil

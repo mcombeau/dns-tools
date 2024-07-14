@@ -21,8 +21,8 @@ func decodeDNSQuestion(data []byte, offset int) (*dns.Question, int, error) {
 
 	question := dns.Question{
 		Name:   name,
-		QType:  utils.ParseUint16(data, offset),
-		QClass: utils.ParseUint16(data, offset+2),
+		QType:  utils.DecodeUint16(data, offset),
+		QClass: utils.DecodeUint16(data, offset+2),
 	}
 
 	return &question, offset + 4, nil

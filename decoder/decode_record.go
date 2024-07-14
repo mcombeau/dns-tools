@@ -21,10 +21,10 @@ func decodeDNSResourceRecord(data []byte, offset int) (*dns.ResourceRecord, int,
 
 	record := dns.ResourceRecord{
 		Name:     name,
-		RType:    utils.ParseUint16(data, offset),
-		RClass:   utils.ParseUint16(data, offset+2),
-		TTL:      utils.ParseUint32(data, offset+4),
-		RDLength: utils.ParseUint16(data, offset+8),
+		RType:    utils.DecodeUint16(data, offset),
+		RClass:   utils.DecodeUint16(data, offset+2),
+		TTL:      utils.DecodeUint32(data, offset+4),
+		RDLength: utils.DecodeUint16(data, offset+8),
 	}
 	offset += 10
 
