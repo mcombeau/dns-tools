@@ -104,6 +104,12 @@ func printDNSResourceRecord(records []dns.ResourceRecord, title string) {
 	}
 }
 
+// TODO: At this stage it's hard to get RData to print correctly.
+// We are missing offset data for RData like CNAME and PTR
+// if DNS message is compressed (which it looks like it often is).
+// Either pass raw DNS message here as well,
+// or parse RData in decoding (duh!)
+
 func getRecordDataString(record dns.ResourceRecord) (string, error) {
 	switch record.RType {
 
