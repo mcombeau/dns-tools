@@ -13,7 +13,7 @@ type DNSQuestion struct {
 }
 
 func decodeDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
-	name, newOffset := utils.ParseDomainName(data, offset)
+	name, newOffset := utils.DecodeDomainName(data, offset)
 	offset += newOffset
 
 	if len(data) < offset+4 {

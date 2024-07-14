@@ -16,7 +16,7 @@ type DNSResourceRecord struct {
 }
 
 func decodeDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, error) {
-	name, newOffset := utils.ParseDomainName(data, offset)
+	name, newOffset := utils.DecodeDomainName(data, offset)
 	offset += newOffset
 
 	if len(data) < offset+10 {

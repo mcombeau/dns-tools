@@ -32,7 +32,7 @@ Domain name in DNS encoded with labels, each label prefixed with length:
 [7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0]
 */
 
-func ParseDomainName(data []byte, offset int) (string, int) {
+func DecodeDomainName(data []byte, offset int) (string, int) {
 	var name string
 	originalOffset := offset
 	for {
