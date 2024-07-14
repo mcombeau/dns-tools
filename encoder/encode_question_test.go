@@ -18,8 +18,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "A record question",
 			question: dns.Question{
 				Name:   "example.com",
-				QType:  1, // A record
-				QClass: 1, // IN class
+				QType:  dns.A,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
@@ -31,8 +31,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "AAAA record question",
 			question: dns.Question{
 				Name:   "example.com",
-				QType:  28, // AAAA record
-				QClass: 1,  // IN class
+				QType:  dns.AAAA,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
@@ -44,8 +44,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "CNAME record question",
 			question: dns.Question{
 				Name:   "www.example.com",
-				QType:  5, // CNAME record
-				QClass: 1, // IN class
+				QType:  dns.CNAME,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
@@ -57,8 +57,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "MX record question",
 			question: dns.Question{
 				Name:   "example.com",
-				QType:  15, // MX record
-				QClass: 1,  // IN class
+				QType:  dns.MX,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
@@ -70,8 +70,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "NS record question",
 			question: dns.Question{
 				Name:   "example.com",
-				QType:  2, // NS record
-				QClass: 1, // IN class
+				QType:  dns.NS,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
@@ -83,8 +83,8 @@ func TestEncodeDNSQuestion(t *testing.T) {
 			name: "PTR record question",
 			question: dns.Question{
 				Name:   "34.216.184.93.in-addr.arpa",
-				QType:  12, // PTR record
-				QClass: 1,  // IN class
+				QType:  dns.PTR,
+				QClass: dns.IN,
 			},
 			want: []byte{
 				2, '3', '4', 3, '2', '1', '6', 3, '1', '8', '4', 2, '9', '3', 7, 'i', 'n', '-', 'a', 'd', 'd', 'r', 4, 'a', 'r', 'p', 'a', 0, // Name: 34.216.184.93.in-addr.arpa

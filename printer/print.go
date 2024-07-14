@@ -2,19 +2,29 @@ package printer
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mcombeau/go-dns-tools/dns"
 )
 
 func PrintDNSMessage(message *dns.Message) {
 	printDNSHeader(message.Header)
-	printDNSQuestions(message.Questions)
-	printDNSResourceRecord(message.Answers, "Answers:")
-	printDNSResourceRecord(message.NameServers, "Authorities:")
-	printDNSResourceRecord(message.Additionals, "Additionals:")
+	if message.Header.QuestionCount > 0 {
+		printDNSQuestions(message.Questions)
+	}
+	if message.Header.AnswerRRCount > 0 {
+		printDNSResourceRecord(message.Answers, "Answers")
+	}
+	if message.Header.NameserverRRCount > 0 {
+		printDNSResourceRecord(message.NameServers, "Authorities")
+	}
+	if message.Header.AdditionalRRCount > 0 {
+		printDNSResourceRecord(message.Additionals, "Additionals")
+	}
 }
 
 func printDNSHeader(header *dns.Header) {
+	fmt.Println("---------------HEADER")
 	fmt.Printf("Transaction ID: %d\n", header.Id)
 	fmt.Println("Flags:")
 	fmt.Printf("\tResponse: %t\n", header.Flags.Response)
@@ -26,7 +36,7 @@ func printDNSHeader(header *dns.Header) {
 	fmt.Printf("\tDnssecOk: %t\n", header.Flags.DnssecOk)
 	fmt.Printf("\tAuthenticatedData: %t\n", header.Flags.AuthenticatedData)
 	fmt.Printf("\tCheckingDisabled: %t\n", header.Flags.CheckingDisabled)
-	fmt.Printf("\tResponseCode: %d\n", header.Flags.ResponseCode)
+	fmt.Printf("\tResponseCode: %s\n", DNSRCode(header.Flags.ResponseCode))
 	fmt.Printf("Question count: %d\n", header.QuestionCount)
 	fmt.Printf("Answer RR count: %d\n", header.AnswerRRCount)
 	fmt.Printf("Authority RR count: %d\n", header.NameserverRRCount)
@@ -34,20 +44,22 @@ func printDNSHeader(header *dns.Header) {
 }
 
 func printDNSQuestions(questions []dns.Question) {
-	fmt.Println("Questions:")
+	fmt.Println("---------------QUESTIONS")
 	for _, question := range questions {
+		fmt.Println("Question:")
 		fmt.Printf("\tName: %s\n", question.Name)
-		fmt.Printf("\tQType: %d\n", question.QType)
-		fmt.Printf("\tQClass: %d\n", question.QClass)
+		fmt.Printf("\tQType: %s\n", DNSType(question.QType).String())
+		fmt.Printf("\tQClass: %s\n", DNSClass(question.QClass).String())
 	}
 }
 
 func printDNSResourceRecord(records []dns.ResourceRecord, title string) {
-	fmt.Println(title)
+	fmt.Printf("---------------%s\n", strings.ToUpper(title))
 	for _, record := range records {
+		fmt.Println("Record:")
 		fmt.Printf("\tName: %s\n", record.Name)
-		fmt.Printf("\tRType: %d\n", record.RType)
-		fmt.Printf("\tRClass: %d\n", record.RClass)
+		fmt.Printf("\tRType: %s\n", DNSType(record.RType).String())
+		fmt.Printf("\tRClass: %s\n", DNSClass(record.RClass).String())
 		fmt.Printf("\tTTL: %d\n", record.TTL)
 		fmt.Printf("\tRDLength: %d\n", record.RDLength)
 		fmt.Printf("\tRData: %v\n", record.RData)

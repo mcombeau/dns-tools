@@ -17,8 +17,8 @@ func MockDNSQuery() *dns.Message {
 		Questions: []dns.Question{
 			{
 				Name:   "example.com.",
-				QType:  1, // Type A
-				QClass: 1, // Class IN
+				QType:  dns.A,
+				QClass: dns.IN,
 			},
 		},
 	}

@@ -18,8 +18,8 @@ func TestEncodeResourceRecord(t *testing.T) {
 			name: "A record",
 			rr: dns.ResourceRecord{
 				Name:     "example.com",
-				RType:    1, // A record
-				RClass:   1, // IN class
+				RType:    dns.A,
+				RClass:   dns.IN,
 				TTL:      300,
 				RDLength: 4,
 				RData:    []byte{93, 184, 216, 34}, // 93.184.216.34
@@ -37,8 +37,8 @@ func TestEncodeResourceRecord(t *testing.T) {
 			name: "AAAA record",
 			rr: dns.ResourceRecord{
 				Name:     "example.com",
-				RType:    28, // AAAA record
-				RClass:   1,  // IN class
+				RType:    dns.AAAA,
+				RClass:   dns.IN,
 				TTL:      300,
 				RDLength: 16,
 				RData:    []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2001:db8::1
@@ -56,8 +56,8 @@ func TestEncodeResourceRecord(t *testing.T) {
 			name: "CNAME record",
 			rr: dns.ResourceRecord{
 				Name:     "www.example.com",
-				RType:    5, // CNAME record
-				RClass:   1, // IN class
+				RType:    dns.CNAME,
+				RClass:   dns.IN,
 				TTL:      300,
 				RDLength: 13,
 				RData:    []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, // example.com
@@ -75,8 +75,8 @@ func TestEncodeResourceRecord(t *testing.T) {
 			name: "MX record",
 			rr: dns.ResourceRecord{
 				Name:     "example.com",
-				RType:    15, // MX record
-				RClass:   1,  // IN class
+				RType:    dns.MX,
+				RClass:   dns.IN,
 				TTL:      300,
 				RDLength: 16,
 				RData:    append([]byte{0, 10}, []byte{4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}...), // preference 10, mail.example.com

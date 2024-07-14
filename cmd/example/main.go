@@ -31,8 +31,8 @@ func main() {
 		Questions: []dns.Question{
 			{
 				Name:   domain,
-				QType:  1, // Type A
-				QClass: 1, // Class IN
+				QType:  dns.A,
+				QClass: dns.IN,
 			},
 		},
 	}
