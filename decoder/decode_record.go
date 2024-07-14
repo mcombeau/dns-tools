@@ -8,7 +8,7 @@ import (
 )
 
 func decodeDNSResourceRecord(data []byte, offset int) (*dns.ResourceRecord, int, error) {
-	name, newOffset, err := utils.DecodeDomainName(data, offset)
+	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
 		return &dns.ResourceRecord{}, 0, err
 	}
