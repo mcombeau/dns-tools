@@ -1,6 +1,10 @@
 package decoder
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/mcombeau/go-dns-tools/utils"
+)
 
 type DNSQuestion struct {
 	Name   string
@@ -9,7 +13,7 @@ type DNSQuestion struct {
 }
 
 func decodeDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
-	name, newOffset := parseDomainName(data, offset)
+	name, newOffset := utils.ParseDomainName(data, offset)
 	offset += newOffset
 
 	if len(data) < offset+4 {
@@ -18,8 +22,8 @@ func decodeDNSQuestion(data []byte, offset int) (*DNSQuestion, int, error) {
 
 	question := DNSQuestion{
 		Name:   name,
-		QType:  parseUint16(data, offset),
-		QClass: parseUint16(data, offset+2),
+		QType:  utils.ParseUint16(data, offset),
+		QClass: utils.ParseUint16(data, offset+2),
 	}
 
 	return &question, offset + 4, nil

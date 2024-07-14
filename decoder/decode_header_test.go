@@ -19,7 +19,7 @@ func TestParseFlags(t *testing.T) {
 
 	want := unpackedMockResponse
 	// TODO: test the flag function directly
-	got, err := ParseDNSHeader(mockResponse)
+	got, err := DecodeDNSHeader(mockResponse)
 
 	assert.NoError(t, err)
 
@@ -46,7 +46,7 @@ func TestParseHeader(t *testing.T) {
 	}
 
 	want := unpackedMockResponse
-	got, err := ParseDNSHeader(mockResponse)
+	got, err := DecodeDNSHeader(mockResponse)
 
 	assert.NoError(t, err)
 

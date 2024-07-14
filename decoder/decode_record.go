@@ -2,6 +2,8 @@ package decoder
 
 import (
 	"errors"
+
+	"github.com/mcombeau/go-dns-tools/utils"
 )
 
 type DNSResourceRecord struct {
@@ -14,7 +16,7 @@ type DNSResourceRecord struct {
 }
 
 func decodeDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, error) {
-	name, newOffset := parseDomainName(data, offset)
+	name, newOffset := utils.ParseDomainName(data, offset)
 	offset += newOffset
 
 	if len(data) < offset+10 {
@@ -23,10 +25,10 @@ func decodeDNSResourceRecord(data []byte, offset int) (*DNSResourceRecord, int, 
 
 	record := DNSResourceRecord{
 		Name:     name,
-		RType:    parseUint16(data, offset),
-		RClass:   parseUint16(data, offset+2),
-		TTL:      parseUint32(data, offset+4),
-		RDLength: parseUint16(data, offset+8),
+		RType:    utils.ParseUint16(data, offset),
+		RClass:   utils.ParseUint16(data, offset+2),
+		TTL:      utils.ParseUint32(data, offset+4),
+		RDLength: utils.ParseUint16(data, offset+8),
 	}
 	offset += 10
 

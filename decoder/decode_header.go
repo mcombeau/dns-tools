@@ -2,6 +2,8 @@ package decoder
 
 import (
 	"errors"
+
+	"github.com/mcombeau/go-dns-tools/utils"
 )
 
 // 12 bytes long
@@ -39,12 +41,12 @@ func DecodeDNSHeader(data []byte) (*DNSHeader, error) {
 	}
 
 	header := DNSHeader{
-		Id:                parseUint16(data, 0),
+		Id:                utils.ParseUint16(data, 0),
 		Flags:             decodeDNSFlags(data),
-		QuestionCount:     parseUint16(data, 4),
-		AnswerRRCount:     parseUint16(data, 6),
-		NameserverRRCount: parseUint16(data, 8),
-		AdditionalRRCount: parseUint16(data, 10),
+		QuestionCount:     utils.ParseUint16(data, 4),
+		AnswerRRCount:     utils.ParseUint16(data, 6),
+		NameserverRRCount: utils.ParseUint16(data, 8),
+		AdditionalRRCount: utils.ParseUint16(data, 10),
 	}
 
 	return &header, nil

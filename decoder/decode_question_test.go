@@ -3,6 +3,7 @@ package decoder
 import (
 	"testing"
 
+	"github.com/mcombeau/go-dns-tools/utils"
 	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +20,7 @@ func TestParseDomainName(t *testing.T) {
 
 	want := unpackedMockResponse.Question[0].Name
 	wantBytes := len(unpackedMockResponse.Question[0].Name) + 1
-	got, gotBytes := parseDomainName(mockResponse, 12)
+	got, gotBytes := utils.ParseDomainName(mockResponse, 12)
 
 	assert.Equal(t, want, got)
 	assert.Equal(t, wantBytes, gotBytes)
