@@ -10,9 +10,9 @@ import (
 
 func TestEncodeFlags(t *testing.T) {
 	tests := []struct {
-		name     string
-		flags    *dns.Flags
-		expected []byte
+		name  string
+		flags *dns.Flags
+		want  []byte
 	}{
 		{
 			name: "All flags off",
@@ -28,7 +28,7 @@ func TestEncodeFlags(t *testing.T) {
 				CheckingDisabled:   false,
 				ResponseCode:       0,
 			},
-			expected: []byte{0b00000000, 0b00000000},
+			want: []byte{0b00000000, 0b00000000},
 		},
 		{
 			name: "Response flag on",
@@ -44,7 +44,7 @@ func TestEncodeFlags(t *testing.T) {
 				CheckingDisabled:   false,
 				ResponseCode:       0,
 			},
-			expected: []byte{0b10000000, 0b00000000},
+			want: []byte{0b10000000, 0b00000000},
 		},
 		{
 			name: "Opcode set to 2",
@@ -60,7 +60,7 @@ func TestEncodeFlags(t *testing.T) {
 				CheckingDisabled:   false,
 				ResponseCode:       0,
 			},
-			expected: []byte{0b00010000, 0b00000000},
+			want: []byte{0b00010000, 0b00000000},
 		},
 		{
 			name: "Authoritative flag on",
@@ -76,7 +76,7 @@ func TestEncodeFlags(t *testing.T) {
 				CheckingDisabled:   false,
 				ResponseCode:       0,
 			},
-			expected: []byte{0b00000100, 0b00000000},
+			want: []byte{0b00000100, 0b00000000},
 		},
 		{
 			name: "Multiple flags on",
@@ -92,23 +92,23 @@ func TestEncodeFlags(t *testing.T) {
 				CheckingDisabled:   true,
 				ResponseCode:       3,
 			},
-			expected: []byte{0b10010111, 0b11110011},
+			want: []byte{0b10010111, 0b11110011},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := encodeDNSFlags(tt.flags)
-			assert.Equal(t, tt.expected, result)
+			assert.Equal(t, tt.want, result)
 		})
 	}
 }
 
 func TestEncodeDNSHeader(t *testing.T) {
 	tests := []struct {
-		name     string
-		msg      *dns.Message
-		expected []byte
+		name string
+		msg  *dns.Message
+		want []byte
 	}{
 		{
 			name: "Basic header encoding",
@@ -137,7 +137,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 				NameServers: nil,
 				Additionals: nil,
 			},
-			expected: []byte{
+			want: []byte{
 				0x04, 0xd2, // ID: 1234
 				0x85, 0x00, // Flags: 10000101 00000000
 				0x00, 0x01, // Question Count: 1
@@ -173,7 +173,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 				NameServers: nil,
 				Additionals: nil,
 			},
-			expected: []byte{
+			want: []byte{
 				0x04, 0xd2, // ID: 1234
 				0x85, 0x80, // Flags: 10000101 10000000
 				0x00, 0x01, // Question Count: 1
@@ -188,7 +188,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			encodeDNSHeader(&buf, tt.msg)
-			assert.Equal(t, tt.expected, buf.Bytes())
+			assert.Equal(t, tt.want, buf.Bytes())
 		})
 	}
 }

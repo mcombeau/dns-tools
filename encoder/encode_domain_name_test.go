@@ -10,9 +10,8 @@ import (
 func TestEncodeName(t *testing.T) {
 
 	tests := []struct {
-		data       string
-		wantBytes  []byte
-		wantLength int
+		data      string
+		wantBytes []byte
 	}{
 		{
 			data:      "example.com",
