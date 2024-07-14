@@ -30,3 +30,12 @@ func DecodeUint32(data []byte, offset int) uint32 {
 func EncodeUint16(value uint16) []byte {
 	return []byte{byte(value >> 8), byte(value & 0xFF)}
 }
+
+func EncodeUint32(value uint32) []byte {
+	return []byte{
+		byte(value >> 24),
+		byte((value >> 16) & 0xFF),
+		byte((value >> 8) & 0xFF),
+		byte(value & 0xFF),
+	}
+}
