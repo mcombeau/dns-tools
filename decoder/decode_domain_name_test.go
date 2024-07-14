@@ -10,38 +10,38 @@ import (
 
 func TestDecodeDomainName(t *testing.T) {
 	tests := []struct {
-		data     []byte
-		offset   int
-		expected string
-		length   int
+		data       []byte
+		offset     int
+		wantString string
+		wantLength int
 	}{
 		{
-			data:     []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0},
-			offset:   0,
-			expected: "example.com.",
-			length:   13,
+			data:       []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0},
+			offset:     0,
+			wantString: "example.com.",
+			wantLength: 13,
 		},
 		{
-			data:     []byte{3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0},
-			offset:   0,
-			expected: "www.example.com.",
-			length:   17,
+			data:       []byte{3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0},
+			offset:     0,
+			wantString: "www.example.com.",
+			wantLength: 17,
 		},
 		{
-			data:     []byte{0},
-			offset:   0,
-			expected: ".",
-			length:   1,
+			data:       []byte{0},
+			offset:     0,
+			wantString: ".",
+			wantLength: 1,
 		},
 	}
 
 	for _, test := range tests {
-		name, length, err := decodeDomainName(test.data, test.offset)
+		gotString, gotLength, err := decodeDomainName(test.data, test.offset)
 
 		assert.NoError(t, err)
 
-		assert.Equal(t, test.expected, name)
-		assert.Equal(t, test.length, length)
+		assert.Equal(t, test.wantString, gotString)
+		assert.Equal(t, test.wantLength, gotLength)
 	}
 }
 
