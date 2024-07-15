@@ -36,7 +36,7 @@ func TestDecodeDomainName(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotString, gotLength, err := DecodeDomainName(test.data, test.offset)
+		gotString, gotLength, err := decodeDomainName(test.data, test.offset)
 
 		assert.NoError(t, err)
 
@@ -60,7 +60,7 @@ func TestDecodeDomainNameInDNSMessage(t *testing.T) {
 
 	want := unpackedMockResponse.Question[0].Name
 	wantBytes := len(unpackedMockResponse.Question[0].Name) + 1
-	got, gotBytes, err := DecodeDomainName(mockResponse, 12)
+	got, gotBytes, err := decodeDomainName(mockResponse, 12)
 
 	assert.NoError(t, err)
 
@@ -86,7 +86,7 @@ func TestDecodeDomainNameInCompressedDNSMessage(t *testing.T) {
 	answerOffset := headerLength + questionLength
 
 	want := unpackedMockResponse.Answer[0].Header().Name
-	got, gotBytes, err := DecodeDomainName(mockResponse, answerOffset)
+	got, gotBytes, err := decodeDomainName(mockResponse, answerOffset)
 	wantBytes := 2 // Pointer size is 2 bytes
 
 	assert.NoError(t, err)

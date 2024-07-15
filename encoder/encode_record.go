@@ -13,5 +13,5 @@ func encodeDNSResourceRecord(buf *bytes.Buffer, rr dns.ResourceRecord) {
 	buf.Write(utils.EncodeUint16(rr.RClass))
 	buf.Write(utils.EncodeUint32(rr.TTL))
 	buf.Write(utils.EncodeUint16(rr.RDLength))
-	buf.Write(rr.RData)
+	buf.Write(rr.RData.Raw)
 }

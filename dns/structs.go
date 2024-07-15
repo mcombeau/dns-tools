@@ -42,5 +42,10 @@ type ResourceRecord struct {
 	RClass   uint16
 	TTL      uint32
 	RDLength uint16
-	RData    []byte
+	RData    RData
+}
+
+type RData struct {
+	Raw     []byte
+	Decoded string
 }
