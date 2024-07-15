@@ -96,13 +96,13 @@ func checkResourceRecord(t *testing.T, want []dns.RR, got []dnstypes.ResourceRec
 
 		switch wantRecord := want[i].(type) {
 		case *dns.A:
-			assert.Equal(t, wantRecord.A.String(), net.IP(got[i].RData).String())
+			assert.Equal(t, wantRecord.A.String(), net.IP(got[i].RData.Raw).String())
 		case *dns.AAAA:
-			assert.Equal(t, wantRecord.AAAA.String(), net.IP(got[i].RData).String())
+			assert.Equal(t, wantRecord.AAAA.String(), net.IP(got[i].RData.Raw).String())
 		case *dns.CNAME:
-			assert.Equal(t, wantRecord.Target, string(got[i].RData))
+			assert.Equal(t, wantRecord.Target, string(got[i].RData.Raw))
 		case *dns.MX:
-			assert.Equal(t, wantRecord.Mx, string(got[i].RData))
+			assert.Equal(t, wantRecord.Mx, string(got[i].RData.Raw))
 		default:
 			t.Errorf("unsupported DNS record type: %T", wantRecord)
 		}

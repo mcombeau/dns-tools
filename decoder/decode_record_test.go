@@ -42,13 +42,13 @@ func TestDecodeResourceRecord(t *testing.T) {
 
 	switch record := want.(type) {
 	case *dns.A:
-		assert.Equal(t, record.A.String(), net.IP(got.RData).String())
+		assert.Equal(t, record.A.String(), net.IP(got.RData.Raw).String())
 	case *dns.AAAA:
-		assert.Equal(t, record.AAAA.String(), net.IP(got.RData).String())
+		assert.Equal(t, record.AAAA.String(), net.IP(got.RData.Raw).String())
 	case *dns.CNAME:
-		assert.Equal(t, record.Target, string(got.RData))
+		assert.Equal(t, record.Target, string(got.RData.Raw))
 	case *dns.MX:
-		assert.Equal(t, record.Mx, string(got.RData))
+		assert.Equal(t, record.Mx, string(got.RData.Raw))
 	default:
 		t.Fatalf("unsupported DNS record type: %T", record)
 	}

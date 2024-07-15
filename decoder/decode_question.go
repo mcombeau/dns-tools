@@ -8,7 +8,7 @@ import (
 )
 
 func decodeDNSQuestion(data []byte, offset int) (*dns.Question, int, error) {
-	name, newOffset, err := DecodeDomainName(data, offset)
+	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
 		return &dns.Question{}, 0, err
 	}

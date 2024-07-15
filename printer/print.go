@@ -2,12 +2,9 @@ package printer
 
 import (
 	"fmt"
-	"net"
 	"strings"
 
-	"github.com/mcombeau/go-dns-tools/decoder"
 	"github.com/mcombeau/go-dns-tools/dns"
-	"github.com/mcombeau/go-dns-tools/utils"
 )
 
 func PrintDNSMessage(message *dns.Message, query string) {
@@ -95,44 +92,10 @@ func printDNSResourceRecord(records []dns.ResourceRecord, title string) {
 		fmt.Printf("%s\t", DNSClass(record.RClass).String())
 		fmt.Printf("%s\t", DNSType(record.RType).String())
 
-		recordData, err := getRecordDataString(record)
-		if err != nil || recordData == "" {
-			fmt.Printf("%v\n", record.RData)
+		if record.RData.Decoded == "" {
+			fmt.Printf("%v (Raw data)\n", record.RData.Raw)
 		} else {
-			fmt.Printf("%s\n", recordData)
+			fmt.Printf("%s\n", record.RData.Decoded)
 		}
-	}
-}
-
-// TODO: At this stage it's hard to get RData to print correctly.
-// We are missing offset data for RData like CNAME and PTR
-// if DNS message is compressed (which it looks like it often is).
-// Either pass raw DNS message here as well,
-// or parse RData in decoding (duh!)
-
-func getRecordDataString(record dns.ResourceRecord) (string, error) {
-	switch record.RType {
-
-	case dns.A, dns.AAAA:
-		return net.IP(record.RData).String(), nil
-
-	case dns.CNAME, dns.PTR:
-		domainName, _, err := decoder.DecodeDomainName(record.RData, 0)
-		if err != nil {
-			return "", err
-		}
-		return domainName, nil
-
-	case dns.MX:
-		preference := utils.DecodeUint16(record.RData[:2], 0)
-		domainName, _, err := decoder.DecodeDomainName(record.RData, 2)
-		if err != nil {
-			return "", err
-		}
-		return fmt.Sprintf("%d %s", preference, domainName), nil
-
-	default:
-		return "", nil
-
 	}
 }
