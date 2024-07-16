@@ -22,7 +22,7 @@ func DecodeDNSHeader(data []byte) (*dns.Header, error) {
 
 	header := dns.Header{
 		Id:                utils.DecodeUint16(data, 0),
-		Flags:             decodeDNSFlags(data),
+		Flags:             decodeDNSFlags(data[2:4]),
 		QuestionCount:     utils.DecodeUint16(data, 4),
 		AnswerRRCount:     utils.DecodeUint16(data, 6),
 		NameserverRRCount: utils.DecodeUint16(data, 8),
@@ -47,15 +47,15 @@ const (
 
 func decodeDNSFlags(data []byte) *dns.Flags {
 	return &dns.Flags{
-		Response:           data[2]&uint8(QRMask>>8) != 0,
-		Opcode:             (uint16(data[2]) >> 3) & (OpcodeMask >> 11),
-		Authoritative:      data[2]&uint8(AAMask>>8) != 0,
-		Truncated:          data[2]&uint8(TCMask>>8) != 0,
-		RecursionDesired:   data[2]&uint8(RDMask>>8) != 0,
-		RecursionAvailable: data[3]&uint8(RAMask) != 0,
-		DnssecOk:           data[3]&uint8(DOMask) != 0,
-		AuthenticatedData:  data[3]&uint8(ADMask) != 0,
-		CheckingDisabled:   data[3]&uint8(CDMask) != 0,
-		ResponseCode:       uint16(data[3]) & RCodeMask,
+		Response:           data[0]&uint8(QRMask>>8) != 0,
+		Opcode:             (uint16(data[0]) >> 3) & (OpcodeMask >> 11),
+		Authoritative:      data[0]&uint8(AAMask>>8) != 0,
+		Truncated:          data[0]&uint8(TCMask>>8) != 0,
+		RecursionDesired:   data[0]&uint8(RDMask>>8) != 0,
+		RecursionAvailable: data[1]&uint8(RAMask) != 0,
+		DnssecOk:           data[1]&uint8(DOMask) != 0,
+		AuthenticatedData:  data[1]&uint8(ADMask) != 0,
+		CheckingDisabled:   data[1]&uint8(CDMask) != 0,
+		ResponseCode:       uint16(data[1]) & RCodeMask,
 	}
 }
