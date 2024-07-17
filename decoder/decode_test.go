@@ -1,31 +1,186 @@
 package decoder
 
-// TODO: Replace with tests that don't rely on an external library
+import (
+	"testing"
 
-// func TestDecodeDNSMessage(t *testing.T) {
-// 	mockResponse, err := testutils.MockDNSResponse()
-// 	if err != nil {
-// 		t.Fatalf("Failed to create mock response: %v\n", err)
-// 	}
+	"github.com/mcombeau/go-dns-tools/dns"
+	"github.com/stretchr/testify/assert"
+)
 
-// 	var unpackedMockResponse dns.Msg
-// 	err = unpackedMockResponse.Unpack(mockResponse)
+func TestDecodeDNSMessage(t *testing.T) {
+	tests := []struct {
+		name  string
+		bytes []byte
+		want  *dns.Message
+	}{
+		{
+			name: "Basic DNS message decoding",
+			bytes: []byte{
+				0x04, 0xd2, // ID: 1234
+				0x85, 0x00, // Flags: 10000101 00000000
+				0x00, 0x01, // Question Count: 1
+				0x00, 0x01, // Answer RR Count: 1
+				0x00, 0x00, // Nameserver RR Count: 0
+				0x00, 0x00, // Additional RR Count: 0
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // QType: 1 (A)
+				0, 1, // QClass: 1 (IN)
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // RType: 1
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 4, // RDLength: 4
+				93, 184, 216, 34, // RData: 93.184.216.34
+			},
+			want: &dns.Message{
+				Header: &dns.Header{
+					Id: 1234,
+					Flags: &dns.Flags{
+						Response:           true,
+						Opcode:             0,
+						Authoritative:      true,
+						Truncated:          false,
+						RecursionDesired:   true,
+						RecursionAvailable: false,
+						DnssecOk:           false,
+						AuthenticatedData:  false,
+						CheckingDisabled:   false,
+						ResponseCode:       0,
+					},
+					QuestionCount:     1,
+					AnswerRRCount:     1,
+					NameserverRRCount: 0,
+					AdditionalRRCount: 0,
+				},
+				Questions: []dns.Question{
+					{
+						Name:   "example.com.",
+						QType:  dns.A,
+						QClass: dns.IN,
+					},
+				},
+				Answers: []dns.ResourceRecord{
+					{
+						Name:     "example.com.",
+						RType:    dns.A,
+						RClass:   dns.IN,
+						TTL:      300,
+						RDLength: 4,
+						RData: dns.RData{
+							Raw:     []byte{93, 184, 216, 34},
+							Decoded: "93.184.216.34",
+						},
+					},
+				},
 
-// 	if err != nil {
-// 		t.Fatalf("Failed to unpack mock response: %v\n", err)
-// 	}
+				NameServers: nil,
+				Additionals: nil,
+			},
+		},
+		{
+			name: "Compressed DNS message decoding",
+			bytes: []byte{
+				0x04, 0xd2, // ID: 1234
+				0x85, 0x00, // Flags: 10000101 00000000
+				0x00, 0x01, // Question Count: 1
+				0x00, 0x01, // Answer RR Count: 1
+				0x00, 0x00, // Nameserver RR Count: 0
+				0x00, 0x00, // Additional RR Count: 0
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // QType: 1 (A)
+				0, 1, // QClass: 1 (IN)
+				0xc0, 12, // Pointer to: example.com
+				0, 1, // RType: 1
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 4, // RDLength: 4
+				93, 184, 216, 34, // RData: 93.184.216.34
+			},
+			want: &dns.Message{
+				Header: &dns.Header{
+					Id: 1234,
+					Flags: &dns.Flags{
+						Response:           true,
+						Opcode:             0,
+						Authoritative:      true,
+						Truncated:          false,
+						RecursionDesired:   true,
+						RecursionAvailable: false,
+						DnssecOk:           false,
+						AuthenticatedData:  false,
+						CheckingDisabled:   false,
+						ResponseCode:       0,
+					},
+					QuestionCount:     1,
+					AnswerRRCount:     1,
+					NameserverRRCount: 0,
+					AdditionalRRCount: 0,
+				},
+				Questions: []dns.Question{
+					{
+						Name:   "example.com.",
+						QType:  dns.A,
+						QClass: dns.IN,
+					},
+				},
+				Answers: []dns.ResourceRecord{
+					{
+						Name:     "example.com.",
+						RType:    dns.A,
+						RClass:   dns.IN,
+						TTL:      300,
+						RDLength: 4,
+						RData: dns.RData{
+							Raw:     []byte{93, 184, 216, 34},
+							Decoded: "93.184.216.34",
+						},
+					},
+				},
 
-// 	want := unpackedMockResponse
-// 	got, err := DecodeDNSMessage(mockResponse)
+				NameServers: nil,
+				Additionals: nil,
+			},
+		},
+	}
 
-// 	assert.NoError(t, err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecodeDNSMessage(tt.bytes)
 
-// 	checkHeader(t, want, *got)
-// 	checkQuestions(t, want.Question, got.Questions)
-// 	checkResourceRecord(t, want.Answer, got.Answers)
-// 	checkResourceRecord(t, want.Ns, got.NameServers)
-// 	checkResourceRecord(t, want.Extra, got.Additionals)
-// }
+			assert.NoError(t, err)
+
+			assert.Equal(t, tt.want.Header.Id, got.Header.Id)
+
+			assert.Equal(t, tt.want.Header.Flags.Response, got.Header.Flags.Response)
+			assert.Equal(t, tt.want.Header.Flags.Opcode, got.Header.Flags.Opcode)
+			assert.Equal(t, tt.want.Header.Flags.Authoritative, got.Header.Flags.Authoritative)
+			assert.Equal(t, tt.want.Header.Flags.Truncated, got.Header.Flags.Truncated)
+			assert.Equal(t, tt.want.Header.Flags.RecursionDesired, got.Header.Flags.RecursionDesired)
+			assert.Equal(t, tt.want.Header.Flags.RecursionAvailable, got.Header.Flags.RecursionAvailable)
+			assert.Equal(t, tt.want.Header.Flags.DnssecOk, got.Header.Flags.DnssecOk)
+			assert.Equal(t, tt.want.Header.Flags.AuthenticatedData, got.Header.Flags.AuthenticatedData)
+			assert.Equal(t, tt.want.Header.Flags.CheckingDisabled, got.Header.Flags.CheckingDisabled)
+			assert.Equal(t, tt.want.Header.Flags.ResponseCode, got.Header.Flags.ResponseCode)
+
+			assert.Equal(t, tt.want.Header.QuestionCount, got.Header.QuestionCount)
+			assert.Equal(t, tt.want.Header.AnswerRRCount, got.Header.AnswerRRCount)
+			assert.Equal(t, tt.want.Header.NameserverRRCount, got.Header.NameserverRRCount)
+			assert.Equal(t, tt.want.Header.AdditionalRRCount, got.Header.AdditionalRRCount)
+
+			assert.Equal(t, tt.want.Questions[0].Name, got.Questions[0].Name)
+			assert.Equal(t, tt.want.Questions[0].QClass, got.Questions[0].QClass)
+			assert.Equal(t, tt.want.Questions[0].QType, got.Questions[0].QType)
+
+			assert.Equal(t, tt.want.Answers[0].Name, got.Answers[0].Name)
+			assert.Equal(t, tt.want.Answers[0].RType, got.Answers[0].RType)
+			assert.Equal(t, tt.want.Answers[0].RClass, got.Answers[0].RClass)
+			assert.Equal(t, tt.want.Answers[0].TTL, got.Answers[0].TTL)
+			assert.Equal(t, tt.want.Answers[0].RDLength, got.Answers[0].RDLength)
+			assert.Equal(t, tt.want.Answers[0].RData.Raw, got.Answers[0].RData.Raw)
+			assert.Equal(t, tt.want.Answers[0].RData.Decoded, got.Answers[0].RData.Decoded)
+		})
+	}
+}
 
 // func TestDecodeCompressedDNSMessage(t *testing.T) {
 // 	mockResponse, err := testutils.MockDNSCompressedResponse()
