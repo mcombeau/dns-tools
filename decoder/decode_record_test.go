@@ -31,7 +31,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RDLength: 4,
 				RData: dns.RData{
 					Raw:     []byte{93, 184, 216, 34},
-					Decoded: "",
+					Decoded: "93.184.216.34",
 				},
 			},
 		},
@@ -53,7 +53,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RDLength: 16,
 				RData: dns.RData{
 					Raw:     []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2001:db8::1
-					Decoded: "",
+					Decoded: "2001:db8::1",
 				},
 			},
 		},
@@ -75,7 +75,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RDLength: 13,
 				RData: dns.RData{
 					Raw:     []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, // example.com
-					Decoded: "",
+					Decoded: "example.com.",
 				},
 			},
 		},
@@ -86,7 +86,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				0, 15, // RType: 15 (MX)
 				0, 1, // RClass: 1
 				0, 0, 1, 44, // TTL: 300
-				0, 16, // RDLength: 16
+				0, 20, // RDLength: 16
 				0, 10, // Preference: 10
 				4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RData: mail.example.com
 			},
@@ -95,10 +95,13 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RType:    dns.MX,
 				RClass:   dns.IN,
 				TTL:      300,
-				RDLength: 16,
+				RDLength: 20,
 				RData: dns.RData{
-					Raw:     append([]byte{0, 10}, []byte{4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}...), // preference 10, mail.example.com
-					Decoded: "",
+					Raw: []byte{
+						0, 10,
+						4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+					},
+					Decoded: "10 mail.example.com.",
 				},
 			},
 		},
@@ -113,8 +116,8 @@ func TestDecodeResourceRecord(t *testing.T) {
 			assert.Equal(t, tt.want.RClass, got.RClass)
 			assert.Equal(t, tt.want.TTL, got.TTL)
 			assert.Equal(t, tt.want.RDLength, got.RDLength)
-			// TODO: FIX THIS
-			// assert.Equal(t, tt.want.RData.Raw, got.RData.Raw)
+			assert.Equal(t, tt.want.RData.Raw, got.RData.Raw)
+			assert.Equal(t, tt.want.RData.Decoded, got.RData.Decoded)
 		})
 	}
 }
