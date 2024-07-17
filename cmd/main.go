@@ -20,7 +20,7 @@ func main() {
 	}
 
 	domain := os.Args[1]
-	var questionType uint16
+	questionType := dns.A
 	if len(os.Args) == 3 {
 		questionType = dns.GetCodeFromTypeString(os.Args[2])
 	}
@@ -46,6 +46,8 @@ func main() {
 		log.Fatalf("Failed to encode DNS message: %v\n", err)
 	}
 
+	startTime := time.Now()
+
 	conn, err := net.Dial("udp", dnsServer)
 	if err != nil {
 		log.Fatalf("Failed to connect to DNS server: %v\n", err)
@@ -65,11 +67,13 @@ func main() {
 		log.Fatalf("Failed to read DNS response: %v\n", err)
 	}
 
+	queryTime := time.Since(startTime)
+
 	decodedMessage, err := decoder.DecodeDNSMessage(response[:n])
 	if err != nil {
 		log.Fatalf("Failed to decode DNS response: %v\n", err)
 	}
 
-	fmt.Println("Received DNS response:")
 	printer.PrintDNSMessage(decodedMessage, domain)
+	printer.PrintDNSQueryInfo(dnsServer, queryTime)
 }

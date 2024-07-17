@@ -3,9 +3,16 @@ package printer
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/mcombeau/go-dns-tools/dns"
 )
+
+func PrintDNSQueryInfo(dnsServer string, queryTime time.Duration) {
+	fmt.Printf(";; Query time: %v\n", queryTime)
+	fmt.Printf(";; SERVER: %s\n", dnsServer)
+	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
+}
 
 func PrintDNSMessage(message *dns.Message, query string) {
 	fmt.Printf("; <<>> DNSTool <<>> %s\n", query)
