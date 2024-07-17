@@ -9,7 +9,7 @@ import (
 )
 
 func PrintDNSQueryInfo(dnsServer string, queryTime time.Duration) {
-	fmt.Printf(";; Query time: %v\n", queryTime)
+	fmt.Printf("\n;; Query time: %v\n", queryTime)
 	fmt.Printf(";; SERVER: %s\n", dnsServer)
 	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
 }
