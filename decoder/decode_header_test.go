@@ -1,7 +1,6 @@
 package decoder
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/mcombeau/go-dns-tools/dns"
@@ -98,9 +97,8 @@ func TestDecodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fmt.Printf("tt.want.Response = %t\n", tt.want.Response)
 			got := decodeDNSFlags(tt.bytes)
-			fmt.Printf("got.Response = %t\n", got.Response)
+
 			assert.Equal(t, tt.want.Response, got.Response)
 			assert.Equal(t, tt.want.Opcode, got.Opcode)
 			assert.Equal(t, tt.want.Authoritative, got.Authoritative)
