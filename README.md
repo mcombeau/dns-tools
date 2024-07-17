@@ -1,6 +1,6 @@
-# go-dns-tools
+# dns-tools
 
-A small Golang DNS message toolkit. It includes encoding and decoding functions and is mostly RFC 1035 compliant. It's able to handle compressed DNS messages.
+A small DNS message toolkit in Go. It includes encoding and decoding functions and is mostly RFC 1035 compliant. It's able to handle compressed DNS messages.
 
 It also includes a main which is able to encode and send a DNS question and print the answer in a human-readable dig-like format.
 
