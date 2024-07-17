@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/mcombeau/go-dns-tools/decoder"
-	"github.com/mcombeau/go-dns-tools/dns"
-	"github.com/mcombeau/go-dns-tools/encoder"
-	"github.com/mcombeau/go-dns-tools/printer"
+	"github.com/mcombeau/dns-tools/decoder"
+	"github.com/mcombeau/dns-tools/dns"
+	"github.com/mcombeau/dns-tools/encoder"
+	"github.com/mcombeau/dns-tools/printer"
 )
 
 func main() {

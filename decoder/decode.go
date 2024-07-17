@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mcombeau/go-dns-tools/dns"
+	"github.com/mcombeau/dns-tools/dns"
 )
 
 func DecodeDNSMessage(data []byte) (*dns.Message, error) {

@@ -3,7 +3,7 @@ package encoder
 import (
 	"bytes"
 
-	"github.com/mcombeau/go-dns-tools/dns"
+	"github.com/mcombeau/dns-tools/dns"
 )
 
 func EncodeDNSMessage(msg *dns.Message) ([]byte, error) {

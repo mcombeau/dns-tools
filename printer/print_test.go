@@ -3,7 +3,7 @@ package printer
 import (
 	"testing"
 
-	"github.com/mcombeau/go-dns-tools/dns"
+	"github.com/mcombeau/dns-tools/dns"
 	"github.com/stretchr/testify/assert"
 )
 

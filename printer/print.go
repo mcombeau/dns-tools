@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mcombeau/go-dns-tools/dns"
+	"github.com/mcombeau/dns-tools/dns"
 )
 
 func PrintDNSQueryInfo(dnsServer string, queryTime time.Duration) {

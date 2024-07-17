@@ -1,6 +1,6 @@
 package printer
 
-import "github.com/mcombeau/go-dns-tools/dns"
+import "github.com/mcombeau/dns-tools/dns"
 
 type DNSType uint16
 

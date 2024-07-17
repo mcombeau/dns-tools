@@ -3,8 +3,8 @@ package encoder
 import (
 	"bytes"
 
-	"github.com/mcombeau/go-dns-tools/dns"
-	"github.com/mcombeau/go-dns-tools/utils"
+	"github.com/mcombeau/dns-tools/dns"
+	"github.com/mcombeau/dns-tools/utils"
 )
 
 func encodeDNSQuestion(buf *bytes.Buffer, question dns.Question) {

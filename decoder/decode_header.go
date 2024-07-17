@@ -3,8 +3,8 @@ package decoder
 import (
 	"errors"
 
-	"github.com/mcombeau/go-dns-tools/dns"
-	"github.com/mcombeau/go-dns-tools/utils"
+	"github.com/mcombeau/dns-tools/dns"
+	"github.com/mcombeau/dns-tools/utils"
 )
 
 // DNS Header is 12 bytes long
