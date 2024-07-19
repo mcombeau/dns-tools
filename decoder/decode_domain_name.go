@@ -36,7 +36,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			break
 		}
 		// check if the first two bits are 1s, indicating a pointer
-		if lenLabel&0b11000000 == 0b11000000 {
+		if lenLabel == 0b11000000 {
 			if !jumped {
 				pointerOffset = offset + 2
 			}
