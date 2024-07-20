@@ -17,45 +17,45 @@ const (
 	DSOTYPENI uint16 = 11 // DSO-TYPE Not Implemented [RFC8490]
 	BADVERS   uint16 = 16 // Bad OPT Version [RFC6891]
 	// BADSIG      uint16 = 16 // TSIG Signature Failure [RFC8945] // BADVERS more common, so ignoring this for now
-	BADKEY      uint16 = 17 // Key not recognized [RFC8945]
-	BADTIME     uint16 = 18 // Signature out of time window [RFC8945]
-	BADMODE     uint16 = 19 // Bad TKEY Mode [RFC2930]
-	BADNAME     uint16 = 20 // Duplicate key name [RFC2930]
-	BADALG      uint16 = 21 // Algorithm not supported [RFC2930]
-	BADTRUNC    uint16 = 22 // Bad Truncation [RFC8945]
-	BADCOOKIE   uint16 = 23 // Bad/missing Server Cookie [RFC7873]
-	UNASSIGNED1 uint16 = 12 // Unassigned
-	UNASSIGNED2 uint16 = 13 // Unassigned
-	UNASSIGNED3 uint16 = 14 // Unassigned
-	UNASSIGNED4 uint16 = 15 // Unassigned
+	BADKEY    uint16 = 17 // Key not recognized [RFC8945]
+	BADTIME   uint16 = 18 // Signature out of time window [RFC8945]
+	BADMODE   uint16 = 19 // Bad TKEY Mode [RFC2930]
+	BADNAME   uint16 = 20 // Duplicate key name [RFC2930]
+	BADALG    uint16 = 21 // Algorithm not supported [RFC2930]
+	BADTRUNC  uint16 = 22 // Bad Truncation [RFC8945]
+	BADCOOKIE uint16 = 23 // Bad/missing Server Cookie [RFC7873]
+	// UNASSIGNED1 uint16 = 12 // Unassigned
+	// UNASSIGNED2 uint16 = 13 // Unassigned
+	// UNASSIGNED3 uint16 = 14 // Unassigned
+	// UNASSIGNED4 uint16 = 15 // Unassigned
 )
 
 var dnsResponseCodeNames = map[uint16]string{
-	NOERROR:   "No Error",
-	FORMERR:   "Format Error",
-	SERVFAIL:  "Server Failure",
-	NXDOMAIN:  "Non-Existent Domain",
-	NOTIMP:    "Not Implemented",
-	REFUSED:   "Query Refused",
-	YXDOMAIN:  "Name Exists when it should not",
-	YXRRSET:   "RR Set Exists when it should not",
-	NXRRSET:   "RR Set that should exist does not",
-	NOTAUTH:   "Not Authorized",
-	NOTZONE:   "Name not contained in zone",
-	DSOTYPENI: "DSO-TYPE Not Implemented",
-	BADVERS:   "Bad OPT Version",
-	// BADSIG:      "TSIG Signature Failure",
-	BADKEY:      "Key not recognized",
-	BADTIME:     "Signature out of time window",
-	BADMODE:     "Bad TKEY Mode",
-	BADNAME:     "Duplicate key name",
-	BADALG:      "Algorithm not supported",
-	BADTRUNC:    "Bad Truncation",
-	BADCOOKIE:   "Bad/missing Server Cookie",
-	UNASSIGNED1: "Unassigned",
-	UNASSIGNED2: "Unassigned",
-	UNASSIGNED3: "Unassigned",
-	UNASSIGNED4: "Unassigned",
+	NOERROR:   "NOERROR",
+	FORMERR:   "FORMERR",
+	SERVFAIL:  "SERVFAIL",
+	NXDOMAIN:  "NXDOMAIN",
+	NOTIMP:    "NOTIMP",
+	REFUSED:   "REFUSEd",
+	YXDOMAIN:  "YXDOMAIN",
+	YXRRSET:   "YXRRSET",
+	NXRRSET:   "NXRRSET",
+	NOTAUTH:   "NOTAUTH",
+	NOTZONE:   "NOTZONE",
+	DSOTYPENI: "DSOTYPENI",
+	BADVERS:   "BADVERS",
+	// BADSIG:      "BADSIG",
+	BADKEY:    "BADKEY",
+	BADTIME:   "BADTIME",
+	BADMODE:   "BADMODE",
+	BADNAME:   "BADNAME",
+	BADALG:    "BADALG",
+	BADTRUNC:  "BADTRUNC",
+	BADCOOKIE: "BADCOOKIE",
+	// UNASSIGNED1: "Unassigned",
+	// UNASSIGNED2: "Unassigned",
+	// UNASSIGNED3: "Unassigned",
+	// UNASSIGNED4: "Unassigned",
 }
 
 func (rc DNSRCode) String() string {
