@@ -5,6 +5,27 @@ import (
 	"errors"
 )
 
+// Header section format
+// The header contains the following fields:
+
+//                                     1  1  1  1  1  1
+//       0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |                      ID                       |
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   | <- flags
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |                    QDCOUNT                    |
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |                    ANCOUNT                    |
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |                    NSCOUNT                    |
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+//     |                    ARCOUNT                    |
+//     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+// Header is 12 bytes long
+
 type Header struct {
 	Id                uint16
 	Flags             Flags
@@ -26,8 +47,6 @@ type Flags struct {
 	CheckingDisabled   bool // RFC 4035
 	ResponseCode       uint16
 }
-
-// DNS Header is 12 bytes long
 
 func decodeHeader(data []byte) (*Header, error) {
 	if len(data) < 12 {

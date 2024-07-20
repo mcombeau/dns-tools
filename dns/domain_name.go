@@ -15,10 +15,17 @@ Domain names are also sometimes compressed, meaning they are declared once
 in the questions section and in the answers section there is a pointer to the
 question section rather than a duplicate of the domain name.
 
-0x192 (0b11000000) indicates that the following is a pointer, here to the 12th byte
-which is right after the header (question section domain name field):
+From RFC1035:
+The pointer takes the form of a two octet sequence:
 
-[192, 12]
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+| 1  1|                OFFSET                   |
++--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
+The first two bits are ones.  This allows a pointer to be distinguished
+from a label, since the label must begin with two zero bits because
+labels are restricted to 63 octets or less.  (The 10 and 01 combinations
+are reserved for future use.)
 */
 
 func decodeDomainName(data []byte, offset int) (string, int, error) {
@@ -32,20 +39,41 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			return "", 0, errors.New("offset out of bounds")
 		}
 
-		lenLabel := int(data[offset])
+		labelIndicator := int(data[offset]) // Read the label length or pointer indicator
 
-		if lenLabel == 0 {
+		if labelIndicator == 0 {
+			// we've reached the end of the domain name
 			offset++
 			name += "." // for the root domain
 			break
 		}
-		// check if the first two bits are 1s, indicating a pointer
-		if lenLabel == 0b11000000 {
+
+		if labelIndicator&0b11000000 == 0b11000000 {
+			// This label indicator byte is a pointer, not a length
+			// This means we have to jump to another part of the message
+
+			// We know this because the first two bits are 1:
+			// labelIndicator = 0b11000011
+			// mask			  = 0b11000000
+			// &			  = 0b11000000
+
 			if !jumped {
+				// Save the current offset if we haven't jumped yet
 				pointerOffset = offset + 2
 			}
 
-			newOffset := int(lenLabel&^0b11000000)<<8 | int(data[offset+1])
+			// Calculate the new offset we have to jump to:
+			// The pointer consists of two bytes:
+			// The first byte has its first two bits set to 11, and the remaining 6 bits are the high-order bits of the 14-bit offset.
+			// The second byte contains the low-order bits of the 14-bit offset.
+
+			// labelIndicator	=			11000011
+			// mask				= 			11000000
+			// &^				= 			00000011
+			// << 8				= 00000011	00000000
+			// data[offset+1]	= 00000000	10001010
+			// |				= 00000011	10001010 <- new offset
+			newOffset := int(labelIndicator&^0b11000000)<<8 | int(data[offset+1])
 
 			if newOffset >= len(data) {
 				return "", 0, errors.New("pointer offset out of bounds")
@@ -55,18 +83,21 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			jumped = true
 
 		} else {
+			// Normal label, not a pointer:
+			//labelIndicator indicates the length of the label
 			offset++
 
 			if len(name) > 0 {
 				name += "."
 			}
 
-			if offset+lenLabel > len(data) {
+			if offset+labelIndicator > len(data) {
 				return "", 0, errors.New("label length at offset out of bounds")
 			}
 
-			name += string(data[offset : offset+lenLabel])
-			offset += lenLabel
+			// Add label to domain name
+			name += string(data[offset : offset+labelIndicator])
+			offset += labelIndicator // Move to the next label
 		}
 	}
 
