@@ -2,10 +2,10 @@ package encoder
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeResourceRecord(t *testing.T) {
@@ -109,7 +109,14 @@ func TestEncodeResourceRecord(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
 			encodeDNSResourceRecord(&buf, tt.rr)
-			assert.Equal(t, tt.want, buf.Bytes())
+			got := buf.Bytes()
+
+			if len(got) != len(tt.want) {
+				t.Errorf("encodeDNSResourceRecord() bytes length got = %d, want = %d\n", len(got), len(tt.want))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeDNSResourceRecord() bytes\n\tgot = %v,\n\twant = %v\n", got, tt.want)
+			}
 		})
 	}
 }

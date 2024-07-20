@@ -1,14 +1,14 @@
 package encoder
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/stretchr/testify/assert"
 )
 
-func MockDNSQuery() *dns.Message {
-	return &dns.Message{
+func TestEncodeDNSMessage(t *testing.T) {
+	message := dns.Message{
 		Header: &dns.Header{
 			Id:            1234,
 			Flags:         &dns.Flags{RecursionDesired: true},
@@ -22,10 +22,6 @@ func MockDNSQuery() *dns.Message {
 			},
 		},
 	}
-}
-
-func TestEncodeDNSMessage(t *testing.T) {
-	message := MockDNSQuery()
 	want := []byte{
 		0x04, 0xd2, // ID bytes
 		0x01, 0x00, // Flags: recursion desired
@@ -41,10 +37,15 @@ func TestEncodeDNSMessage(t *testing.T) {
 		0x00, 0x01, // QCLASS: 1 (IN)
 	}
 
-	got, err := EncodeDNSMessage(message)
+	got, err := EncodeDNSMessage(&message)
 
-	assert.NoError(t, err)
-
-	assert.Equal(t, len(want), len(got))
-	assert.Equal(t, want, got)
+	if err != nil {
+		t.Fatalf("encodeDNSMessage() unexpected error = %v\n", err)
+	}
+	if len(got) != len(want) {
+		t.Errorf("encodeDNSMessage() bytes length got = %d, want = %d\n", len(got), len(want))
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("encodeDNSMessage() bytes\n\tgot = %v,\n\twant = %v\n", got, want)
+	}
 }

@@ -2,21 +2,21 @@ package encoder
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeFlags(t *testing.T) {
 	tests := []struct {
-		name  string
-		flags *dns.Flags
-		want  []byte
+		name string
+		data *dns.Flags
+		want []byte
 	}{
 		{
 			name: "All flags off",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      false,
@@ -32,7 +32,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Response flag on",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           true,
 				Opcode:             0,
 				Authoritative:      false,
@@ -48,7 +48,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Opcode set to 2",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           false,
 				Opcode:             2,
 				Authoritative:      false,
@@ -64,7 +64,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Authoritative flag on",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      true,
@@ -80,7 +80,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Multiple flags on",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           true,
 				Opcode:             2,
 				Authoritative:      true,
@@ -98,8 +98,14 @@ func TestEncodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := encodeDNSFlags(tt.flags)
-			assert.Equal(t, tt.want, result)
+			got := encodeDNSFlags(tt.data)
+
+			if len(got) != len(tt.want) {
+				t.Errorf("encodeDNSFlags() bytes length got = %d, want = %d\n", len(got), len(tt.want))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeDNSFlags() bytes got = %v, want = %v\n", got, tt.want)
+			}
 		})
 	}
 }
@@ -107,12 +113,12 @@ func TestEncodeFlags(t *testing.T) {
 func TestEncodeDNSHeader(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *dns.Message
+		data *dns.Message
 		want []byte
 	}{
 		{
 			name: "Basic header encoding",
-			msg: &dns.Message{
+			data: &dns.Message{
 				Header: &dns.Header{
 					Id: 1234,
 					Flags: &dns.Flags{
@@ -148,7 +154,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 		},
 		{
 			name: "RecursionAvailable flag on",
-			msg: &dns.Message{
+			data: &dns.Message{
 				Header: &dns.Header{
 					Id: 1234,
 					Flags: &dns.Flags{
@@ -187,8 +193,15 @@ func TestEncodeDNSHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var buf bytes.Buffer
-			encodeDNSHeader(&buf, tt.msg)
-			assert.Equal(t, tt.want, buf.Bytes())
+			encodeDNSHeader(&buf, tt.data)
+			got := buf.Bytes()
+
+			if len(got) != len(tt.want) {
+				t.Errorf("encodeDNSHeader() bytes length got = %d, want = %d\n", len(got), len(tt.want))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeDNSHeader() bytes\n\tgot = %v,\n\twant = %v\n", got, tt.want)
+			}
 		})
 	}
 }

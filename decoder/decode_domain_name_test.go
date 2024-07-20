@@ -1,10 +1,6 @@
 package decoder
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-)
+import "testing"
 
 func TestDecodeDomainName(t *testing.T) {
 	tests := []struct {
@@ -87,10 +83,15 @@ func TestDecodeDomainName(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			gotString, gotOffsetIncrement, err := decodeDomainName(test.data, test.offset)
 
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.wantString, gotString)
-			assert.Equal(t, test.wantOffsetIncrement, gotOffsetIncrement)
+			if err != nil {
+				t.Fatalf("decodeDomainName() error = %v, data = %v, offset = %d\n", err, test.data, test.offset)
+			}
+			if gotString != test.wantString {
+				t.Errorf("decodeDomainName() string got = %s, want = %s, data = %v, offset = %d\n", gotString, test.wantString, test.data, test.offset)
+			}
+			if gotOffsetIncrement != test.wantOffsetIncrement {
+				t.Errorf("decodeDomainName() offset got = %d, want = %d, data = %v, offset = %d\n", gotOffsetIncrement, test.wantOffsetIncrement, test.data, test.offset)
+			}
 		})
 	}
 }

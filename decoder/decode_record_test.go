@@ -1,21 +1,21 @@
 package decoder
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDecodeResourceRecord(t *testing.T) {
 	tests := []struct {
-		name  string
-		bytes []byte
-		want  dns.ResourceRecord
+		name string
+		data []byte
+		want dns.ResourceRecord
 	}{
 		{
 			name: "A record",
-			bytes: []byte{
+			data: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
 				0, 1, // RType: 1
 				0, 1, // RClass: 1
@@ -37,7 +37,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 		},
 		{
 			name: "AAAA record",
-			bytes: []byte{
+			data: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
 				0, 28, // RType: 28 (AAAA)
 				0, 1, // RClass: 1
@@ -59,7 +59,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 		},
 		{
 			name: "CNAME record",
-			bytes: []byte{
+			data: []byte{
 				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
 				0, 5, // RType: 5 (CNAME)
 				0, 1, // RClass: 1
@@ -81,7 +81,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 		},
 		{
 			name: "MX record",
-			bytes: []byte{
+			data: []byte{
 				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
 				0, 15, // RType: 15 (MX)
 				0, 1, // RClass: 1
@@ -109,15 +109,37 @@ func TestDecodeResourceRecord(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := decodeDNSResourceRecord(tt.bytes, 0)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want.Name, got.Name)
-			assert.Equal(t, tt.want.RType, got.RType)
-			assert.Equal(t, tt.want.RClass, got.RClass)
-			assert.Equal(t, tt.want.TTL, got.TTL)
-			assert.Equal(t, tt.want.RDLength, got.RDLength)
-			assert.Equal(t, tt.want.RData.Raw, got.RData.Raw)
-			assert.Equal(t, tt.want.RData.Decoded, got.RData.Decoded)
+			got, _, err := decodeDNSResourceRecord(tt.data, 0)
+
+			if err != nil {
+				t.Fatalf("decodeDNSResourceRecord() error = %v, data = %v\n", err, tt.data)
+			}
+
+			assertRessourceRecord(t, got, &tt.want, tt.data)
 		})
+	}
+}
+
+func assertRessourceRecord(t *testing.T, got *dns.ResourceRecord, want *dns.ResourceRecord, data []byte) {
+	if got.Name != want.Name {
+		t.Errorf("decodeDNSResourceRecord() Name got = %s, want = %s, data = %v\n", got.Name, want.Name, data)
+	}
+	if got.RType != want.RType {
+		t.Errorf("decodeDNSResourceRecord() RType got = %d, want = %d, data = %v\n", got.RType, want.RType, data)
+	}
+	if got.RClass != want.RClass {
+		t.Errorf("decodeDNSResourceRecord() RClass got = %d, want = %d, data = %v\n", got.RClass, want.RClass, data)
+	}
+	if got.TTL != want.TTL {
+		t.Errorf("decodeDNSResourceRecord() TTL got = %d, want = %d, data = %v\n", got.TTL, want.TTL, data)
+	}
+	if got.RDLength != want.RDLength {
+		t.Errorf("decodeDNSResourceRecord() RDLength got = %d, want = %d, data = %v\n", got.RDLength, want.RDLength, data)
+	}
+	if !reflect.DeepEqual(got.RData.Raw, want.RData.Raw) {
+		t.Errorf("decodeDNSResourceRecord() RData Raw got = %v, want = %v, data = %v\n", got.RData.Raw, want.RData.Raw, data)
+	}
+	if got.RData.Decoded != want.RData.Decoded {
+		t.Errorf("decodeDNSResourceRecord() RData decoded got = %s, want = %s, data = %v\n", got.RData.Decoded, want.RData.Decoded, data)
 	}
 }

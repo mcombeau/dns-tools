@@ -4,18 +4,17 @@ import (
 	"testing"
 
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestGetFlagString(t *testing.T) {
 	tests := []struct {
-		name  string
-		flags *dns.Flags
-		want  string
+		name string
+		data *dns.Flags
+		want string
 	}{
 		{
 			name: "No flags set",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           false,
 				Authoritative:      false,
 				Truncated:          false,
@@ -29,7 +28,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "QR flag set",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           true,
 				Authoritative:      false,
 				Truncated:          false,
@@ -43,7 +42,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "AA flag set",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           false,
 				Authoritative:      true,
 				Truncated:          false,
@@ -57,7 +56,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "All flags set",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           true,
 				Authoritative:      true,
 				Truncated:          true,
@@ -71,7 +70,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "Mixed flags set",
-			flags: &dns.Flags{
+			data: &dns.Flags{
 				Response:           true,
 				Authoritative:      false,
 				Truncated:          true,
@@ -87,8 +86,11 @@ func TestGetFlagString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getFlagString(tt.flags)
-			assert.Equal(t, tt.want, result)
+			got := getFlagString(tt.data)
+
+			if got != tt.want {
+				t.Errorf("getFlagString() got = %s, want = %s\n", got, tt.want)
+			}
 		})
 	}
 }
