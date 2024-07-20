@@ -1,6 +1,10 @@
-package decoder
+package dns
 
-import "errors"
+import (
+	"bytes"
+	"errors"
+	"strings"
+)
 
 /*
 Domain name in DNS encoded with labels, each label prefixed with length:
@@ -70,4 +74,18 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 		return name, offset - originalOffset, nil
 	}
 	return name, pointerOffset - originalOffset, nil
+}
+
+func encodeDomainName(buf *bytes.Buffer, name string) {
+	parts := strings.Split(name, ".")
+
+	for _, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+		buf.WriteByte(byte(len(part)))
+		buf.WriteString(part)
+	}
+
+	buf.WriteByte(0)
 }

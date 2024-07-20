@@ -1,26 +1,40 @@
-package decoder
+package dns
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
-	"github.com/mcombeau/dns-tools/dns"
 	"github.com/mcombeau/dns-tools/utils"
 )
 
-func decodeDNSResourceRecord(data []byte, offset int) (*dns.ResourceRecord, int, error) {
+type ResourceRecord struct {
+	Name     string
+	RType    uint16
+	RClass   uint16
+	TTL      uint32
+	RDLength uint16
+	RData    RData
+}
+
+type RData struct {
+	Raw     []byte
+	Decoded string
+}
+
+func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return &dns.ResourceRecord{}, 0, err
+		return &ResourceRecord{}, 0, err
 	}
 
 	offset += newOffset
 
 	if len(data) < offset+10 {
-		return &dns.ResourceRecord{}, 0, errors.New("invalid DNS resource record")
+		return &ResourceRecord{}, 0, errors.New("invalid DNS resource record")
 	}
 	rtype := utils.DecodeUint16(data, offset)
 	rclass := utils.DecodeUint16(data, offset+2)
@@ -29,12 +43,12 @@ func decodeDNSResourceRecord(data []byte, offset int) (*dns.ResourceRecord, int,
 	offset += 10
 
 	if len(data) < offset+int(rdlength) {
-		return &dns.ResourceRecord{}, 0, errors.New("invalid DNS resource record RDATA length")
+		return &ResourceRecord{}, 0, errors.New("invalid DNS resource record RDATA length")
 	}
 
 	rdata := decodeRData(data, rtype, offset, int(rdlength))
 
-	record := dns.ResourceRecord{
+	record := ResourceRecord{
 		Name:     name,
 		RType:    rtype,
 		RClass:   rclass,
@@ -48,26 +62,26 @@ func decodeDNSResourceRecord(data []byte, offset int) (*dns.ResourceRecord, int,
 	return &record, offset, nil
 }
 
-func decodeRData(data []byte, rtype uint16, offset int, length int) *dns.RData {
-	rdata := dns.RData{
+func decodeRData(data []byte, rtype uint16, offset int, length int) *RData {
+	rdata := RData{
 		Raw:     data[offset : offset+length],
 		Decoded: "",
 	}
 
 	switch rtype {
-	case dns.A, dns.AAAA:
+	case A, AAAA:
 		rdata.Decoded = decodeA(data, offset, offset+length)
 
-	case dns.CNAME, dns.PTR, dns.NS:
+	case CNAME, PTR, NS:
 		rdata.Decoded = decodeCNAME(data, offset)
 
-	case dns.MX:
+	case MX:
 		rdata.Decoded = decodeMX(data, offset)
 
-	case dns.TXT:
+	case TXT:
 		rdata.Decoded = decodeTXT(data, offset, offset+length)
 
-	case dns.SOA:
+	case SOA:
 		rdata.Decoded = decodeSOA(data, offset)
 
 	default:
@@ -160,4 +174,13 @@ func decodeSOA(data []byte, offset int) string {
 	soa = append(soa, strconv.Itoa(minimum))
 
 	return strings.Join(soa, " ")
+}
+
+func encodeResourceRecord(buf *bytes.Buffer, rr ResourceRecord) {
+	encodeDomainName(buf, rr.Name)
+	buf.Write(utils.EncodeUint16(rr.RType))
+	buf.Write(utils.EncodeUint16(rr.RClass))
+	buf.Write(utils.EncodeUint32(rr.TTL))
+	buf.Write(utils.EncodeUint16(rr.RDLength))
+	buf.Write(rr.RData.Raw)
 }
