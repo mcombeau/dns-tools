@@ -3,8 +3,6 @@ package dns
 import (
 	"bytes"
 	"errors"
-
-	"github.com/mcombeau/dns-tools/utils"
 )
 
 type Question struct {
@@ -27,8 +25,8 @@ func decodeQuestion(data []byte, offset int) (*Question, int, error) {
 
 	question := Question{
 		Name:   name,
-		QType:  utils.DecodeUint16(data, offset),
-		QClass: utils.DecodeUint16(data, offset+2),
+		QType:  decodeUint16(data, offset),
+		QClass: decodeUint16(data, offset+2),
 	}
 
 	return &question, offset + 4, nil
@@ -36,6 +34,6 @@ func decodeQuestion(data []byte, offset int) (*Question, int, error) {
 
 func encodeQuestion(buf *bytes.Buffer, question Question) {
 	encodeDomainName(buf, question.Name)
-	buf.Write(utils.EncodeUint16(question.QType))
-	buf.Write(utils.EncodeUint16(question.QClass))
+	buf.Write(encodeUint16(question.QType))
+	buf.Write(encodeUint16(question.QClass))
 }

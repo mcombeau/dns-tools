@@ -7,8 +7,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/mcombeau/dns-tools/utils"
 )
 
 type ResourceRecord struct {
@@ -36,10 +34,10 @@ func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error)
 	if len(data) < offset+10 {
 		return &ResourceRecord{}, 0, errors.New("invalid DNS resource record")
 	}
-	rtype := utils.DecodeUint16(data, offset)
-	rclass := utils.DecodeUint16(data, offset+2)
-	ttl := utils.DecodeUint32(data, offset+4)
-	rdlength := utils.DecodeUint16(data, offset+8)
+	rtype := decodeUint16(data, offset)
+	rclass := decodeUint16(data, offset+2)
+	ttl := decodeUint32(data, offset+4)
+	rdlength := decodeUint16(data, offset+8)
 	offset += 10
 
 	if len(data) < offset+int(rdlength) {
@@ -117,7 +115,7 @@ func decodeCNAME(data []byte, offset int) string {
 // PREFERENCE:	A 16 bit integer which specifies the preference given to this RR among others at the same owner.  Lower values are preferred.
 // EXCHANGE:	A <domain-name> which specifies a host willing to act as a mail exchange for the owner name.
 func decodeMX(data []byte, offset int) string {
-	preference := utils.DecodeUint16(data, offset)
+	preference := decodeUint16(data, offset)
 
 	domainName, _, err := decodeDomainName(data, offset+2)
 	if err != nil {
@@ -158,19 +156,19 @@ func decodeSOA(data []byte, offset int) string {
 	offset += newoffset
 	soa = append(soa, rname)
 
-	serial := int(utils.DecodeUint32(data, offset))
+	serial := int(decodeUint32(data, offset))
 	soa = append(soa, strconv.Itoa(serial))
 
-	refresh := int(utils.DecodeUint32(data, offset+4))
+	refresh := int(decodeUint32(data, offset+4))
 	soa = append(soa, strconv.Itoa(refresh))
 
-	retry := int(utils.DecodeUint32(data, offset+8))
+	retry := int(decodeUint32(data, offset+8))
 	soa = append(soa, strconv.Itoa(retry))
 
-	expire := int(utils.DecodeUint32(data, offset+12))
+	expire := int(decodeUint32(data, offset+12))
 	soa = append(soa, strconv.Itoa(expire))
 
-	minimum := int(utils.DecodeUint32(data, offset+16))
+	minimum := int(decodeUint32(data, offset+16))
 	soa = append(soa, strconv.Itoa(minimum))
 
 	return strings.Join(soa, " ")
@@ -178,9 +176,9 @@ func decodeSOA(data []byte, offset int) string {
 
 func encodeResourceRecord(buf *bytes.Buffer, rr ResourceRecord) {
 	encodeDomainName(buf, rr.Name)
-	buf.Write(utils.EncodeUint16(rr.RType))
-	buf.Write(utils.EncodeUint16(rr.RClass))
-	buf.Write(utils.EncodeUint32(rr.TTL))
-	buf.Write(utils.EncodeUint16(rr.RDLength))
+	buf.Write(encodeUint16(rr.RType))
+	buf.Write(encodeUint16(rr.RClass))
+	buf.Write(encodeUint32(rr.TTL))
+	buf.Write(encodeUint16(rr.RDLength))
 	buf.Write(rr.RData.Raw)
 }

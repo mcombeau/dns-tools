@@ -3,8 +3,6 @@ package dns
 import (
 	"bytes"
 	"errors"
-
-	"github.com/mcombeau/dns-tools/utils"
 )
 
 type Header struct {
@@ -43,12 +41,12 @@ func DecodeHeader(data []byte) (*Header, error) {
 	}
 
 	header := Header{
-		Id:                utils.DecodeUint16(data, 0),
+		Id:                decodeUint16(data, 0),
 		Flags:             decodeFlags(data[2:4]),
-		QuestionCount:     utils.DecodeUint16(data, 4),
-		AnswerRRCount:     utils.DecodeUint16(data, 6),
-		NameserverRRCount: utils.DecodeUint16(data, 8),
-		AdditionalRRCount: utils.DecodeUint16(data, 10),
+		QuestionCount:     decodeUint16(data, 4),
+		AnswerRRCount:     decodeUint16(data, 6),
+		NameserverRRCount: decodeUint16(data, 8),
+		AdditionalRRCount: decodeUint16(data, 10),
 	}
 
 	return &header, nil
@@ -83,12 +81,12 @@ func decodeFlags(data []byte) *Flags {
 }
 
 func encodeHeader(buf *bytes.Buffer, msg *Message) {
-	buf.Write(utils.EncodeUint16(msg.Header.Id))
+	buf.Write(encodeUint16(msg.Header.Id))
 	buf.Write(encodeFlags(msg.Header.Flags))
-	buf.Write(utils.EncodeUint16(msg.Header.QuestionCount))
-	buf.Write(utils.EncodeUint16(msg.Header.AnswerRRCount))
-	buf.Write(utils.EncodeUint16(msg.Header.NameserverRRCount))
-	buf.Write(utils.EncodeUint16(msg.Header.AdditionalRRCount))
+	buf.Write(encodeUint16(msg.Header.QuestionCount))
+	buf.Write(encodeUint16(msg.Header.AnswerRRCount))
+	buf.Write(encodeUint16(msg.Header.NameserverRRCount))
+	buf.Write(encodeUint16(msg.Header.AdditionalRRCount))
 }
 
 func encodeFlags(flags *Flags) []byte {
