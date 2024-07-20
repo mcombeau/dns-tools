@@ -96,11 +96,6 @@ func printResourceRecord(records []ResourceRecord, title string) {
 		fmt.Printf("%d\t", record.TTL)
 		fmt.Printf("%s\t", DNSClass(record.RClass).String())
 		fmt.Printf("%s\t", DNSType(record.RType).String())
-
-		if record.RData.Decoded == "" {
-			fmt.Printf("%v (Raw data)\n", record.RData.Raw)
-		} else {
-			fmt.Printf("%s\n", record.RData.Decoded)
-		}
+		fmt.Printf("%s\n", record.RData.String())
 	}
 }

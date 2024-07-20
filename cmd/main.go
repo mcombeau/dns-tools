@@ -66,6 +66,8 @@ func main() {
 
 	queryTime := time.Since(startTime)
 
+	//TODO: if truncated flag, retry TCP mode
+	// ex. google.com TXT (it's looooong)
 	decodedMessage, err := dns.DecodeMessage(response[:n])
 	if err != nil {
 		log.Fatalf("Failed to decode DNS response: %v\n", err)

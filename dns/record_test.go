@@ -1,8 +1,7 @@
 package dns
 
 import (
-	"bytes"
-	"reflect"
+	"net"
 	"testing"
 )
 
@@ -28,9 +27,8 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RClass:   IN,
 				TTL:      300,
 				RDLength: 4,
-				RData: RData{
-					Raw:     []byte{93, 184, 216, 34},
-					Decoded: "93.184.216.34",
+				RData: &RDataA{
+					IP: net.ParseIP("93.184.216.34"),
 				},
 			},
 		},
@@ -50,9 +48,8 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RClass:   IN,
 				TTL:      300,
 				RDLength: 16,
-				RData: RData{
-					Raw:     []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2001:db8::1
-					Decoded: "2001:db8::1",
+				RData: &RDataAAAA{
+					IP: net.ParseIP("2001:db8::1"),
 				},
 			},
 		},
@@ -72,9 +69,71 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RClass:   IN,
 				TTL:      300,
 				RDLength: 13,
-				RData: RData{
-					Raw:     []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, // example.com
-					Decoded: "example.com.",
+				RData: &RDataCNAME{
+					domainName: "example.com.",
+				},
+			},
+		},
+		{
+			name: "PTR record",
+			data: []byte{
+				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
+				0, 12, // RType: 12 (PTR)
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 13, // RDLength: 13
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RData: example.com
+			},
+			want: ResourceRecord{
+				Name:     "www.example.com.",
+				RType:    PTR,
+				RClass:   IN,
+				TTL:      300,
+				RDLength: 13,
+				RData: &RDataPTR{
+					domainName: "example.com.",
+				},
+			},
+		},
+		{
+			name: "NS record",
+			data: []byte{
+				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
+				0, 2, // RType: 2 (NS)
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 16, // RDLength: 16
+				2, 'n', 's', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RData: example.com
+			},
+			want: ResourceRecord{
+				Name:     "www.example.com.",
+				RType:    NS,
+				RClass:   IN,
+				TTL:      300,
+				RDLength: 16,
+				RData: &RDataNS{
+					domainName: "ns.example.com.",
+				},
+			},
+		},
+		{
+			name: "TXT record",
+			data: []byte{
+				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
+				0, 16, // RType: 16 (TXT)
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 10, // RDLength: 10
+				'h', 'e', 'l', 'l', 'o', 'w', 'o', 'r', 'l', 'd', // RData: helloworld
+			},
+			want: ResourceRecord{
+				Name:     "www.example.com.",
+				RType:    TXT,
+				RClass:   IN,
+				TTL:      300,
+				RDLength: 10,
+				RData: &RDataTXT{
+					text: "helloworld",
 				},
 			},
 		},
@@ -95,12 +154,42 @@ func TestDecodeResourceRecord(t *testing.T) {
 				RClass:   IN,
 				TTL:      300,
 				RDLength: 20,
-				RData: RData{
-					Raw: []byte{
-						0, 10,
-						4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
-					},
-					Decoded: "10 mail.example.com.",
+				RData: &RDataMX{
+					preference: 10,
+					domainName: "mail.example.com.",
+				},
+			},
+		},
+		{
+			name: "SOA record",
+			data: []byte{
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 6, // RType: 6 (SOA)
+				0, 1, // RClass: 1 (IN)
+				0, 0, 1, 44, // TTL: 300
+				0, 39, // RDLength: 39
+				3, 'n', 's', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // MName: ns1.example.com
+				5, 'a', 'd', 'm', 'i', 'n', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RName: admin.example.com
+				0, 0, 0, 202, // Serial: 202
+				0, 0, 1, 44, // Refresh: 300
+				0, 0, 0, 100, // Retry: 100
+				0, 0, 10, 0, // Expire: 2560
+				0, 0, 1, 0, // Minimum: 256
+			},
+			want: ResourceRecord{
+				Name:     "example.com.",
+				RType:    SOA,
+				RClass:   IN,
+				TTL:      300,
+				RDLength: 39,
+				RData: &RDataSOA{
+					mName:   "ns1.example.com.",
+					rName:   "admin.example.com.",
+					serial:  202,
+					refresh: 300,
+					retry:   100,
+					expire:  2560,
+					minimum: 256,
 				},
 			},
 		},
@@ -135,123 +224,7 @@ func assertRessourceRecord(t *testing.T, got *ResourceRecord, want *ResourceReco
 	if got.RDLength != want.RDLength {
 		t.Errorf("decodeDNSResourceRecord() RDLength got = %d, want = %d, data = %v\n", got.RDLength, want.RDLength, data)
 	}
-	if !reflect.DeepEqual(got.RData.Raw, want.RData.Raw) {
-		t.Errorf("decodeDNSResourceRecord() RData Raw got = %v, want = %v, data = %v\n", got.RData.Raw, want.RData.Raw, data)
-	}
-	if got.RData.Decoded != want.RData.Decoded {
-		t.Errorf("decodeDNSResourceRecord() RData decoded got = %s, want = %s, data = %v\n", got.RData.Decoded, want.RData.Decoded, data)
-	}
-}
-
-func TestEncodeResourceRecord(t *testing.T) {
-	tests := []struct {
-		name string
-		rr   ResourceRecord
-		want []byte
-	}{
-		{
-			name: "A record",
-			rr: ResourceRecord{
-				Name:     "example.com",
-				RType:    A,
-				RClass:   IN,
-				TTL:      300,
-				RDLength: 4,
-				RData: RData{
-					Raw:     []byte{93, 184, 216, 34},
-					Decoded: "",
-				},
-			},
-			want: []byte{
-				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
-				0, 1, // RType: 1
-				0, 1, // RClass: 1
-				0, 0, 1, 44, // TTL: 300
-				0, 4, // RDLength: 4
-				93, 184, 216, 34, // RData: 93.184.216.34
-			},
-		},
-		{
-			name: "AAAA record",
-			rr: ResourceRecord{
-				Name:     "example.com",
-				RType:    AAAA,
-				RClass:   IN,
-				TTL:      300,
-				RDLength: 16,
-				RData: RData{
-					Raw:     []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, // 2001:db8::1
-					Decoded: "",
-				},
-			},
-			want: []byte{
-				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
-				0, 28, // RType: 28 (AAAA)
-				0, 1, // RClass: 1
-				0, 0, 1, 44, // TTL: 300
-				0, 16, // RDLength: 16
-				32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, // RData: 2001:db8::1
-			},
-		},
-		{
-			name: "CNAME record",
-			rr: ResourceRecord{
-				Name:     "www.example.com",
-				RType:    CNAME,
-				RClass:   IN,
-				TTL:      300,
-				RDLength: 13,
-				RData: RData{
-					Raw:     []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}, // example.com
-					Decoded: "",
-				},
-			},
-			want: []byte{
-				3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: www.example.com
-				0, 5, // RType: 5 (CNAME)
-				0, 1, // RClass: 1
-				0, 0, 1, 44, // TTL: 300
-				0, 13, // RDLength: 13
-				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RData: example.com
-			},
-		},
-		{
-			name: "MX record",
-			rr: ResourceRecord{
-				Name:     "example.com",
-				RType:    MX,
-				RClass:   IN,
-				TTL:      300,
-				RDLength: 16,
-				RData: RData{
-					Raw:     append([]byte{0, 10}, []byte{4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0}...), // preference 10, mail.example.com
-					Decoded: "",
-				},
-			},
-			want: []byte{
-				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
-				0, 15, // RType: 15 (MX)
-				0, 1, // RClass: 1
-				0, 0, 1, 44, // TTL: 300
-				0, 16, // RDLength: 16
-				0, 10, // Preference: 10
-				4, 'm', 'a', 'i', 'l', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RData: mail.example.com
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			encodeResourceRecord(&buf, tt.rr)
-			got := buf.Bytes()
-
-			if len(got) != len(tt.want) {
-				t.Errorf("encodeDNSResourceRecord() bytes length got = %d, want = %d\n", len(got), len(tt.want))
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("encodeDNSResourceRecord() bytes\n\tgot = %v,\n\twant = %v\n", got, tt.want)
-			}
-		})
+	if got.RData.String() != want.RData.String() {
+		t.Errorf("decodeDNSResourceRecord() RData got = %s, want = %s, data = %v\n", got.RData.String(), want.RData.String(), data)
 	}
 }

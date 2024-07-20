@@ -1,9 +1,9 @@
 package dns
 
 import (
-	"testing"
-
+	"net"
 	"reflect"
+	"testing"
 )
 
 func TestDecodeDNSMessage(t *testing.T) {
@@ -65,9 +65,8 @@ func TestDecodeDNSMessage(t *testing.T) {
 						RClass:   IN,
 						TTL:      300,
 						RDLength: 4,
-						RData: RData{
-							Raw:     []byte{93, 184, 216, 34},
-							Decoded: "93.184.216.34",
+						RData: &RDataA{
+							IP: net.ParseIP("93.184.216.34"),
 						},
 					},
 				},
@@ -129,9 +128,8 @@ func TestDecodeDNSMessage(t *testing.T) {
 						RClass:   IN,
 						TTL:      300,
 						RDLength: 4,
-						RData: RData{
-							Raw:     []byte{93, 184, 216, 34},
-							Decoded: "93.184.216.34",
+						RData: &RDataA{
+							IP: net.ParseIP("93.184.216.34"),
 						},
 					},
 				},
