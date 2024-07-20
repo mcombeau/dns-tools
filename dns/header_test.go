@@ -200,7 +200,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DecodeHeader(tt.data)
+			got, err := decodeHeader(tt.data)
 
 			if err == nil && tt.wantError {
 				t.Fatalf("decodeDNSHeader() error got = %v, want error = %t, data = %v\n", err, tt.wantError, tt.data)

@@ -19,7 +19,7 @@ func DecodeMessage(data []byte) (*Message, error) {
 		return nil, errors.New("invalid DNS message: too short")
 	}
 
-	header, err := DecodeHeader(data)
+	header, err := decodeHeader(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS header: %v", err)
 	}

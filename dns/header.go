@@ -35,7 +35,7 @@ type Flags struct {
 // bytes 8-9: Number of Authority (nameserver) RRs
 // bytes 10-11: Number of Additional RRs
 
-func DecodeHeader(data []byte) (*Header, error) {
+func decodeHeader(data []byte) (*Header, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS header")
 	}
