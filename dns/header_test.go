@@ -1,21 +1,21 @@
-package decoder
+package dns
 
 import (
+	"bytes"
+	"reflect"
 	"testing"
-
-	"github.com/mcombeau/dns-tools/dns"
 )
 
 func TestDecodeFlags(t *testing.T) {
 	tests := []struct {
 		name string
 		data []byte
-		want *dns.Flags
+		want *Flags
 	}{
 		{
 			name: "All flags off",
 			data: []byte{0b00000000, 0b00000000},
-			want: &dns.Flags{
+			want: &Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      false,
@@ -31,7 +31,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Response flag on",
 			data: []byte{0b10000000, 0b00000000},
-			want: &dns.Flags{
+			want: &Flags{
 				Response:           true,
 				Opcode:             0,
 				Authoritative:      false,
@@ -47,7 +47,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Opcode set to 2",
 			data: []byte{0b00010000, 0b00000000},
-			want: &dns.Flags{
+			want: &Flags{
 				Response:           false,
 				Opcode:             2,
 				Authoritative:      false,
@@ -63,7 +63,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Authoritative flag on",
 			data: []byte{0b00000100, 0b00000000},
-			want: &dns.Flags{
+			want: &Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      true,
@@ -79,7 +79,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Multiple flags on",
 			data: []byte{0b10010111, 0b11110011},
-			want: &dns.Flags{
+			want: &Flags{
 				Response:           true,
 				Opcode:             2,
 				Authoritative:      true,
@@ -96,7 +96,7 @@ func TestDecodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := decodeDNSFlags(tt.data)
+			got := decodeFlags(tt.data)
 
 			assertFlags(t, got, tt.want, tt.data)
 		})
@@ -108,7 +108,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 		name      string
 		data      []byte
 		wantError bool
-		want      *dns.Message
+		want      *Message
 	}{
 		{
 			name: "Basic header decoding",
@@ -121,10 +121,10 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x04, // Additional RR Count: 4
 			},
 			wantError: false,
-			want: &dns.Message{
-				Header: &dns.Header{
+			want: &Message{
+				Header: &Header{
 					Id: 1234,
-					Flags: &dns.Flags{
+					Flags: &Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -158,10 +158,10 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x04, // Additional RR Count: 4
 			},
 			wantError: false,
-			want: &dns.Message{
-				Header: &dns.Header{
+			want: &Message{
+				Header: &Header{
 					Id: 1234,
-					Flags: &dns.Flags{
+					Flags: &Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -200,7 +200,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DecodeDNSHeader(tt.data)
+			got, err := DecodeHeader(tt.data)
 
 			if err == nil && tt.wantError {
 				t.Fatalf("decodeDNSHeader() error got = %v, want error = %t, data = %v\n", err, tt.wantError, tt.data)
@@ -218,7 +218,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 	}
 }
 
-func assertHeader(t *testing.T, got *dns.Header, want *dns.Header, data []byte) {
+func assertHeader(t *testing.T, got *Header, want *Header, data []byte) {
 	if got.Id != want.Id {
 		t.Errorf("decodeDNSHeader() Id got = %d, want = %d, data = %v\n", got.Id, want.Id, data)
 	}
@@ -237,7 +237,7 @@ func assertHeader(t *testing.T, got *dns.Header, want *dns.Header, data []byte) 
 
 }
 
-func assertFlags(t *testing.T, got *dns.Flags, want *dns.Flags, data []byte) {
+func assertFlags(t *testing.T, got *Flags, want *Flags, data []byte) {
 	if got.Response != want.Response {
 		t.Errorf("decodeDNSFlags() QR got = %t, want = %t, data = %v\n", got.Response, want.Response, data)
 	}
@@ -267,5 +267,203 @@ func assertFlags(t *testing.T, got *dns.Flags, want *dns.Flags, data []byte) {
 	}
 	if got.ResponseCode != want.ResponseCode {
 		t.Errorf("decodeDNSFlags() RCode got = %d, want = %d, data = %v\n", got.ResponseCode, want.ResponseCode, data)
+	}
+}
+
+func TestEncodeFlags(t *testing.T) {
+	tests := []struct {
+		name string
+		data *Flags
+		want []byte
+	}{
+		{
+			name: "All flags off",
+			data: &Flags{
+				Response:           false,
+				Opcode:             0,
+				Authoritative:      false,
+				Truncated:          false,
+				RecursionDesired:   false,
+				RecursionAvailable: false,
+				DnssecOk:           false,
+				AuthenticatedData:  false,
+				CheckingDisabled:   false,
+				ResponseCode:       0,
+			},
+			want: []byte{0b00000000, 0b00000000},
+		},
+		{
+			name: "Response flag on",
+			data: &Flags{
+				Response:           true,
+				Opcode:             0,
+				Authoritative:      false,
+				Truncated:          false,
+				RecursionDesired:   false,
+				RecursionAvailable: false,
+				DnssecOk:           false,
+				AuthenticatedData:  false,
+				CheckingDisabled:   false,
+				ResponseCode:       0,
+			},
+			want: []byte{0b10000000, 0b00000000},
+		},
+		{
+			name: "Opcode set to 2",
+			data: &Flags{
+				Response:           false,
+				Opcode:             2,
+				Authoritative:      false,
+				Truncated:          false,
+				RecursionDesired:   false,
+				RecursionAvailable: false,
+				DnssecOk:           false,
+				AuthenticatedData:  false,
+				CheckingDisabled:   false,
+				ResponseCode:       0,
+			},
+			want: []byte{0b00010000, 0b00000000},
+		},
+		{
+			name: "Authoritative flag on",
+			data: &Flags{
+				Response:           false,
+				Opcode:             0,
+				Authoritative:      true,
+				Truncated:          false,
+				RecursionDesired:   false,
+				RecursionAvailable: false,
+				DnssecOk:           false,
+				AuthenticatedData:  false,
+				CheckingDisabled:   false,
+				ResponseCode:       0,
+			},
+			want: []byte{0b00000100, 0b00000000},
+		},
+		{
+			name: "Multiple flags on",
+			data: &Flags{
+				Response:           true,
+				Opcode:             2,
+				Authoritative:      true,
+				Truncated:          true,
+				RecursionDesired:   true,
+				RecursionAvailable: true,
+				DnssecOk:           true,
+				AuthenticatedData:  true,
+				CheckingDisabled:   true,
+				ResponseCode:       3,
+			},
+			want: []byte{0b10010111, 0b11110011},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := encodeFlags(tt.data)
+
+			if len(got) != len(tt.want) {
+				t.Errorf("encodeDNSFlags() bytes length got = %d, want = %d\n", len(got), len(tt.want))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeDNSFlags() bytes got = %v, want = %v\n", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestEncodeDNSHeader(t *testing.T) {
+	tests := []struct {
+		name string
+		data *Message
+		want []byte
+	}{
+		{
+			name: "Basic header encoding",
+			data: &Message{
+				Header: &Header{
+					Id: 1234,
+					Flags: &Flags{
+						Response:           true,
+						Opcode:             0,
+						Authoritative:      true,
+						Truncated:          false,
+						RecursionDesired:   true,
+						RecursionAvailable: false,
+						DnssecOk:           false,
+						AuthenticatedData:  false,
+						CheckingDisabled:   false,
+						ResponseCode:       0,
+					},
+					QuestionCount:     1,
+					AnswerRRCount:     2,
+					NameserverRRCount: 3,
+					AdditionalRRCount: 4,
+				},
+				Questions:   nil,
+				Answers:     nil,
+				NameServers: nil,
+				Additionals: nil,
+			},
+			want: []byte{
+				0x04, 0xd2, // ID: 1234
+				0x85, 0x00, // Flags: 10000101 00000000
+				0x00, 0x01, // Question Count: 1
+				0x00, 0x02, // Answer RR Count: 2
+				0x00, 0x03, // Nameserver RR Count: 3
+				0x00, 0x04, // Additional RR Count: 4
+			},
+		},
+		{
+			name: "RecursionAvailable flag on",
+			data: &Message{
+				Header: &Header{
+					Id: 1234,
+					Flags: &Flags{
+						Response:           true,
+						Opcode:             0,
+						Authoritative:      true,
+						Truncated:          false,
+						RecursionDesired:   true,
+						RecursionAvailable: true,
+						DnssecOk:           false,
+						AuthenticatedData:  false,
+						CheckingDisabled:   false,
+						ResponseCode:       0,
+					},
+					QuestionCount:     1,
+					AnswerRRCount:     2,
+					NameserverRRCount: 3,
+					AdditionalRRCount: 4,
+				},
+				Questions:   nil,
+				Answers:     nil,
+				NameServers: nil,
+				Additionals: nil,
+			},
+			want: []byte{
+				0x04, 0xd2, // ID: 1234
+				0x85, 0x80, // Flags: 10000101 10000000
+				0x00, 0x01, // Question Count: 1
+				0x00, 0x02, // Answer RR Count: 2
+				0x00, 0x03, // Nameserver RR Count: 3
+				0x00, 0x04, // Additional RR Count: 4
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			encodeHeader(&buf, tt.data)
+			got := buf.Bytes()
+
+			if len(got) != len(tt.want) {
+				t.Errorf("encodeDNSHeader() bytes length got = %d, want = %d\n", len(got), len(tt.want))
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("encodeDNSHeader() bytes\n\tgot = %v,\n\twant = %v\n", got, tt.want)
+			}
+		})
 	}
 }

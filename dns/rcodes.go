@@ -1,5 +1,7 @@
 package dns
 
+type DNSRCode uint16
+
 const (
 	NOERROR   uint16 = 0  // No Error [RFC1035]
 	FORMERR   uint16 = 1  // Format Error [RFC1035]
@@ -27,3 +29,38 @@ const (
 	UNASSIGNED3 uint16 = 14 // Unassigned
 	UNASSIGNED4 uint16 = 15 // Unassigned
 )
+
+var dnsResponseCodeNames = map[uint16]string{
+	NOERROR:   "No Error",
+	FORMERR:   "Format Error",
+	SERVFAIL:  "Server Failure",
+	NXDOMAIN:  "Non-Existent Domain",
+	NOTIMP:    "Not Implemented",
+	REFUSED:   "Query Refused",
+	YXDOMAIN:  "Name Exists when it should not",
+	YXRRSET:   "RR Set Exists when it should not",
+	NXRRSET:   "RR Set that should exist does not",
+	NOTAUTH:   "Not Authorized",
+	NOTZONE:   "Name not contained in zone",
+	DSOTYPENI: "DSO-TYPE Not Implemented",
+	BADVERS:   "Bad OPT Version",
+	// BADSIG:      "TSIG Signature Failure",
+	BADKEY:      "Key not recognized",
+	BADTIME:     "Signature out of time window",
+	BADMODE:     "Bad TKEY Mode",
+	BADNAME:     "Duplicate key name",
+	BADALG:      "Algorithm not supported",
+	BADTRUNC:    "Bad Truncation",
+	BADCOOKIE:   "Bad/missing Server Cookie",
+	UNASSIGNED1: "Unassigned",
+	UNASSIGNED2: "Unassigned",
+	UNASSIGNED3: "Unassigned",
+	UNASSIGNED4: "Unassigned",
+}
+
+func (rc DNSRCode) String() string {
+	if n, ok := dnsResponseCodeNames[uint16(rc)]; ok {
+		return n
+	}
+	return "Unknown"
+}

@@ -1,26 +1,33 @@
-package decoder
+package dns
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
-
-	"github.com/mcombeau/dns-tools/dns"
 )
 
-func DecodeDNSMessage(data []byte) (*dns.Message, error) {
+type Message struct {
+	Header      *Header
+	Questions   []Question
+	Answers     []ResourceRecord
+	NameServers []ResourceRecord
+	Additionals []ResourceRecord
+}
+
+func DecodeMessage(data []byte) (*Message, error) {
 	if len(data) < 12 {
 		return nil, errors.New("invalid DNS message: too short")
 	}
 
-	header, err := DecodeDNSHeader(data)
+	header, err := DecodeHeader(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse DNS header: %v", err)
 	}
 	offset := 12
 
-	questions := make([]dns.Question, 0, header.QuestionCount)
+	questions := make([]Question, 0, header.QuestionCount)
 	for i := 0; i < int(header.QuestionCount); i++ {
-		question, newOffset, err := decodeDNSQuestion(data, offset)
+		question, newOffset, err := decodeQuestion(data, offset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DNS question: %v", err)
 		}
@@ -43,7 +50,7 @@ func DecodeDNSMessage(data []byte) (*dns.Message, error) {
 		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
 	}
 
-	return &dns.Message{
+	return &Message{
 		Header:      header,
 		Questions:   questions,
 		Answers:     answers,
@@ -52,10 +59,10 @@ func DecodeDNSMessage(data []byte) (*dns.Message, error) {
 	}, nil
 }
 
-func decodeResourceRecords(data []byte, offset int, count uint16) ([]dns.ResourceRecord, int, error) {
-	records := make([]dns.ResourceRecord, 0, count)
+func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRecord, int, error) {
+	records := make([]ResourceRecord, 0, count)
 	for i := 0; i < int(count); i++ {
-		record, newOffset, err := decodeDNSResourceRecord(data, offset)
+		record, newOffset, err := decodeResourceRecord(data, offset)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -63,4 +70,26 @@ func decodeResourceRecords(data []byte, offset int, count uint16) ([]dns.Resourc
 		offset = newOffset
 	}
 	return records, offset, nil
+}
+
+func EncodeMessage(msg *Message) ([]byte, error) {
+	buf := new(bytes.Buffer)
+
+	encodeHeader(buf, msg)
+
+	for _, question := range msg.Questions {
+		encodeQuestion(buf, question)
+	}
+
+	for _, rr := range msg.Answers {
+		encodeResourceRecord(buf, rr)
+	}
+	for _, rr := range msg.NameServers {
+		encodeResourceRecord(buf, rr)
+	}
+	for _, rr := range msg.Additionals {
+		encodeResourceRecord(buf, rr)
+	}
+
+	return buf.Bytes(), nil
 }

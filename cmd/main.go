@@ -7,10 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/mcombeau/dns-tools/decoder"
 	"github.com/mcombeau/dns-tools/dns"
-	"github.com/mcombeau/dns-tools/encoder"
-	"github.com/mcombeau/dns-tools/printer"
 )
 
 func main() {
@@ -41,7 +38,7 @@ func main() {
 		},
 	}
 
-	data, err := encoder.EncodeDNSMessage(message)
+	data, err := dns.EncodeMessage(message)
 	if err != nil {
 		log.Fatalf("Failed to encode DNS message: %v\n", err)
 	}
@@ -69,11 +66,11 @@ func main() {
 
 	queryTime := time.Since(startTime)
 
-	decodedMessage, err := decoder.DecodeDNSMessage(response[:n])
+	decodedMessage, err := dns.DecodeMessage(response[:n])
 	if err != nil {
 		log.Fatalf("Failed to decode DNS response: %v\n", err)
 	}
 
-	printer.PrintDNSMessage(decodedMessage, domain)
-	printer.PrintDNSQueryInfo(dnsServer, queryTime)
+	dns.PrintMessage(decodedMessage, domain)
+	dns.PrintQueryInfo(dnsServer, queryTime)
 }
