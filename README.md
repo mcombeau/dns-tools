@@ -15,7 +15,7 @@ go test ./... -v
 To run main:
 
 ```shell
-go run ./cmd/example/main.go <domain> [question type]
+go run ./cmd/main.go <domain> [question type]
 ```
 
 ---
