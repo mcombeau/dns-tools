@@ -7,7 +7,7 @@ import (
 
 type Header struct {
 	Id                uint16
-	Flags             *Flags
+	Flags             Flags
 	QuestionCount     uint16
 	AnswerRRCount     uint16
 	NameserverRRCount uint16
@@ -28,12 +28,6 @@ type Flags struct {
 }
 
 // DNS Header is 12 bytes long
-// bytes 0-1: transaction ID
-// bytes 2-3: flags
-// bytes 4-5: Number of Questions
-// bytes 6-7: Number of Answer Resource Record (RR)
-// bytes 8-9: Number of Authority (nameserver) RRs
-// bytes 10-11: Number of Additional RRs
 
 func decodeHeader(data []byte) (*Header, error) {
 	if len(data) < 12 {
@@ -41,12 +35,12 @@ func decodeHeader(data []byte) (*Header, error) {
 	}
 
 	header := Header{
-		Id:                decodeUint16(data, 0),
-		Flags:             decodeFlags(data[2:4]),
-		QuestionCount:     decodeUint16(data, 4),
-		AnswerRRCount:     decodeUint16(data, 6),
-		NameserverRRCount: decodeUint16(data, 8),
-		AdditionalRRCount: decodeUint16(data, 10),
+		Id:                decodeUint16(data, 0),  // bytes 0-1: transaction ID
+		Flags:             decodeFlags(data[2:4]), // bytes 2-3: flags
+		QuestionCount:     decodeUint16(data, 4),  // bytes 4-5: Number of Questions
+		AnswerRRCount:     decodeUint16(data, 6),  // bytes 6-7: Number of Answer Resource Record (RR)
+		NameserverRRCount: decodeUint16(data, 8),  // bytes 8-9: Number of Authority (nameserver) RRs
+		AdditionalRRCount: decodeUint16(data, 10), // bytes 10-11: Number of Additional RRs
 	}
 
 	return &header, nil
@@ -65,8 +59,8 @@ const (
 	RCodeMask  = 0b00000000_00001111 // Rcode: Bits 0-3
 )
 
-func decodeFlags(data []byte) *Flags {
-	return &Flags{
+func decodeFlags(data []byte) Flags {
+	return Flags{
 		Response:           data[0]&uint8(QRMask>>8) != 0,
 		Opcode:             (uint16(data[0]) >> 3) & (OpcodeMask >> 11),
 		Authoritative:      data[0]&uint8(AAMask>>8) != 0,
@@ -89,7 +83,7 @@ func encodeHeader(buf *bytes.Buffer, msg *Message) {
 	buf.Write(encodeUint16(msg.Header.AdditionalRRCount))
 }
 
-func encodeFlags(flags *Flags) []byte {
+func encodeFlags(flags Flags) []byte {
 	var result uint16
 	if flags.Response {
 		result |= QRMask

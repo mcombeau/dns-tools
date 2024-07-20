@@ -42,7 +42,7 @@ func printHeader(header *Header) {
 	fmt.Printf("status: %s, ", DNSRCode(header.Flags.ResponseCode))
 	fmt.Printf("id: %d\n", header.Id)
 
-	fmt.Printf(";; flags: %s; ", getFlagString(header.Flags))
+	fmt.Printf(";; flags: %s; ", getFlagString(&header.Flags))
 	fmt.Printf("QUERY: %d; ", header.QuestionCount)
 	fmt.Printf("ANSWER: %d; ", header.AnswerRRCount)
 	fmt.Printf("AUTHORITY: %d; ", header.NameserverRRCount)

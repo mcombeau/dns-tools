@@ -26,7 +26,7 @@ func main() {
 	message := &dns.Message{
 		Header: &dns.Header{
 			Id:            1234,
-			Flags:         &dns.Flags{RecursionDesired: true},
+			Flags:         dns.Flags{RecursionDesired: true},
 			QuestionCount: 1,
 		},
 		Questions: []dns.Question{

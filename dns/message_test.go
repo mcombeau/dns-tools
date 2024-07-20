@@ -34,7 +34,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -98,7 +98,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -174,7 +174,7 @@ func TestEncodeDNSMessage(t *testing.T) {
 	message := Message{
 		Header: &Header{
 			Id:            1234,
-			Flags:         &Flags{RecursionDesired: true},
+			Flags:         Flags{RecursionDesired: true},
 			QuestionCount: 1,
 		},
 		Questions: []Question{

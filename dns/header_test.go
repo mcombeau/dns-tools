@@ -10,12 +10,12 @@ func TestDecodeFlags(t *testing.T) {
 	tests := []struct {
 		name string
 		data []byte
-		want *Flags
+		want Flags
 	}{
 		{
 			name: "All flags off",
 			data: []byte{0b00000000, 0b00000000},
-			want: &Flags{
+			want: Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      false,
@@ -31,7 +31,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Response flag on",
 			data: []byte{0b10000000, 0b00000000},
-			want: &Flags{
+			want: Flags{
 				Response:           true,
 				Opcode:             0,
 				Authoritative:      false,
@@ -47,7 +47,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Opcode set to 2",
 			data: []byte{0b00010000, 0b00000000},
-			want: &Flags{
+			want: Flags{
 				Response:           false,
 				Opcode:             2,
 				Authoritative:      false,
@@ -63,7 +63,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Authoritative flag on",
 			data: []byte{0b00000100, 0b00000000},
-			want: &Flags{
+			want: Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      true,
@@ -79,7 +79,7 @@ func TestDecodeFlags(t *testing.T) {
 		{
 			name: "Multiple flags on",
 			data: []byte{0b10010111, 0b11110011},
-			want: &Flags{
+			want: Flags{
 				Response:           true,
 				Opcode:             2,
 				Authoritative:      true,
@@ -124,7 +124,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -161,7 +161,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -237,7 +237,7 @@ func assertHeader(t *testing.T, got *Header, want *Header, data []byte) {
 
 }
 
-func assertFlags(t *testing.T, got *Flags, want *Flags, data []byte) {
+func assertFlags(t *testing.T, got Flags, want Flags, data []byte) {
 	if got.Response != want.Response {
 		t.Errorf("decodeDNSFlags() QR got = %t, want = %t, data = %v\n", got.Response, want.Response, data)
 	}
@@ -273,12 +273,12 @@ func assertFlags(t *testing.T, got *Flags, want *Flags, data []byte) {
 func TestEncodeFlags(t *testing.T) {
 	tests := []struct {
 		name string
-		data *Flags
+		data Flags
 		want []byte
 	}{
 		{
 			name: "All flags off",
-			data: &Flags{
+			data: Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      false,
@@ -294,7 +294,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Response flag on",
-			data: &Flags{
+			data: Flags{
 				Response:           true,
 				Opcode:             0,
 				Authoritative:      false,
@@ -310,7 +310,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Opcode set to 2",
-			data: &Flags{
+			data: Flags{
 				Response:           false,
 				Opcode:             2,
 				Authoritative:      false,
@@ -326,7 +326,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Authoritative flag on",
-			data: &Flags{
+			data: Flags{
 				Response:           false,
 				Opcode:             0,
 				Authoritative:      true,
@@ -342,7 +342,7 @@ func TestEncodeFlags(t *testing.T) {
 		},
 		{
 			name: "Multiple flags on",
-			data: &Flags{
+			data: Flags{
 				Response:           true,
 				Opcode:             2,
 				Authoritative:      true,
@@ -383,7 +383,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 			data: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
@@ -419,7 +419,7 @@ func TestEncodeDNSHeader(t *testing.T) {
 			data: &Message{
 				Header: &Header{
 					Id: 1234,
-					Flags: &Flags{
+					Flags: Flags{
 						Response:           true,
 						Opcode:             0,
 						Authoritative:      true,
