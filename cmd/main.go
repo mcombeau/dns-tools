@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -12,23 +13,13 @@ import (
 )
 
 // TODO:
-// - Handle inverse query
-// - Fix error handling
+// - Improve error handling
 
 const maxUint16 = ^uint16(0) // ^ negation: sets all bits to 1: 65535
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run main.go <domain> [question type]")
-		return
-	}
-
-	domain := os.Args[1]
-	questionType := dns.A
-	if len(os.Args) == 3 {
-		questionType = dns.GetCodeFromTypeString(os.Args[2])
-	}
 	dnsServer := "8.8.8.8:53" // Google's public DNS server
+	domain, questionType := parseArgs()
 
 	// Seed the RNG for DNS header ID
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -84,7 +75,8 @@ func main() {
 
 	queryTime := time.Since(startTime)
 
-	dns.PrintMessage(decodedMessage, domain)
+	dns.PrintUserQuery(domain, questionType)
+	dns.PrintMessage(decodedMessage)
 	dns.PrintQueryInfo(dnsServer, queryTime, tcpQuery)
 }
 
@@ -128,4 +120,41 @@ func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]by
 	}
 
 	return response, nil
+}
+
+func parseArgs() (string, uint16) {
+	reverseDNSQuery := flag.Bool("x", false, "Perform a reverse DNS query")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage: go run main.go [-x] <domain_or_ip> [question_type]\n")
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		fmt.Fprintf(os.Stderr, "  -h\tDisplay this help message\n")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NArg() < 1 {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	var domain string
+	var questionType uint16
+	var err error
+
+	if *reverseDNSQuery {
+		ip := flag.Arg(0)
+		questionType = dns.PTR
+		domain, err = dns.GetReverseDNSDomain(ip)
+		if err != nil {
+			log.Fatalf("Get Reverse DNS Domain from IP address: %v\n", err)
+		}
+	} else {
+		domain = flag.Arg(0)
+		questionType = dns.A // Default to A
+		if flag.NArg() == 2 {
+			questionType = dns.GetCodeFromTypeString(flag.Arg(1))
+		}
+	}
+
+	return domain, questionType
 }

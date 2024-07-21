@@ -295,5 +295,5 @@ func (t DNSType) String() string {
 	if n, ok := dnsTypeNames[uint16(t)]; ok {
 		return n
 	}
-	return "Unknown"
+	return "UNKNOWN"
 }

@@ -15,8 +15,13 @@ go test ./... -v
 To run main:
 
 ```shell
-go run ./cmd/main.go <domain> [question type]
+go run ./cmd/main.go [-x] <domain or ip> [question type]
 ```
+
+Options:
+
+- `-h`: show help
+- `-x`: enable reverse DNS query (default: false)
 
 ---
 Made by mcombeau | LinkedIn: [mcombeau](https://www.linkedin.com/in/mia-combeau-86653420b/) | Website: [codequoi.com](https://www.codequoi.com)

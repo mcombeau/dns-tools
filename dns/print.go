@@ -17,8 +17,11 @@ func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
 	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
 }
 
-func PrintMessage(message *Message, query string) {
-	fmt.Printf("; <<>> DNSTool <<>> %s\n", query)
+func PrintUserQuery(domainName string, questionType uint16) {
+	fmt.Printf("; <<>> DNSTool <<>> %s %s\n", domainName, DNSType(questionType))
+}
+
+func PrintMessage(message *Message) {
 	fmt.Println(";; Got answer:")
 
 	printHeader(message.Header)
@@ -43,7 +46,7 @@ func PrintMessage(message *Message, query string) {
 func printHeader(header *Header) {
 
 	fmt.Printf(";; ->>HEADER<<- ")
-	fmt.Printf("opcode: %d, ", header.Flags.Opcode)
+	fmt.Printf("opcode: %s, ", DNSOpCode(header.Flags.Opcode))
 	fmt.Printf("status: %s, ", DNSRCode(header.Flags.ResponseCode))
 	fmt.Printf("id: %d\n", header.Id)
 

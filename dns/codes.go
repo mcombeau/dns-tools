@@ -1,5 +1,6 @@
 package dns
 
+// ------------------- RCODES
 type DNSRCode uint16
 
 const (
@@ -58,9 +59,40 @@ var dnsResponseCodeNames = map[uint16]string{
 	// UNASSIGNED4: "Unassigned",
 }
 
-func (rc DNSRCode) String() string {
-	if n, ok := dnsResponseCodeNames[uint16(rc)]; ok {
+func (responseCode DNSRCode) String() string {
+	if n, ok := dnsResponseCodeNames[uint16(responseCode)]; ok {
 		return n
 	}
-	return "Unknown"
+	return "UNKNOWN"
+}
+
+// ------------------- OPCODES
+type DNSOpCode uint16
+
+const (
+	QUERY      uint16 = 0 // Query [RFC1035]
+	IQUERY     uint16 = 1 // Inverse Query, OBSOLETE [RFC3425]
+	STATUS     uint16 = 2 // Status [RFC1035]
+	UNASSIGNED uint16 = 3 // Unassigned
+	NOTIFY     uint16 = 4 // Notify [RFC1996]
+	UPDATE     uint16 = 5 // Update [RFC2136]
+	DSO        uint16 = 6 // DNS Stateful Operations (DSO) [RFC8490]
+	// 7-15	Unassigned
+)
+
+var dnsOperationCodeNames = map[uint16]string{
+	QUERY:      "QUERY",
+	IQUERY:     "IQUERY",
+	STATUS:     "STATUS",
+	UNASSIGNED: "UNASSIGNED",
+	NOTIFY:     "NOTIFY",
+	UPDATE:     "UPDATE",
+	DSO:        "DSO",
+}
+
+func (opCode DNSOpCode) String() string {
+	if n, ok := dnsOperationCodeNames[uint16(opCode)]; ok {
+		return n
+	}
+	return "UNKNOWN"
 }
