@@ -6,9 +6,14 @@ import (
 	"time"
 )
 
-func PrintQueryInfo(dnsServer string, queryTime time.Duration) {
+func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
 	fmt.Printf("\n;; Query time: %v\n", queryTime)
-	fmt.Printf(";; SERVER: %s\n", dnsServer)
+	fmt.Printf(";; SERVER: %s ", dnsServer)
+	if tcpQuery {
+		fmt.Printf("(TCP)\n")
+	} else {
+		fmt.Printf("(UDP)\n")
+	}
 	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
 }
 

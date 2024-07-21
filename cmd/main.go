@@ -55,6 +55,7 @@ func main() {
 
 	startTime := time.Now()
 
+	tcpQuery := false
 	response, err := sendDNSQuery("udp", dnsServer, data)
 	if err != nil {
 		log.Fatalf("Failed to send DNS query over UDP: %v\n", err)
@@ -69,6 +70,7 @@ func main() {
 		// If UDP response is truncated (i.e. larger than 512 bytes)
 		// fall back to TCP
 
+		tcpQuery = true
 		response, err := sendDNSQuery("tcp", dnsServer, data)
 		if err != nil {
 			log.Fatalf("Failed to send DNS query over TCP: %v\n", err)
@@ -83,7 +85,7 @@ func main() {
 	queryTime := time.Since(startTime)
 
 	dns.PrintMessage(decodedMessage, domain)
-	dns.PrintQueryInfo(dnsServer, queryTime)
+	dns.PrintQueryInfo(dnsServer, queryTime, tcpQuery)
 }
 
 func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]byte, error) {
