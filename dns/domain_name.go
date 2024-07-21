@@ -79,12 +79,12 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 				return "", 0, errors.New("pointer offset out of bounds")
 			}
 
-			offset = newOffset
+			offset = newOffset // Perform actual jump
 			jumped = true
 
 		} else {
 			// Normal label, not a pointer:
-			//labelIndicator indicates the length of the label
+			// labelIndicator indicates the length of the label
 			offset++
 
 			if len(name) > 0 {
@@ -108,14 +108,14 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 }
 
 func encodeDomainName(buf *bytes.Buffer, name string) {
-	parts := strings.Split(name, ".")
+	labels := strings.Split(name, ".")
 
-	for _, part := range parts {
-		if len(part) == 0 {
+	for _, label := range labels {
+		if len(label) == 0 {
 			continue
 		}
-		buf.WriteByte(byte(len(part)))
-		buf.WriteString(part)
+		buf.WriteByte(byte(len(label)))
+		buf.WriteString(label)
 	}
 
 	buf.WriteByte(0)
