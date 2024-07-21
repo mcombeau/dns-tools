@@ -72,7 +72,7 @@ func main() {
 
 	queryTime := time.Since(startTime)
 
-	dns.PrintUserQuery(domain, questionType)
+	dns.PrintBasicQueryInfo(domain, questionType)
 	dns.PrintMessage(decodedMessage)
 	dns.PrintQueryInfo(dnsServer, queryTime, tcpQuery)
 }
@@ -149,7 +149,7 @@ func parseArgs() (string, uint16) {
 		domain = flag.Arg(0)
 		questionType = dns.A // Default to A
 		if flag.NArg() == 2 {
-			questionType = dns.GetCodeFromTypeString(flag.Arg(1))
+			questionType = dns.GetRecordTypeFromTypeString(flag.Arg(1))
 		}
 	}
 

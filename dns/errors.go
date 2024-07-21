@@ -14,30 +14,30 @@ var (
 	ErrInvalidMessage        = fmt.Errorf("invalid DNS message")
 )
 
-func NewInvalidMessageError(detail string) error {
+func invalidMessageError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidMessage, detail)
 }
 
-func NewInvalidDomainNameError(detail string) error {
+func invalidDomainNameError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidDomainName, detail)
 }
 
-func NewInvalidIPError(detail string) error {
+func invalidIPError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidIP, detail)
 }
 
-func NewInvalidHeaderError(detail string) error {
+func invalidHeaderError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidHeader, detail)
 }
 
-func NewInvalidQuestionError(detail string) error {
+func invalidQuestionError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidQuestion, detail)
 }
 
-func NewInvalidRecordDataError(detail string) error {
+func invalidRecordDataError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidRecordData, detail)
 }
 
-func NewInvalidResourceRecordError(detail string) error {
+func invalidResourceRecordError(detail string) error {
 	return fmt.Errorf("%w: %s", ErrInvalidResourceRecord, detail)
 }

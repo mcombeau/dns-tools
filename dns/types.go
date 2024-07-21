@@ -3,31 +3,31 @@ package dns
 type DNSType uint16
 
 const (
-	A          uint16 = 1     // a host address [RFC1035]
-	NS         uint16 = 2     // an authoritative name server [RFC1035]
-	MD         uint16 = 3     // a mail destination (OBSOLETE - use MX) [RFC1035]
-	MF         uint16 = 4     // a mail forwarder (OBSOLETE - use MX) [RFC1035]
-	CNAME      uint16 = 5     // the canonical name for an alias [RFC1035]
-	SOA        uint16 = 6     // marks the start of a zone of authority [RFC1035]
-	MB         uint16 = 7     // a mailbox domain name (EXPERIMENTAL) [RFC1035]
-	MG         uint16 = 8     // a mail group member (EXPERIMENTAL) [RFC1035]
-	MR         uint16 = 9     // a mail rename domain name (EXPERIMENTAL) [RFC1035]
-	NULL       uint16 = 10    // a null RR (EXPERIMENTAL) [RFC1035]
-	WKS        uint16 = 11    // a well known service description [RFC1035]
-	PTR        uint16 = 12    // a domain name pointer [RFC1035]
-	HINFO      uint16 = 13    // host information [RFC1035]
-	MINFO      uint16 = 14    // mailbox or mail list information [RFC1035]
-	MX         uint16 = 15    // mail exchange [RFC1035]
-	TXT        uint16 = 16    // text strings [RFC1035]
-	RP         uint16 = 17    // for Responsible Person [RFC1183]
-	AFSDB      uint16 = 18    // for AFS Data Base location [RFC1183][RFC5864]
-	X25        uint16 = 19    // for X.25 PSDN address [RFC1183]
-	ISDN       uint16 = 20    // for ISDN address [RFC1183]
-	RT         uint16 = 21    // for Route Through [RFC1183]
-	NSAP       uint16 = 22    // for NSAP address, NSAP style A record (DEPRECATED) [RFC1706][status-change-int-tlds-to-historic]
-	NSAPPTR    uint16 = 23    // for domain name pointer, NSAP style (DEPRECATED) [RFC1706][status-change-int-tlds-to-historic]
-	SIG        uint16 = 24    // for security signature [RFC2536][RFC2931][RFC3110][RFC4034]
-	KEY        uint16 = 25    // for security key [RFC2536][RFC2539][RFC3110][RFC4034]
+	A          uint16 = 1     // IPv4 address [RFC1035]
+	NS         uint16 = 2     // Authoritative name server [RFC1035]
+	MD         uint16 = 3     // Mail destination (OBSOLETE - use MX) [RFC1035]
+	MF         uint16 = 4     // Mail forwarder (OBSOLETE - use MX) [RFC1035]
+	CNAME      uint16 = 5     // Canonical name for an alias [RFC1035]
+	SOA        uint16 = 6     // Start of a zone of authority [RFC1035]
+	MB         uint16 = 7     // Mailbox domain name (EXPERIMENTAL) [RFC1035]
+	MG         uint16 = 8     // Mail group member (EXPERIMENTAL) [RFC1035]
+	MR         uint16 = 9     // Mail rename domain name (EXPERIMENTAL) [RFC1035]
+	NULL       uint16 = 10    // Null RR (EXPERIMENTAL) [RFC1035]
+	WKS        uint16 = 11    // Well known service description [RFC1035]
+	PTR        uint16 = 12    // Domain name pointer [RFC1035]
+	HINFO      uint16 = 13    // Host information [RFC1035]
+	MINFO      uint16 = 14    // Mailbox or mail list information [RFC1035]
+	MX         uint16 = 15    // Mail exchange [RFC1035]
+	TXT        uint16 = 16    // Text strings [RFC1035]
+	RP         uint16 = 17    // For Responsible Person [RFC1183]
+	AFSDB      uint16 = 18    // For AFS Data Base location [RFC1183][RFC5864]
+	X25        uint16 = 19    // For X.25 PSDN address [RFC1183]
+	ISDN       uint16 = 20    // For ISDN address [RFC1183]
+	RT         uint16 = 21    // For Route Through [RFC1183]
+	NSAP       uint16 = 22    // For NSAP address, NSAP style A record (DEPRECATED) [RFC1706][status-change-int-tlds-to-historic]
+	NSAPPTR    uint16 = 23    // For domain name pointer, NSAP style (DEPRECATED) [RFC1706][status-change-int-tlds-to-historic]
+	SIG        uint16 = 24    // For security signature [RFC2536][RFC2931][RFC3110][RFC4034]
+	KEY        uint16 = 25    // For security key [RFC2536][RFC2539][RFC3110][RFC4034]
 	PX         uint16 = 26    // X.400 mail mapping information [RFC2163]
 	GPOS       uint16 = 27    // Geographical Position [RFC1712]
 	AAAA       uint16 = 28    // IP6 Address [RFC3596]
@@ -76,14 +76,14 @@ const (
 	L32        uint16 = 105   // [RFC6742]
 	L64        uint16 = 106   // [RFC6742]
 	LP         uint16 = 107   // [RFC6742]
-	EUI48      uint16 = 108   // an EUI-48 address [RFC7043]
-	EUI64      uint16 = 109   // an EUI-64 address [RFC7043]
+	EUI48      uint16 = 108   // EUI-48 address [RFC7043]
+	EUI64      uint16 = 109   // EUI-64 address [RFC7043]
 	TKEY       uint16 = 249   // Transaction Key [RFC2930]
 	TSIG       uint16 = 250   // Transaction Signature [RFC8945]
-	IXFR       uint16 = 251   // incremental transfer [RFC1995]
-	AXFR       uint16 = 252   // transfer of an entire zone [RFC1035][RFC5936]
-	MAILB      uint16 = 253   // mailbox-related RRs (MB, MG or MR) [RFC1035]
-	MAILA      uint16 = 254   // mail agent RRs (OBSOLETE - see MX) [RFC1035]
+	IXFR       uint16 = 251   // Incremental transfer [RFC1995]
+	AXFR       uint16 = 252   // Transfer of an entire zone [RFC1035][RFC5936]
+	MAILB      uint16 = 253   // Mailbox-related RRs (MB, MG or MR) [RFC1035]
+	MAILA      uint16 = 254   // Mail agent RRs (OBSOLETE - see MX) [RFC1035]
 	ALL        uint16 = 255   // A request for some or all records the server has available [RFC1035][RFC6895][RFC8482]
 	URI        uint16 = 256   // URI [RFC7553]
 	CAA        uint16 = 257   // Certification Authority Restriction [RFC8659]
@@ -190,7 +190,14 @@ var DNSTypeNames = map[string]uint16{
 	"DLV":        DLV,
 }
 
-func GetCodeFromTypeString(dnsType string) uint16 {
+// GetRecordTypeFromTypeString returns the DNS record type code for a given type string.
+//
+// Parameters:
+//   - dnsType: The string representation of the DNS record type (e.g., "A", "MX").
+//
+// Returns:
+//   - The corresponding uint16 code for the DNS record type. Returns 0 if the type is not found.
+func GetRecordTypeFromTypeString(dnsType string) uint16 {
 	if n, ok := DNSTypeNames[dnsType]; ok {
 		return n
 	}

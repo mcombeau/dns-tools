@@ -30,10 +30,18 @@ type Message struct {
 	Additionals []ResourceRecord
 }
 
+// DecodeMessage parses DNS message data and returns a Message structure.
+//
+// Parameters:
+//   - data: The DNS message in a byte slice.
+//
+// Returns:
+//   - *Message: The decoded DNS message in a structure.
+//   - error: If the message is invalid or decoding fails.
 func DecodeMessage(data []byte) (*Message, error) {
 	header, err := decodeHeader(data)
 	if err != nil {
-		return nil, NewInvalidMessageError(err.Error())
+		return nil, invalidMessageError(err.Error())
 	}
 	offset := 12
 
@@ -41,7 +49,7 @@ func DecodeMessage(data []byte) (*Message, error) {
 	for i := 0; i < int(header.QuestionCount); i++ {
 		question, newOffset, err := decodeQuestion(data, offset)
 		if err != nil {
-			return nil, NewInvalidMessageError(err.Error())
+			return nil, invalidMessageError(err.Error())
 		}
 		questions = append(questions, *question)
 		offset = newOffset
@@ -49,17 +57,17 @@ func DecodeMessage(data []byte) (*Message, error) {
 
 	answers, offset, err := decodeResourceRecords(data, offset, header.AnswerRRCount)
 	if err != nil {
-		return nil, NewInvalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
+		return nil, invalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
 	}
 
 	nameServers, offset, err := decodeResourceRecords(data, offset, header.NameserverRRCount)
 	if err != nil {
-		return nil, NewInvalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
+		return nil, invalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
 	}
 
 	additionals, _, err := decodeResourceRecords(data, offset, header.AdditionalRRCount)
 	if err != nil {
-		return nil, NewInvalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
+		return nil, invalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
 	}
 
 	return &Message{
@@ -84,6 +92,14 @@ func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRec
 	return records, offset, nil
 }
 
+// EncodeMessage converts a Message structure into DNS message bytes.
+//
+// Parameters:
+//   - msg: A pointer to a Message structure to encode.
+//
+// Returns:
+//   - []byte: The encoded DNS message bytes.
+//   - error: If encoding fails.
 func EncodeMessage(msg *Message) ([]byte, error) {
 	buf := new(bytes.Buffer)
 

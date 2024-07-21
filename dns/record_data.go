@@ -29,7 +29,7 @@ func (rdata *RDataA) String() string {
 func (rdata *RDataA) Encode(buf *bytes.Buffer) error {
 	_, err := buf.Write(rdata.IP)
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("A RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("A RData: %s", err.Error()))
 	}
 	return nil
 }
@@ -54,7 +54,7 @@ func (rdata *RDataAAAA) String() string {
 func (rdata *RDataAAAA) Encode(buf *bytes.Buffer) error {
 	_, err := buf.Write(rdata.IP)
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("AAAA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("AAAA RData: %s", err.Error()))
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (rdata *RDataCNAME) Decode(data []byte, offset int, length uint16) (int, er
 
 	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
 	}
 	return newOffset, nil
 }
@@ -115,7 +115,7 @@ func (rdata *RDataPTR) Decode(data []byte, offset int, length uint16) (int, erro
 
 	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
 	}
 	return newOffset, nil
 }
@@ -143,7 +143,7 @@ func (rdata *RDataNS) Decode(data []byte, offset int, length uint16) (int, error
 
 	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
 	}
 	return newOffset, nil
 }
@@ -163,7 +163,7 @@ func (rdata *RDataTXT) String() string {
 func (rdata *RDataTXT) Encode(buf *bytes.Buffer) error {
 	_, err := buf.WriteString(rdata.text)
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("TXT RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("TXT RData: %s", err.Error()))
 	}
 	return nil
 }
@@ -190,7 +190,7 @@ func (rdata *RDataMX) String() string {
 func (rdata *RDataMX) Encode(buf *bytes.Buffer) error {
 	_, err := buf.Write(encodeUint16(rdata.preference))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
 	}
 	encodeDomainName(buf, rdata.domainName)
 	return nil
@@ -203,7 +203,7 @@ func (rdata *RDataMX) Decode(data []byte, offset int, length uint16) (int, error
 	rdata.preference = decodeUint16(data, offset)
 	rdata.domainName, newOffset, err = decodeDomainName(data, offset+2)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
 	}
 	return newOffset, nil
 }
@@ -248,27 +248,27 @@ func (rdata *RDataSOA) Encode(buf *bytes.Buffer) error {
 
 	_, err := buf.Write(encodeUint32(rdata.serial))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 
 	_, err = buf.Write(encodeUint32(rdata.refresh))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 
 	_, err = buf.Write(encodeUint32(rdata.retry))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 
 	_, err = buf.Write(encodeUint32(rdata.expire))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 
 	_, err = buf.Write(encodeUint32(rdata.minimum))
 	if err != nil {
-		return NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 	return nil
 }
@@ -279,13 +279,13 @@ func (rdata *RDataSOA) Decode(data []byte, offset int, length uint16) (int, erro
 
 	rdata.mName, newOffset, err = decodeDomainName(data, offset)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 	offset += newOffset
 
 	rdata.rName, newOffset, err = decodeDomainName(data, offset)
 	if err != nil {
-		return 0, NewInvalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return 0, invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
 	offset += newOffset
 

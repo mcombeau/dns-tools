@@ -49,7 +49,7 @@ type Flags struct {
 
 func decodeHeader(data []byte) (*Header, error) {
 	if len(data) < 12 {
-		return nil, NewInvalidHeaderError("too short")
+		return nil, invalidHeaderError("too short")
 	}
 
 	header := Header{

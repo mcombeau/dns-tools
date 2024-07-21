@@ -37,7 +37,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 
 	for {
 		if offset >= len(data) {
-			return "", 0, NewInvalidDomainNameError("offset out of bounds")
+			return "", 0, invalidDomainNameError("offset out of bounds")
 		}
 
 		labelIndicator := int(data[offset]) // Read the label length or pointer indicator
@@ -77,7 +77,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			newOffset := int(labelIndicator&^0b11000000)<<8 | int(data[offset+1])
 
 			if newOffset >= len(data) {
-				return "", 0, NewInvalidDomainNameError("pointer offset out of bounds")
+				return "", 0, invalidDomainNameError("pointer offset out of bounds")
 			}
 
 			offset = newOffset // Perform actual jump
@@ -93,7 +93,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			}
 
 			if offset+labelIndicator > len(data) {
-				return "", 0, NewInvalidDomainNameError("label offset out of bounds")
+				return "", 0, invalidDomainNameError("label offset out of bounds")
 			}
 
 			// Add label to domain name
@@ -122,54 +122,64 @@ func encodeDomainName(buf *bytes.Buffer, name string) {
 	buf.WriteByte(0)
 }
 
-// Reverse DNS domain is used for reverse DNS lookups (i.e. searching for the domain
-// name associated with a given IP address)
-
-// Octets/nibbles of IP address must be reversed for hierarchical delegation of address spaces
-// and in-addr.arpa.net (for IPv4) or ip6.arpa.net (IPv6) added on
-
-// For IPv4:
-// 192.0.1.2 -> 2.1.0.192.in-addr.arpa.net.
-// For IPv6:
-// 2001:db8::1 -> 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.
-
+// GetReverseDNSDomain returns the reverse DNS domain for the given IP address.
+// Supports both IPv4 ("<reversed-ip>.in-addr.arpa.") and IPv6 ("<reversed-nibbles>.ip6.arpa.").
+// For example:
+//   - IPv4: "192.0.1.2" -> "2.1.0.192.in-addr.arpa."
+//   - IPv6: "2001:db8::1" -> "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa."
+//
+// Parameters:
+//   - ip: The IP address to convert.
+//
+// Returns:
+//   - string: The reverse DNS domain.
+//   - error: If the IP address is invalid.
 func GetReverseDNSDomain(ip string) (string, error) {
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
-		return "", NewInvalidIPError(ip)
+		return "", invalidIPError(ip)
 	}
 
-	var invertedDomain string
+	var reversedDomain string
 	if parsedIP.To4() != nil {
 		// IPv4 address
-		octets := strings.Split(parsedIP.String(), ".")
-
-		for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
-			octets[i], octets[j] = octets[j], octets[i]
-		}
-
-		invertedDomain = strings.Join(octets, ".") + ".in-addr.arpa."
+		reversedDomain = reverseIPv4(parsedIP)
 
 	} else {
 		// IPv6 address
-		parsedIP = parsedIP.To16()
-
-		// Expand IPv6 in case 0s were omitted (ex. 2001:db8::1)
-		// And append them in reverse low to high:
-
-		// ex. parsedIP[i]	= 1100 0101
-		// 0xF				= 0000 1111
-		// & (= low nibble)	= 0000 0101 <- appended first
-
-		// ex. parsedIP[i]		= 1100 0101
-		// >> 4 (= high nibble) = 0000 1100 <- appended second
-
-		nibbles := make([]string, 0, 32)
-		for i := len(parsedIP) - 1; i >= 0; i-- {
-			nibbles = append(nibbles, fmt.Sprintf("%x.%x", parsedIP[i]&0xF, parsedIP[i]>>4))
-		}
-
-		invertedDomain = strings.Join(nibbles, ".") + ".ip6.arpa."
+		reversedDomain = reverseIPv6(parsedIP)
 	}
-	return invertedDomain, nil
+	return reversedDomain, nil
+}
+
+func reverseIPv4(parsedIP net.IP) string {
+	octets := strings.Split(parsedIP.String(), ".")
+
+	for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
+		octets[i], octets[j] = octets[j], octets[i]
+	}
+
+	return strings.Join(octets, ".") + ".in-addr.arpa."
+
+}
+
+func reverseIPv6(parsedIP net.IP) string {
+	parsedIP = parsedIP.To16()
+
+	// Expand IPv6 in case 0s were omitted (e.g. 2001:db8::1)
+	// And append them in reverse order, low to high:
+
+	// ex. parsedIP[i]	= 1100 0101
+	// 0xF				= 0000 1111
+	// & (= low nibble)	= 0000 0101 <- appended first
+
+	// ex. parsedIP[i]		= 1100 0101
+	// >> 4 (= high nibble) = 0000 1100 <- appended second
+
+	nibbles := make([]string, 0, 32)
+	for i := len(parsedIP) - 1; i >= 0; i-- {
+		nibbles = append(nibbles, fmt.Sprintf("%x.%x", parsedIP[i]&0xF, parsedIP[i]>>4))
+	}
+
+	return strings.Join(nibbles, ".") + ".ip6.arpa."
 }

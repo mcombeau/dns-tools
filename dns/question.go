@@ -30,13 +30,13 @@ type Question struct {
 func decodeQuestion(data []byte, offset int) (*Question, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return nil, 0, NewInvalidQuestionError(err.Error())
+		return nil, 0, invalidQuestionError(err.Error())
 	}
 
 	offset += newOffset
 
 	if len(data) < offset+4 {
-		return nil, 0, NewInvalidQuestionError("too short")
+		return nil, 0, invalidQuestionError("too short")
 	}
 
 	question := Question{

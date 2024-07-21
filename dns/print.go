@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+// PrintQueryInfo prints information about a DNS query.
+//
+// Parameters:
+//   - dnsServer: The DNS server the query is sent to.
+//   - queryTime: The duration of the query.
+//   - tcpQuery: Indicates if the query was over TCP (true) or UDP (false).
 func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
 	fmt.Printf("\n;; Query time: %v\n", queryTime)
 	fmt.Printf(";; SERVER: %s ", dnsServer)
@@ -17,10 +23,19 @@ func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
 	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
 }
 
-func PrintUserQuery(domainName string, questionType uint16) {
+// PrintBasicQueryInfo prints the basic query information.
+//
+// Parameters:
+//   - domainName: The domain name being queried.
+//   - questionType: The type of DNS query.
+func PrintBasicQueryInfo(domainName string, questionType uint16) {
 	fmt.Printf("; <<>> DNSTool <<>> %s %s\n", domainName, DNSType(questionType))
 }
 
+// PrintMessage prints the details of a DNS message.
+//
+// Parameters:
+//   - message: A pointer to the Message structure to print.
 func PrintMessage(message *Message) {
 	fmt.Println(";; Got answer:")
 
