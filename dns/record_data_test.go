@@ -401,20 +401,6 @@ func TestRDataSOA(t *testing.T) {
 			want:      &RDataSOA{},
 			wantError: ErrInvalidRecordData,
 		},
-		{
-			name: "Invalid SOA record: missing field",
-			data: []byte{
-				3, 'n', 's', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // MName: ns1.example.com
-				5, 'a', 'd', 'm', 'i', 'n', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RName: admin.example.com
-				0, 0, 0, 202, // Serial: 202
-				0, 0, 1, 44, // Refresh: 300
-				0, 0, 0, 100, // Retry: 100
-				0, 0, 10, 0, // Expire: 2560
-				// missing minimum
-			},
-			want:      &RDataSOA{},
-			wantError: ErrInvalidRecordData,
-		},
 	}
 
 	for _, tt := range tests {

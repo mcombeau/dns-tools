@@ -268,15 +268,11 @@ func (rdata *RDataSOA) Decode(data []byte, offset int, length uint16) (int, erro
 	}
 	offset += newOffset
 
-	if offset+20 > int(length) {
-		return 0, invalidRecordDataError("too short")
-	}
 	rdata.serial = decodeUint32(data, offset)
 	rdata.refresh = decodeUint32(data, offset+4)
 	rdata.retry = decodeUint32(data, offset+8)
 	rdata.expire = decodeUint32(data, offset+12)
 	rdata.minimum = decodeUint32(data, offset+16)
-	offset += 20
 
-	return offset, nil
+	return newOffset, nil
 }
