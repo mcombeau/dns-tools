@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+// TODO: Add tests for errors
+
 func TestDecodeDNSMessage(t *testing.T) {
 	tests := []struct {
 		name string

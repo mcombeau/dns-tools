@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 )
 
 // Question section format
@@ -31,13 +30,13 @@ type Question struct {
 func decodeQuestion(data []byte, offset int) (*Question, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return &Question{}, 0, err
+		return nil, 0, NewInvalidQuestionError(err.Error())
 	}
 
 	offset += newOffset
 
 	if len(data) < offset+4 {
-		return &Question{}, 0, errors.New("invalid DNS question")
+		return nil, 0, NewInvalidQuestionError("too short")
 	}
 
 	question := Question{

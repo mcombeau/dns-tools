@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+// TODO: add error tests
+
 func TestRDataA(t *testing.T) {
 	tests := []struct {
 		name string

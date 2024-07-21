@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 )
 
@@ -32,13 +31,9 @@ type Message struct {
 }
 
 func DecodeMessage(data []byte) (*Message, error) {
-	if len(data) < 12 {
-		return nil, errors.New("invalid DNS message: too short")
-	}
-
 	header, err := decodeHeader(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse DNS header: %v", err)
+		return nil, NewInvalidMessageError(err.Error())
 	}
 	offset := 12
 
@@ -46,7 +41,7 @@ func DecodeMessage(data []byte) (*Message, error) {
 	for i := 0; i < int(header.QuestionCount); i++ {
 		question, newOffset, err := decodeQuestion(data, offset)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse DNS question: %v", err)
+			return nil, NewInvalidMessageError(err.Error())
 		}
 		questions = append(questions, *question)
 		offset = newOffset
@@ -54,17 +49,17 @@ func DecodeMessage(data []byte) (*Message, error) {
 
 	answers, offset, err := decodeResourceRecords(data, offset, header.AnswerRRCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
+		return nil, NewInvalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
 	}
 
 	nameServers, offset, err := decodeResourceRecords(data, offset, header.NameserverRRCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse DNS authority name server: %v", err)
+		return nil, NewInvalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
 	}
 
 	additionals, _, err := decodeResourceRecords(data, offset, header.AdditionalRRCount)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse DNS answer: %v", err)
+		return nil, NewInvalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
 	}
 
 	return &Message{

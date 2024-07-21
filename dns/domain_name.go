@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -38,7 +37,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 
 	for {
 		if offset >= len(data) {
-			return "", 0, errors.New("offset out of bounds")
+			return "", 0, NewInvalidDomainNameError("offset out of bounds")
 		}
 
 		labelIndicator := int(data[offset]) // Read the label length or pointer indicator
@@ -78,7 +77,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			newOffset := int(labelIndicator&^0b11000000)<<8 | int(data[offset+1])
 
 			if newOffset >= len(data) {
-				return "", 0, errors.New("pointer offset out of bounds")
+				return "", 0, NewInvalidDomainNameError("pointer offset out of bounds")
 			}
 
 			offset = newOffset // Perform actual jump
@@ -94,7 +93,7 @@ func decodeDomainName(data []byte, offset int) (string, int, error) {
 			}
 
 			if offset+labelIndicator > len(data) {
-				return "", 0, errors.New("label length at offset out of bounds")
+				return "", 0, NewInvalidDomainNameError("label offset out of bounds")
 			}
 
 			// Add label to domain name
@@ -137,7 +136,7 @@ func encodeDomainName(buf *bytes.Buffer, name string) {
 func GetReverseDNSDomain(ip string) (string, error) {
 	parsedIP := net.ParseIP(ip)
 	if parsedIP == nil {
-		return "", fmt.Errorf("invalid ip address: %s", ip)
+		return "", NewInvalidIPError(ip)
 	}
 
 	var invertedDomain string
@@ -148,7 +147,9 @@ func GetReverseDNSDomain(ip string) (string, error) {
 		for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
 			octets[i], octets[j] = octets[j], octets[i]
 		}
+
 		invertedDomain = strings.Join(octets, ".") + ".in-addr.arpa."
+
 	} else {
 		// IPv6 address
 		parsedIP = parsedIP.To16()

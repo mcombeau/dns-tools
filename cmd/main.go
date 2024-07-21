@@ -12,9 +12,6 @@ import (
 	"github.com/mcombeau/dns-tools/dns"
 )
 
-// TODO:
-// - Improve error handling
-
 const maxUint16 = ^uint16(0) // ^ negation: sets all bits to 1: 65535
 
 func main() {
@@ -132,7 +129,7 @@ func parseArgs() (string, uint16) {
 	}
 	flag.Parse()
 
-	if flag.NArg() < 1 {
+	if flag.NArg() < 1 || flag.NArg() > 2 {
 		flag.Usage()
 		os.Exit(0)
 	}

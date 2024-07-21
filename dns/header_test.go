@@ -2,6 +2,7 @@ package dns
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -107,7 +108,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 	tests := []struct {
 		name      string
 		data      []byte
-		wantError bool
+		wantError error
 		want      *Message
 	}{
 		{
@@ -120,7 +121,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x03, // Nameserver RR Count: 3
 				0x00, 0x04, // Additional RR Count: 4
 			},
-			wantError: false,
+			wantError: nil,
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
@@ -157,7 +158,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x03, // Nameserver RR Count: 3
 				0x00, 0x04, // Additional RR Count: 4
 			},
-			wantError: false,
+			wantError: nil,
 			want: &Message{
 				Header: &Header{
 					Id: 1234,
@@ -193,7 +194,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x02, // Answer RR Count: 2
 				0x00, 0x03, // Nameserver RR Count: 3
 			},
-			wantError: true,
+			wantError: ErrInvalidHeader,
 			want:      nil,
 		},
 	}
@@ -202,13 +203,10 @@ func TestDecodeDNSHeader(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := decodeHeader(tt.data)
 
-			if err == nil && tt.wantError {
-				t.Fatalf("decodeDNSHeader() error got = %v, want error = %t, data = %v\n", err, tt.wantError, tt.data)
-			}
-			if err != nil && !tt.wantError {
-				t.Fatalf("decodeDNSHeader() error got = %v, want error = %t, data = %v\n", err, tt.wantError, tt.data)
-			}
-			if err != nil && tt.wantError {
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("decodeDNSHeader() error got = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
 				return
 			}
 

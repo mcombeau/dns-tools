@@ -2,15 +2,17 @@ package dns
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"testing"
 )
 
 func TestDecodeDNSQuestion(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want Question
+		name      string
+		data      []byte
+		want      Question
+		wantError error
 	}{
 		{
 			name: "A record question",
@@ -24,6 +26,7 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  A,
 				QClass: IN,
 			},
+			wantError: nil,
 		},
 		{
 			name: "AAAA record question",
@@ -37,6 +40,7 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  AAAA,
 				QClass: IN,
 			},
+			wantError: nil,
 		},
 		{
 			name: "CNAME record question",
@@ -50,6 +54,7 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  CNAME,
 				QClass: IN,
 			},
+			wantError: nil,
 		},
 		{
 			name: "MX record question",
@@ -63,6 +68,7 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  MX,
 				QClass: IN,
 			},
+			wantError: nil,
 		},
 		{
 			name: "NS record question",
@@ -76,6 +82,7 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  NS,
 				QClass: IN,
 			},
+			wantError: nil,
 		},
 		{
 			name: "PTR record question",
@@ -89,6 +96,26 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				QType:  PTR,
 				QClass: IN,
 			},
+			wantError: nil,
+		},
+		{
+			name: "Invalid question: bad domain name",
+			data: []byte{
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 5, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // QType: 1 (A)
+				0, 1, // QClass: 1 (IN)
+			},
+			want:      Question{},
+			wantError: ErrInvalidQuestion,
+		},
+		{
+			name: "Invalid question: too short",
+			data: []byte{
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // QType: 1 (A)
+			},
+			want:      Question{},
+			wantError: ErrInvalidQuestion,
 		},
 	}
 
@@ -96,8 +123,11 @@ func TestDecodeDNSQuestion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, _, err := decodeQuestion(tt.data, 0)
 
-			if err != nil {
-				t.Fatalf("decodeDNSQuestion() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("decodeDNSQuestion() error got = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			assertQuestion(t, got, &tt.want, tt.data)

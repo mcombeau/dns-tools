@@ -193,6 +193,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				},
 			},
 		},
+		// TODO: add test cases for errors
 	}
 
 	for _, tt := range tests {

@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 )
 
@@ -51,7 +50,7 @@ func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error)
 	offset += newOffset
 
 	if len(data) < offset+10 {
-		return nil, 0, errors.New("invalid DNS resource record")
+		return nil, 0, NewInvalidResourceRecordError("too short")
 	}
 	rtype := decodeUint16(data, offset)
 	rclass := decodeUint16(data, offset+2)
@@ -60,17 +59,17 @@ func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error)
 	offset += 10
 
 	if len(data) < offset+int(rdlength) {
-		return nil, 0, errors.New("invalid DNS resource record RDATA length")
+		return nil, 0, NewInvalidResourceRecordError("invalid RData length: too short")
 	}
 
 	rdata, err := getRDataStruct(rtype)
 	if err != nil {
-		return nil, 0, fmt.Errorf("unsupported RDATA type: %d", rtype)
+		return nil, 0, NewInvalidResourceRecordError(err.Error())
 	}
 
 	_, err = rdata.Decode(data, offset, rdlength)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, NewInvalidResourceRecordError(err.Error())
 	}
 
 	record := ResourceRecord{
@@ -108,7 +107,9 @@ func getRDataStruct(rtype uint16) (RData, error) {
 	case SOA:
 		rdata = &RDataSOA{}
 	default:
-		return nil, errors.New("unsupported RDATA type")
+		// TODO: Get a better error type for this
+		// or define a default way of handling unsupported RDATA types
+		return nil, NewInvalidResourceRecordError(fmt.Sprintf("unsupported RDATA type: %s", DNSType(rtype)))
 	}
 	return rdata, nil
 }

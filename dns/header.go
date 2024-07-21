@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bytes"
-	"errors"
 )
 
 // Header section format
@@ -50,7 +49,7 @@ type Flags struct {
 
 func decodeHeader(data []byte) (*Header, error) {
 	if len(data) < 12 {
-		return nil, errors.New("invalid DNS header")
+		return nil, NewInvalidHeaderError("too short")
 	}
 
 	header := Header{
