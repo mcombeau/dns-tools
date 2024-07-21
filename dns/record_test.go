@@ -1,15 +1,17 @@
 package dns
 
 import (
+	"errors"
 	"net"
 	"testing"
 )
 
 func TestDecodeResourceRecord(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want ResourceRecord
+		name      string
+		data      []byte
+		want      ResourceRecord
+		wantError error
 	}{
 		{
 			name: "A record",
@@ -31,6 +33,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					IP: net.ParseIP("93.184.216.34"),
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "AAAA record",
@@ -52,6 +55,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					IP: net.ParseIP("2001:db8::1"),
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "CNAME record",
@@ -73,6 +77,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					domainName: "example.com.",
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "PTR record",
@@ -94,6 +99,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					domainName: "example.com.",
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "NS record",
@@ -115,6 +121,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					domainName: "ns.example.com.",
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "TXT record",
@@ -136,6 +143,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					text: "helloworld",
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "MX record",
@@ -159,6 +167,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 					domainName: "mail.example.com.",
 				},
 			},
+			wantError: nil,
 		},
 		{
 			name: "SOA record",
@@ -192,16 +201,45 @@ func TestDecodeResourceRecord(t *testing.T) {
 					minimum: 256,
 				},
 			},
+			wantError: nil,
 		},
-		// TODO: add test cases for errors
+		{
+			name: "Invalid A record: bad domain encoding",
+			data: []byte{
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', // Name: example.com
+				0, 1, // RType: 1
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 4, // RDLength: 4
+				93, 184, 216, 34, // RData: 93.184.216.34
+			},
+			want:      ResourceRecord{},
+			wantError: ErrInvalidResourceRecord,
+		},
+		{
+			name: "Invalid A record: missing data field",
+			data: []byte{
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // Name: example.com
+				0, 1, // RType: 1
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 4, // RDLength: 4
+				// Missing RData
+			},
+			want:      ResourceRecord{},
+			wantError: ErrInvalidResourceRecord,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, _, err := decodeResourceRecord(tt.data, 0)
 
-			if err != nil {
-				t.Fatalf("decodeDNSResourceRecord() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("decodeDNSResourceRecord() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			assertRessourceRecord(t, got, &tt.want, tt.data)

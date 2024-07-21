@@ -2,18 +2,18 @@ package dns
 
 import (
 	"bytes"
+	"errors"
 	"net"
 	"strconv"
 	"testing"
 )
 
-// TODO: add error tests
-
 func TestRDataA(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "A record",
@@ -21,6 +21,13 @@ func TestRDataA(t *testing.T) {
 			want: &RDataA{
 				IP: net.ParseIP("192.1.0.1"),
 			},
+			wantError: nil,
+		},
+		{
+			name:      "Invalid A record",
+			data:      []byte{192, 1, 0, 1, 1},
+			want:      &RDataA{},
+			wantError: ErrInvalidRecordData,
 		},
 	}
 
@@ -30,8 +37,11 @@ func TestRDataA(t *testing.T) {
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
 
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataA)
@@ -65,9 +75,10 @@ func TestRDataA(t *testing.T) {
 
 func TestRDataAAAA(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "AAAA record",
@@ -75,6 +86,15 @@ func TestRDataAAAA(t *testing.T) {
 			want: &RDataAAAA{
 				IP: net.ParseIP("2001:db8::1"),
 			},
+			wantError: nil,
+		},
+		{
+			name: "Invalid AAAA record",
+			data: []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0},
+			want: &RDataAAAA{
+				IP: net.ParseIP("2001:db8::1"),
+			},
+			wantError: ErrInvalidRecordData,
 		},
 	}
 
@@ -84,8 +104,11 @@ func TestRDataAAAA(t *testing.T) {
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
 
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataAAAA)
@@ -119,9 +142,10 @@ func TestRDataAAAA(t *testing.T) {
 
 func TestRDataCNAME(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "CNAME record",
@@ -129,6 +153,15 @@ func TestRDataCNAME(t *testing.T) {
 			want: &RDataCNAME{
 				domainName: "example.com.",
 			},
+			wantError: nil,
+		},
+		{
+			name: "Invalid CNAME record",
+			data: []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm'},
+			want: &RDataCNAME{
+				domainName: "example.com.",
+			},
+			wantError: ErrInvalidRecordData,
 		},
 	}
 
@@ -138,8 +171,11 @@ func TestRDataCNAME(t *testing.T) {
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
 
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataCNAME)
@@ -173,9 +209,10 @@ func TestRDataCNAME(t *testing.T) {
 
 func TestRDataTXT(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "TXT record",
@@ -185,6 +222,7 @@ func TestRDataTXT(t *testing.T) {
 			want: &RDataTXT{
 				text: "test",
 			},
+			wantError: nil,
 		},
 	}
 
@@ -194,8 +232,11 @@ func TestRDataTXT(t *testing.T) {
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
 
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataTXT)
@@ -229,9 +270,10 @@ func TestRDataTXT(t *testing.T) {
 
 func TestRDataMX(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "MX record",
@@ -243,6 +285,30 @@ func TestRDataMX(t *testing.T) {
 				preference: 10,
 				domainName: "mx1.example.com.",
 			},
+			wantError: nil,
+		},
+		{
+			name: "Invalid MX record: bad domain name",
+			data: []byte{
+				0, 10,
+				3, 'm', 'x', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm',
+			},
+			want: &RDataMX{
+				preference: 10,
+				domainName: "mx1.example.com.",
+			},
+			wantError: ErrInvalidRecordData,
+		},
+		{
+			name: "Invalid MX record: missing field",
+			data: []byte{
+				3, 'm', 'x', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+			},
+			want: &RDataMX{
+				preference: 10,
+				domainName: "mx1.example.com.",
+			},
+			wantError: ErrInvalidRecordData,
 		},
 	}
 
@@ -251,8 +317,12 @@ func TestRDataMX(t *testing.T) {
 			var got RDataMX
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataMX)
@@ -290,9 +360,10 @@ func TestRDataMX(t *testing.T) {
 
 func TestRDataSOA(t *testing.T) {
 	tests := []struct {
-		name string
-		data []byte
-		want RData
+		name      string
+		data      []byte
+		want      RData
+		wantError error
 	}{
 		{
 			name: "SOA record",
@@ -314,6 +385,35 @@ func TestRDataSOA(t *testing.T) {
 				expire:  2560,
 				minimum: 256,
 			},
+			wantError: nil,
+		},
+		{
+			name: "Invalid SOA record: bad domain name",
+			data: []byte{
+				3, 'n', 's', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // MName: ns1.example.com
+				5, 'a', 'd', 'm', 'i', 'n', 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RName: admin.example.com
+				0, 0, 0, 202, // Serial: 202
+				0, 0, 1, 44, // Refresh: 300
+				0, 0, 0, 100, // Retry: 100
+				0, 0, 10, 0, // Expire: 2560
+				0, 0, 1, 0, // Minimum: 256
+			},
+			want:      &RDataSOA{},
+			wantError: ErrInvalidRecordData,
+		},
+		{
+			name: "Invalid SOA record: missing field",
+			data: []byte{
+				3, 'n', 's', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // MName: ns1.example.com
+				5, 'a', 'd', 'm', 'i', 'n', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // RName: admin.example.com
+				0, 0, 0, 202, // Serial: 202
+				0, 0, 1, 44, // Refresh: 300
+				0, 0, 0, 100, // Retry: 100
+				0, 0, 10, 0, // Expire: 2560
+				// missing minimum
+			},
+			want:      &RDataSOA{},
+			wantError: ErrInvalidRecordData,
 		},
 	}
 
@@ -323,8 +423,11 @@ func TestRDataSOA(t *testing.T) {
 
 			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
 
-			if err != nil {
-				t.Fatalf("Decode() error = %v, data = %v\n", err, tt.data)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("Decode() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
 
 			want, ok := tt.want.(*RDataSOA)

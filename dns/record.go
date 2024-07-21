@@ -44,7 +44,7 @@ type ResourceRecord struct {
 func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, invalidResourceRecordError(err.Error())
 	}
 
 	offset += newOffset

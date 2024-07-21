@@ -27,15 +27,17 @@ func (rdata *RDataA) String() string {
 }
 
 func (rdata *RDataA) Encode(buf *bytes.Buffer) error {
-	_, err := buf.Write(rdata.IP)
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("A RData: %s", err.Error()))
-	}
+	buf.Write(rdata.IP)
 	return nil
 }
 
 func (rdata *RDataA) Decode(data []byte, offset int, length uint16) (int, error) {
-	rdata.IP = net.IP(data[offset : offset+int(length)])
+	ip := net.IP(data[offset : offset+int(length)])
+	if ip.To4() == nil {
+		return offset, invalidRecordDataError(fmt.Sprintf("invalid IPv4 address: %v", ip))
+	}
+
+	rdata.IP = ip
 	return offset + int(length), nil
 }
 
@@ -52,15 +54,17 @@ func (rdata *RDataAAAA) String() string {
 }
 
 func (rdata *RDataAAAA) Encode(buf *bytes.Buffer) error {
-	_, err := buf.Write(rdata.IP)
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("AAAA RData: %s", err.Error()))
-	}
+	buf.Write(rdata.IP)
 	return nil
 }
 
 func (rdata *RDataAAAA) Decode(data []byte, offset int, length uint16) (int, error) {
-	rdata.IP = net.IP(data[offset : offset+int(length)])
+	ip := net.IP(data[offset : offset+int(length)])
+	if ip.To16() == nil {
+		return offset, invalidRecordDataError(fmt.Sprintf("invalid IPv6 address: %v", ip))
+	}
+
+	rdata.IP = ip
 	return offset + int(length), nil
 }
 
@@ -161,10 +165,7 @@ func (rdata *RDataTXT) String() string {
 }
 
 func (rdata *RDataTXT) Encode(buf *bytes.Buffer) error {
-	_, err := buf.WriteString(rdata.text)
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("TXT RData: %s", err.Error()))
-	}
+	buf.WriteString(rdata.text)
 	return nil
 }
 
@@ -188,10 +189,7 @@ func (rdata *RDataMX) String() string {
 }
 
 func (rdata *RDataMX) Encode(buf *bytes.Buffer) error {
-	_, err := buf.Write(encodeUint16(rdata.preference))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
-	}
+	buf.Write(encodeUint16(rdata.preference))
 	encodeDomainName(buf, rdata.domainName)
 	return nil
 }
@@ -246,30 +244,11 @@ func (rdata *RDataSOA) Encode(buf *bytes.Buffer) error {
 	encodeDomainName(buf, rdata.mName)
 	encodeDomainName(buf, rdata.rName)
 
-	_, err := buf.Write(encodeUint32(rdata.serial))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
-	}
-
-	_, err = buf.Write(encodeUint32(rdata.refresh))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
-	}
-
-	_, err = buf.Write(encodeUint32(rdata.retry))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
-	}
-
-	_, err = buf.Write(encodeUint32(rdata.expire))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
-	}
-
-	_, err = buf.Write(encodeUint32(rdata.minimum))
-	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
-	}
+	buf.Write(encodeUint32(rdata.serial))
+	buf.Write(encodeUint32(rdata.refresh))
+	buf.Write(encodeUint32(rdata.retry))
+	buf.Write(encodeUint32(rdata.expire))
+	buf.Write(encodeUint32(rdata.minimum))
 	return nil
 }
 
@@ -289,11 +268,15 @@ func (rdata *RDataSOA) Decode(data []byte, offset int, length uint16) (int, erro
 	}
 	offset += newOffset
 
+	if offset+20 > int(length) {
+		return 0, invalidRecordDataError("too short")
+	}
 	rdata.serial = decodeUint32(data, offset)
 	rdata.refresh = decodeUint32(data, offset+4)
 	rdata.retry = decodeUint32(data, offset+8)
 	rdata.expire = decodeUint32(data, offset+12)
 	rdata.minimum = decodeUint32(data, offset+16)
+	offset += 20
 
-	return newOffset, nil
+	return offset, nil
 }
