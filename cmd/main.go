@@ -74,7 +74,7 @@ func main() {
 
 	dns.PrintBasicQueryInfo(domain, questionType)
 	dns.PrintMessage(decodedMessage)
-	dns.PrintQueryInfo(dnsServer, queryTime, tcpQuery)
+	dns.PrintQueryInfo(dnsServer, queryTime, tcpQuery, len(response))
 }
 
 func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]byte, error) {

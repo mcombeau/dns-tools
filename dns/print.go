@@ -12,7 +12,8 @@ import (
 //   - dnsServer: The DNS server the query is sent to.
 //   - queryTime: The duration of the query.
 //   - tcpQuery: Indicates if the query was over TCP (true) or UDP (false).
-func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
+//   - messageLength: The length of the message.
+func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool, messageLength int) {
 	fmt.Printf("\n;; Query time: %v\n", queryTime)
 	fmt.Printf(";; SERVER: %s ", dnsServer)
 	if tcpQuery {
@@ -21,6 +22,7 @@ func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool) {
 		fmt.Printf("(UDP)\n")
 	}
 	fmt.Println(";; WHEN:", time.Now().Format(time.RFC1123))
+	fmt.Println(";; MSG SIZE recvd:", messageLength)
 }
 
 // PrintBasicQueryInfo prints the basic query information.
