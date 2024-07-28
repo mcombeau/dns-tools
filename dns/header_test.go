@@ -123,7 +123,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 			},
 			wantError: nil,
 			want: &Message{
-				Header: &Header{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,
@@ -160,7 +160,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 			},
 			wantError: nil,
 			want: &Message{
-				Header: &Header{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,
@@ -216,7 +216,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 	}
 }
 
-func assertHeader(t *testing.T, got *Header, want *Header, data []byte) {
+func assertHeader(t *testing.T, got Header, want Header, data []byte) {
 	if got.Id != want.Id {
 		t.Errorf("decodeDNSHeader() Id got = %d, want = %d, data = %v\n", got.Id, want.Id, data)
 	}
@@ -373,13 +373,13 @@ func TestEncodeFlags(t *testing.T) {
 func TestEncodeDNSHeader(t *testing.T) {
 	tests := []struct {
 		name string
-		data *Message
+		data Message
 		want []byte
 	}{
 		{
 			name: "Basic header encoding",
-			data: &Message{
-				Header: &Header{
+			data: Message{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,
@@ -414,8 +414,8 @@ func TestEncodeDNSHeader(t *testing.T) {
 		},
 		{
 			name: "RecursionAvailable flag on",
-			data: &Message{
-				Header: &Header{
+			data: Message{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,

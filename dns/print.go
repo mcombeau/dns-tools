@@ -38,7 +38,7 @@ func PrintBasicQueryInfo(domainName string, questionType uint16) {
 //
 // Parameters:
 //   - message: A pointer to the Message structure to print.
-func PrintMessage(message *Message) {
+func PrintMessage(message Message) {
 	fmt.Println(";; Got answer:")
 
 	printHeader(message.Header)
@@ -60,21 +60,21 @@ func PrintMessage(message *Message) {
 	}
 }
 
-func printHeader(header *Header) {
+func printHeader(header Header) {
 
 	fmt.Printf(";; ->>HEADER<<- ")
 	fmt.Printf("opcode: %s, ", DNSOpCode(header.Flags.Opcode))
 	fmt.Printf("status: %s, ", DNSRCode(header.Flags.ResponseCode))
 	fmt.Printf("id: %d\n", header.Id)
 
-	fmt.Printf(";; flags: %s; ", getFlagString(&header.Flags))
+	fmt.Printf(";; flags: %s; ", getFlagString(header.Flags))
 	fmt.Printf("QUERY: %d; ", header.QuestionCount)
 	fmt.Printf("ANSWER: %d; ", header.AnswerRRCount)
 	fmt.Printf("AUTHORITY: %d; ", header.NameserverRRCount)
 	fmt.Printf("ADDITIONAL: %d\n", header.AdditionalRRCount)
 }
 
-func getFlagString(flags *Flags) string {
+func getFlagString(flags Flags) string {
 	flagStrings := []string{}
 
 	if flags.Response {

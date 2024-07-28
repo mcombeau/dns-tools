@@ -21,8 +21,8 @@ func main() {
 	// Seed the RNG for DNS header ID
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	message := &dns.Message{
-		Header: &dns.Header{
+	message := dns.Message{
+		Header: dns.Header{
 			Id:            uint16(rng.Intn(int(maxUint16) + 1)),
 			Flags:         dns.Flags{RecursionDesired: true},
 			QuestionCount: 1,

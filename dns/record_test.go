@@ -242,12 +242,12 @@ func TestDecodeResourceRecord(t *testing.T) {
 				return
 			}
 
-			assertRessourceRecord(t, got, &tt.want, tt.data)
+			assertRessourceRecord(t, got, tt.want, tt.data)
 		})
 	}
 }
 
-func assertRessourceRecord(t *testing.T, got *ResourceRecord, want *ResourceRecord, data []byte) {
+func assertRessourceRecord(t *testing.T, got ResourceRecord, want ResourceRecord, data []byte) {
 	if got.Name != want.Name {
 		t.Errorf("decodeDNSResourceRecord() Name got = %s, want = %s, data = %v\n", got.Name, want.Name, data)
 	}

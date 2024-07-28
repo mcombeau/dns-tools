@@ -10,7 +10,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 	tests := []struct {
 		name string
 		data []byte
-		want *Message
+		want Message
 	}{
 		{
 			name: "Basic DNS message decoding",
@@ -31,8 +31,8 @@ func TestDecodeDNSMessage(t *testing.T) {
 				0, 4, // RDLength: 4
 				93, 184, 216, 34, // RData: 93.184.216.34
 			},
-			want: &Message{
-				Header: &Header{
+			want: Message{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,
@@ -94,8 +94,8 @@ func TestDecodeDNSMessage(t *testing.T) {
 				0, 4, // RDLength: 4
 				93, 184, 216, 34, // RData: 93.184.216.34
 			},
-			want: &Message{
-				Header: &Header{
+			want: Message{
+				Header: Header{
 					Id: 1234,
 					Flags: Flags{
 						Response:           true,
@@ -155,14 +155,14 @@ func TestDecodeDNSMessage(t *testing.T) {
 				t.Fatalf("decodeDNSMessage() Questions count mismatch got = %d, want = %d, data = %v\n", len(got.Questions), len(tt.want.Questions), tt.data)
 			}
 			for i := range got.Questions {
-				assertQuestion(t, &got.Questions[i], &tt.want.Questions[i], tt.data)
+				assertQuestion(t, got.Questions[i], tt.want.Questions[i], tt.data)
 			}
 
 			if len(got.Answers) != len(tt.want.Answers) {
 				t.Fatalf("decodeDNSMessage() Answers count mismatch got = %d, want = %d, data = %v\n", len(got.Answers), len(tt.want.Answers), tt.data)
 			}
 			for i := range got.Answers {
-				assertRessourceRecord(t, &got.Answers[i], &tt.want.Answers[i], tt.data)
+				assertRessourceRecord(t, got.Answers[i], tt.want.Answers[i], tt.data)
 			}
 		})
 	}
@@ -170,7 +170,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 
 func TestEncodeDNSMessage(t *testing.T) {
 	message := Message{
-		Header: &Header{
+		Header: Header{
 			Id:            1234,
 			Flags:         Flags{RecursionDesired: true},
 			QuestionCount: 1,
@@ -198,7 +198,7 @@ func TestEncodeDNSMessage(t *testing.T) {
 		0x00, 0x01, // QCLASS: 1 (IN)
 	}
 
-	got, err := EncodeMessage(&message)
+	got, err := EncodeMessage(message)
 
 	if err != nil {
 		t.Fatalf("encodeDNSMessage() unexpected error = %v\n", err)

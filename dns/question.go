@@ -27,16 +27,16 @@ type Question struct {
 	QClass uint16
 }
 
-func decodeQuestion(data []byte, offset int) (*Question, int, error) {
+func decodeQuestion(data []byte, offset int) (Question, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return nil, 0, invalidQuestionError(err.Error())
+		return Question{}, 0, invalidQuestionError(err.Error())
 	}
 
 	offset += newOffset
 
 	if len(data) < offset+4 {
-		return nil, 0, invalidQuestionError("too short")
+		return Question{}, 0, invalidQuestionError("too short")
 	}
 
 	question := Question{
@@ -45,7 +45,7 @@ func decodeQuestion(data []byte, offset int) (*Question, int, error) {
 		QClass: decodeUint16(data, offset+2),
 	}
 
-	return &question, offset + 4, nil
+	return question, offset + 4, nil
 }
 
 func encodeQuestion(buf *bytes.Buffer, question Question) {

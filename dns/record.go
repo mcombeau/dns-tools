@@ -41,16 +41,16 @@ type ResourceRecord struct {
 	RData    RData
 }
 
-func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error) {
+func decodeResourceRecord(data []byte, offset int) (ResourceRecord, int, error) {
 	name, newOffset, err := decodeDomainName(data, offset)
 	if err != nil {
-		return nil, 0, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, 0, invalidResourceRecordError(err.Error())
 	}
 
 	offset += newOffset
 
 	if len(data) < offset+10 {
-		return nil, 0, invalidResourceRecordError("too short")
+		return ResourceRecord{}, 0, invalidResourceRecordError("too short")
 	}
 	rtype := decodeUint16(data, offset)
 	rclass := decodeUint16(data, offset+2)
@@ -59,17 +59,17 @@ func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error)
 	offset += 10
 
 	if len(data) < offset+int(rdlength) {
-		return nil, 0, invalidResourceRecordError("invalid RData length: too short")
+		return ResourceRecord{}, 0, invalidResourceRecordError("invalid RData length: too short")
 	}
 
 	rdata, err := getRDataStruct(rtype)
 	if err != nil {
-		return nil, 0, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, 0, invalidResourceRecordError(err.Error())
 	}
 
 	_, err = rdata.Decode(data, offset, rdlength)
 	if err != nil {
-		return nil, 0, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, 0, invalidResourceRecordError(err.Error())
 	}
 
 	record := ResourceRecord{
@@ -83,7 +83,7 @@ func decodeResourceRecord(data []byte, offset int) (*ResourceRecord, int, error)
 
 	offset += int(record.RDLength)
 
-	return &record, offset, nil
+	return record, offset, nil
 }
 
 func getRDataStruct(rtype uint16) (RData, error) {

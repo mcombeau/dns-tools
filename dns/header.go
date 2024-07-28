@@ -47,9 +47,9 @@ type Flags struct {
 	ResponseCode       uint16
 }
 
-func decodeHeader(data []byte) (*Header, error) {
+func decodeHeader(data []byte) (Header, error) {
 	if len(data) < 12 {
-		return nil, invalidHeaderError("too short")
+		return Header{}, invalidHeaderError("too short")
 	}
 
 	header := Header{
@@ -61,7 +61,7 @@ func decodeHeader(data []byte) (*Header, error) {
 		AdditionalRRCount: decodeUint16(data, 10), // bytes 10-11: Number of Additional RRs
 	}
 
-	return &header, nil
+	return header, nil
 }
 
 const (
@@ -92,7 +92,7 @@ func decodeFlags(data []byte) Flags {
 	}
 }
 
-func encodeHeader(buf *bytes.Buffer, msg *Message) {
+func encodeHeader(buf *bytes.Buffer, msg Message) {
 	buf.Write(encodeUint16(msg.Header.Id))
 	buf.Write(encodeFlags(msg.Header.Flags))
 	buf.Write(encodeUint16(msg.Header.QuestionCount))

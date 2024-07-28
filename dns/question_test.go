@@ -130,12 +130,12 @@ func TestDecodeDNSQuestion(t *testing.T) {
 				return
 			}
 
-			assertQuestion(t, got, &tt.want, tt.data)
+			assertQuestion(t, got, tt.want, tt.data)
 		})
 	}
 }
 
-func assertQuestion(t *testing.T, got *Question, want *Question, data []byte) {
+func assertQuestion(t *testing.T, got Question, want Question, data []byte) {
 	if got.Name != want.Name {
 		t.Errorf("decodeDNSQuestion() Name got = %s, want = %s, data = %v\n", got.Name, want.Name, data)
 	}

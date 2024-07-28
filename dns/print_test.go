@@ -7,12 +7,12 @@ import (
 func TestGetFlagString(t *testing.T) {
 	tests := []struct {
 		name string
-		data *Flags
+		data Flags
 		want string
 	}{
 		{
 			name: "No flags set",
-			data: &Flags{
+			data: Flags{
 				Response:           false,
 				Authoritative:      false,
 				Truncated:          false,
@@ -26,7 +26,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "QR flag set",
-			data: &Flags{
+			data: Flags{
 				Response:           true,
 				Authoritative:      false,
 				Truncated:          false,
@@ -40,7 +40,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "AA flag set",
-			data: &Flags{
+			data: Flags{
 				Response:           false,
 				Authoritative:      true,
 				Truncated:          false,
@@ -54,7 +54,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "All flags set",
-			data: &Flags{
+			data: Flags{
 				Response:           true,
 				Authoritative:      true,
 				Truncated:          true,
@@ -68,7 +68,7 @@ func TestGetFlagString(t *testing.T) {
 		},
 		{
 			name: "Mixed flags set",
-			data: &Flags{
+			data: Flags{
 				Response:           true,
 				Authoritative:      false,
 				Truncated:          true,

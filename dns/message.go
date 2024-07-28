@@ -23,7 +23,7 @@ import (
 //     +---------------------+
 
 type Message struct {
-	Header      *Header
+	Header      Header
 	Questions   []Question
 	Answers     []ResourceRecord
 	NameServers []ResourceRecord
@@ -38,45 +38,53 @@ type Message struct {
 // Returns:
 //   - *Message: The decoded DNS message in a structure.
 //   - error: If the message is invalid or decoding fails.
-func DecodeMessage(data []byte) (*Message, error) {
+func DecodeMessage(data []byte) (Message, error) {
 	header, err := decodeHeader(data)
 	if err != nil {
-		return nil, invalidMessageError(err.Error())
+		return Message{}, invalidMessageError(err.Error())
 	}
 	offset := 12
 
-	questions := make([]Question, 0, header.QuestionCount)
-	for i := 0; i < int(header.QuestionCount); i++ {
-		question, newOffset, err := decodeQuestion(data, offset)
-		if err != nil {
-			return nil, invalidMessageError(err.Error())
-		}
-		questions = append(questions, *question)
-		offset = newOffset
+	questions, offset, err := decodeQuestions(data, offset, header.QuestionCount)
+	if err != nil {
+		return Message{}, invalidMessageError(fmt.Sprintf("question section: %s", err.Error()))
 	}
 
 	answers, offset, err := decodeResourceRecords(data, offset, header.AnswerRRCount)
 	if err != nil {
-		return nil, invalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
+		return Message{}, invalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
 	}
 
 	nameServers, offset, err := decodeResourceRecords(data, offset, header.NameserverRRCount)
 	if err != nil {
-		return nil, invalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
+		return Message{}, invalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
 	}
 
 	additionals, _, err := decodeResourceRecords(data, offset, header.AdditionalRRCount)
 	if err != nil {
-		return nil, invalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
+		return Message{}, invalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
 	}
 
-	return &Message{
+	return Message{
 		Header:      header,
 		Questions:   questions,
 		Answers:     answers,
 		NameServers: nameServers,
 		Additionals: additionals,
 	}, nil
+}
+
+func decodeQuestions(data []byte, offset int, count uint16) ([]Question, int, error) {
+	questions := make([]Question, 0, count)
+	for i := 0; i < int(count); i++ {
+		question, newOffset, err := decodeQuestion(data, offset)
+		if err != nil {
+			return nil, 0, err
+		}
+		questions = append(questions, question)
+		offset = newOffset
+	}
+	return questions, offset, nil
 }
 
 func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRecord, int, error) {
@@ -86,7 +94,7 @@ func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRec
 		if err != nil {
 			return nil, 0, err
 		}
-		records = append(records, *record)
+		records = append(records, record)
 		offset = newOffset
 	}
 	return records, offset, nil
@@ -100,24 +108,27 @@ func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRec
 // Returns:
 //   - []byte: The encoded DNS message bytes.
 //   - error: If encoding fails.
-func EncodeMessage(msg *Message) ([]byte, error) {
+func EncodeMessage(msg Message) ([]byte, error) {
 	buf := new(bytes.Buffer)
 
 	encodeHeader(buf, msg)
 
-	for _, question := range msg.Questions {
-		encodeQuestion(buf, question)
-	}
-
-	for _, rr := range msg.Answers {
-		encodeResourceRecord(buf, rr)
-	}
-	for _, rr := range msg.NameServers {
-		encodeResourceRecord(buf, rr)
-	}
-	for _, rr := range msg.Additionals {
-		encodeResourceRecord(buf, rr)
-	}
+	encodeQuestions(msg.Questions, buf)
+	encodeResourceRecords(msg.Answers, buf)
+	encodeResourceRecords(msg.NameServers, buf)
+	encodeResourceRecords(msg.Additionals, buf)
 
 	return buf.Bytes(), nil
+}
+
+func encodeQuestions(questions []Question, buf *bytes.Buffer) {
+	for _, question := range questions {
+		encodeQuestion(buf, question)
+	}
+}
+
+func encodeResourceRecords(resourceRecords []ResourceRecord, buf *bytes.Buffer) {
+	for _, rr := range resourceRecords {
+		encodeResourceRecord(buf, rr)
+	}
 }
