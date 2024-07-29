@@ -78,17 +78,19 @@ const (
 )
 
 func decodeFlags(data []byte) Flags {
+	flags := uint16(data[0])<<8 | uint16(data[1])
+
 	return Flags{
-		Response:           data[0]&uint8(QRMask>>8) != 0,
-		Opcode:             (uint16(data[0]) >> 3) & (OpcodeMask >> 11),
-		Authoritative:      data[0]&uint8(AAMask>>8) != 0,
-		Truncated:          data[0]&uint8(TCMask>>8) != 0,
-		RecursionDesired:   data[0]&uint8(RDMask>>8) != 0,
-		RecursionAvailable: data[1]&uint8(RAMask) != 0,
-		DnssecOk:           data[1]&uint8(DOMask) != 0,
-		AuthenticatedData:  data[1]&uint8(ADMask) != 0,
-		CheckingDisabled:   data[1]&uint8(CDMask) != 0,
-		ResponseCode:       uint16(data[1]) & RCodeMask,
+		Response:           flags&QRMask != 0,
+		Opcode:             (flags & OpcodeMask) >> 11,
+		Authoritative:      flags&AAMask != 0,
+		Truncated:          flags&TCMask != 0,
+		RecursionDesired:   flags&RDMask != 0,
+		RecursionAvailable: flags&RAMask != 0,
+		DnssecOk:           flags&DOMask != 0,
+		AuthenticatedData:  flags&ADMask != 0,
+		CheckingDisabled:   flags&CDMask != 0,
+		ResponseCode:       flags & RCodeMask,
 	}
 }
 
