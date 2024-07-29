@@ -43,7 +43,7 @@ func DecodeMessage(data []byte) (Message, error) {
 	if err != nil {
 		return Message{}, invalidMessageError(err.Error())
 	}
-	offset := 12
+	offset := HeaderLength
 
 	questions, offset, err := decodeQuestions(data, offset, header.QuestionCount)
 	if err != nil {

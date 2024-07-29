@@ -23,7 +23,7 @@ import (
 //     |                    ARCOUNT                    |
 //     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-// Header is 12 bytes long
+const HeaderLength = 12
 
 type Header struct {
 	Id                uint16
@@ -48,7 +48,7 @@ type Flags struct {
 }
 
 func decodeHeader(data []byte) (Header, error) {
-	if len(data) < 12 {
+	if len(data) < HeaderLength {
 		return Header{}, invalidHeaderError("too short")
 	}
 
