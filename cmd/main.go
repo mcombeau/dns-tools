@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/rand"
 	"flag"
 	"fmt"
@@ -8,13 +9,17 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/mcombeau/dns-tools/dns"
 )
 
 func main() {
-	dnsServer, domain, questionType := parseArgs()
+	dnsServer, domain, questionType, err := parseArgs()
+	if err != nil {
+		log.Fatalf("Failed to parse args: %v\n", err)
+	}
 
 	message := dns.Message{
 		Header: dns.Header{
@@ -114,12 +119,12 @@ func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]by
 	return response, nil
 }
 
-func parseArgs() (dnsServer string, domain string, questionType uint16) {
+func parseArgs() (dnsServer string, domain string, questionType uint16, err error) {
 	reverseDNSQuery := flag.Bool("x", false, "Perform a reverse DNS query")
 
 	var server string
 	var port string
-	flag.StringVar(&server, "s", "1.1.1.1", "Specify the DNS resolver server address")
+	flag.StringVar(&server, "s", "", "Specify the DNS resolver server address")
 	flag.StringVar(&port, "p", "53", "Specify the DNS resolver server port")
 
 	flag.Usage = func() {
@@ -130,21 +135,22 @@ func parseArgs() (dnsServer string, domain string, questionType uint16) {
 	}
 	flag.Parse()
 
-	dnsServer = server + ":" + port
+	dnsServer, err = getDNSServer(server, port)
+	if err != nil {
+		return "", "", 0, fmt.Errorf("get DNS resolver: %w", err)
+	}
 
 	if flag.NArg() < 1 || flag.NArg() > 2 {
 		flag.Usage()
 		os.Exit(0)
 	}
 
-	var err error
-
 	if *reverseDNSQuery {
 		ip := flag.Arg(0)
 		questionType = dns.PTR
 		domain, err = dns.GetReverseDNSDomain(ip)
 		if err != nil {
-			log.Fatalf("Get Reverse DNS Domain from IP address: %v\n", err)
+			return "", "", 0, fmt.Errorf("get Reverse DNS Domain from IP address: %w", err)
 		}
 	} else {
 		domain = flag.Arg(0)
@@ -154,7 +160,41 @@ func parseArgs() (dnsServer string, domain string, questionType uint16) {
 		}
 	}
 
-	return dnsServer, domain, questionType
+	return dnsServer, domain, questionType, nil
+}
+
+func getDNSServer(server string, port string) (dnsServer string, err error) {
+	if server != "" {
+		return server + ":" + port, nil
+	}
+
+	file, err := os.Open("/etc/resolv.conf")
+	if err != nil {
+		return "", fmt.Errorf("cannot open /etc/resolv.conf: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "nameserver") {
+			fields := strings.Fields(line)
+			if len(fields) > 1 {
+				server = fields[1]
+				break
+			}
+		}
+	}
+
+	if err = scanner.Err(); err != nil {
+		return "", fmt.Errorf("error reading /etc/resolv.conf: %w", err)
+	}
+
+	if server == "" {
+		return "", fmt.Errorf("no nameserver found in /etc/resolv.conf")
+	}
+
+	return server + ":" + port, nil
 }
 
 func generateRandomID() uint16 {
