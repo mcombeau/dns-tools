@@ -1,10 +1,11 @@
 package main
 
 import (
+	"crypto/rand"
 	"flag"
 	"fmt"
+	"io"
 	"log"
-	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -12,18 +13,13 @@ import (
 	"github.com/mcombeau/dns-tools/dns"
 )
 
-const maxUint16 = ^uint16(0) // ^ negation: sets all bits to 1: 65535
-
 func main() {
 	dnsServer := "8.8.8.8:53" // Google's public DNS server
 	domain, questionType := parseArgs()
 
-	// Seed the RNG for DNS header ID
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-
 	message := dns.Message{
 		Header: dns.Header{
-			Id:            uint16(rng.Intn(int(maxUint16) + 1)),
+			Id:            generateRandomID(),
 			Flags:         dns.Flags{RecursionDesired: true},
 			QuestionCount: 1,
 		},
@@ -154,4 +150,15 @@ func parseArgs() (string, uint16) {
 	}
 
 	return domain, questionType
+}
+
+func generateRandomID() uint16 {
+	bytes := [2]byte{}
+
+	_, err := io.ReadFull(rand.Reader, bytes[:])
+	if err != nil {
+		panic(err)
+	}
+
+	return uint16(bytes[0])<<8 | uint16(bytes[1])
 }
