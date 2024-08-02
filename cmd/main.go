@@ -14,8 +14,7 @@ import (
 )
 
 func main() {
-	dnsServer := "8.8.8.8:53" // Google's public DNS server
-	domain, questionType := parseArgs()
+	dnsServer, domain, questionType := parseArgs()
 
 	message := dns.Message{
 		Header: dns.Header{
@@ -115,23 +114,29 @@ func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]by
 	return response, nil
 }
 
-func parseArgs() (string, uint16) {
+func parseArgs() (dnsServer string, domain string, questionType uint16) {
 	reverseDNSQuery := flag.Bool("x", false, "Perform a reverse DNS query")
+
+	var server string
+	var port string
+	flag.StringVar(&server, "s", "1.1.1.1", "Specify the DNS resolver server address")
+	flag.StringVar(&port, "p", "53", "Specify the DNS resolver server port")
+
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: go run main.go [-x] <domain_or_ip> [question_type]\n")
+		fmt.Fprintf(os.Stderr, "Usage: go run main.go [-s server] [-p port] [-x] <domain_or_ip> [question_type]\n")
 		fmt.Fprintf(os.Stderr, "Options:\n")
 		fmt.Fprintf(os.Stderr, "  -h\tDisplay this help message\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
 
+	dnsServer = server + ":" + port
+
 	if flag.NArg() < 1 || flag.NArg() > 2 {
 		flag.Usage()
 		os.Exit(0)
 	}
 
-	var domain string
-	var questionType uint16
 	var err error
 
 	if *reverseDNSQuery {
@@ -149,7 +154,7 @@ func parseArgs() (string, uint16) {
 		}
 	}
 
-	return domain, questionType
+	return dnsServer, domain, questionType
 }
 
 func generateRandomID() uint16 {
