@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDecodeDNSQuestion(t *testing.T) {
+func TestReadDNSQuestion(t *testing.T) {
 	tests := []struct {
 		name      string
 		data      []byte
@@ -121,11 +121,13 @@ func TestDecodeDNSQuestion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := decodeQuestion(tt.data, 0)
+			reader := &dnsReader{data: tt.data}
+
+			got, err := reader.readQuestion()
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
-					t.Fatalf("decodeDNSQuestion() error got = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+					t.Fatalf("readDNSQuestion() error got = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
 				}
 				return
 			}
@@ -137,13 +139,13 @@ func TestDecodeDNSQuestion(t *testing.T) {
 
 func assertQuestion(t *testing.T, got Question, want Question, data []byte) {
 	if got.Name != want.Name {
-		t.Errorf("decodeDNSQuestion() Name got = %s, want = %s, data = %v\n", got.Name, want.Name, data)
+		t.Errorf("readDNSQuestion() Name got = %s, want = %s, data = %v\n", got.Name, want.Name, data)
 	}
 	if got.QClass != want.QClass {
-		t.Errorf("decodeDNSQuestion() QClass got = %d, want = %d, data = %v\n", got.QClass, want.QClass, data)
+		t.Errorf("readDNSQuestion() QClass got = %d, want = %d, data = %v\n", got.QClass, want.QClass, data)
 	}
 	if got.QType != want.QType {
-		t.Errorf("decodeDNSQuestion() QType got = %d, want = %d, data = %v\n", got.QType, want.QType, data)
+		t.Errorf("readDNSQuestion() QType got = %d, want = %d, data = %v\n", got.QType, want.QType, data)
 	}
 }
 

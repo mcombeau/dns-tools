@@ -27,25 +27,35 @@ type Question struct {
 	QClass uint16
 }
 
-func decodeQuestion(data []byte, offset int) (Question, int, error) {
-	name, newOffset, err := decodeDomainName(data, offset)
+func (reader *dnsReader) readQuestions(count uint16) (questions []Question, err error) {
+	questions = make([]Question, 0, count)
+	for i := 0; i < int(count); i++ {
+		question, err := reader.readQuestion()
+		if err != nil {
+			return nil, err
+		}
+		questions = append(questions, question)
+	}
+	return questions, nil
+}
+
+func (reader *dnsReader) readQuestion() (question Question, err error) {
+	name, err := reader.readDomainName()
 	if err != nil {
-		return Question{}, 0, invalidQuestionError(err.Error())
+		return Question{}, invalidQuestionError(err.Error())
 	}
 
-	offset += newOffset
-
-	if len(data) < offset+4 {
-		return Question{}, 0, invalidQuestionError("too short")
+	if len(reader.data) < reader.offset+4 {
+		return Question{}, invalidQuestionError("too short")
 	}
 
-	question := Question{
+	question = Question{
 		Name:   name,
-		QType:  decodeUint16(data, offset),
-		QClass: decodeUint16(data, offset+2),
+		QType:  reader.readUint16(),
+		QClass: reader.readUint16(),
 	}
 
-	return question, offset + 4, nil
+	return question, nil
 }
 
 func encodeQuestion(buf *bytes.Buffer, question Question) {

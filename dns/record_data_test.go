@@ -34,8 +34,9 @@ func TestRDataA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataA
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -101,8 +102,9 @@ func TestRDataAAAA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataAAAA
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -168,8 +170,9 @@ func TestRDataCNAME(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataCNAME
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -229,8 +232,9 @@ func TestRDataTXT(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataTXT
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -315,8 +319,9 @@ func TestRDataMX(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataMX
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -406,8 +411,9 @@ func TestRDataSOA(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got RDataSOA
+			reader := &dnsReader{data: tt.data}
 
-			_, err := got.Decode(tt.data, 0, uint16(len(tt.data)))
+			err := got.Decode(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {

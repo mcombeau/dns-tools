@@ -24,5 +24,5 @@ func (c DNSClass) String() string {
 	if n, ok := dnsClassNames[uint16(c)]; ok {
 		return n
 	}
-	return "Unknown"
+	return "UNKNOWN"
 }

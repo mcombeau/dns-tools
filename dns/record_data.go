@@ -11,7 +11,7 @@ import (
 type RData interface {
 	String() string
 	Encode(buf *bytes.Buffer) error
-	Decode(data []byte, offset int, length uint16) (int, error)
+	Decode(reader *dnsReader, length uint16) error
 }
 
 // -------------- A
@@ -31,14 +31,15 @@ func (rdata *RDataA) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataA) Decode(data []byte, offset int, length uint16) (int, error) {
-	ip := net.IP(data[offset : offset+int(length)])
+func (rdata *RDataA) Decode(reader *dnsReader, length uint16) (err error) {
+	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
 	if ip.To4() == nil {
-		return offset, invalidRecordDataError(fmt.Sprintf("invalid IPv4 address: %v", ip))
+		return invalidRecordDataError(fmt.Sprintf("invalid IPv4 address: %v", ip))
 	}
+	reader.offset += int(length)
 
 	rdata.IP = ip
-	return offset + int(length), nil
+	return nil
 }
 
 // -------------- AAAA
@@ -58,14 +59,15 @@ func (rdata *RDataAAAA) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataAAAA) Decode(data []byte, offset int, length uint16) (int, error) {
-	ip := net.IP(data[offset : offset+int(length)])
+func (rdata *RDataAAAA) Decode(reader *dnsReader, length uint16) (err error) {
+	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
 	if ip.To16() == nil {
-		return offset, invalidRecordDataError(fmt.Sprintf("invalid IPv6 address: %v", ip))
+		return invalidRecordDataError(fmt.Sprintf("invalid IPv6 address: %v", ip))
 	}
+	reader.offset += int(length)
 
 	rdata.IP = ip
-	return offset + int(length), nil
+	return nil
 }
 
 // -------------- CNAME
@@ -85,15 +87,12 @@ func (rdata *RDataCNAME) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataCNAME) Decode(data []byte, offset int, length uint16) (int, error) {
-	var newOffset int
-	var err error
-
-	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
+func (rdata *RDataCNAME) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
 	}
-	return newOffset, nil
+	return nil
 }
 
 // -------------- PTR
@@ -113,15 +112,12 @@ func (rdata *RDataPTR) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataPTR) Decode(data []byte, offset int, length uint16) (int, error) {
-	var newOffset int
-	var err error
-
-	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
+func (rdata *RDataPTR) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
 	}
-	return newOffset, nil
+	return nil
 }
 
 // -------------- NS
@@ -141,15 +137,12 @@ func (rdata *RDataNS) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataNS) Decode(data []byte, offset int, length uint16) (int, error) {
-	var newOffset int
-	var err error
-
-	rdata.domainName, newOffset, err = decodeDomainName(data, offset)
+func (rdata *RDataNS) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
 	}
-	return newOffset, nil
+	return nil
 }
 
 // -------------- TXT
@@ -169,9 +162,9 @@ func (rdata *RDataTXT) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataTXT) Decode(data []byte, offset int, length uint16) (int, error) {
-	rdata.text = string(data[offset : offset+int(length)])
-	return offset + int(length), nil
+func (rdata *RDataTXT) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.text = string(reader.data[reader.offset : reader.offset+int(length)])
+	return nil
 }
 
 // -------------- MX
@@ -194,16 +187,13 @@ func (rdata *RDataMX) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataMX) Decode(data []byte, offset int, length uint16) (int, error) {
-	var newOffset int
-	var err error
-
-	rdata.preference = decodeUint16(data, offset)
-	rdata.domainName, newOffset, err = decodeDomainName(data, offset+2)
+func (rdata *RDataMX) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.preference = reader.readUint16()
+	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
 	}
-	return newOffset, nil
+	return nil
 }
 
 // -------------- SOA
@@ -252,27 +242,22 @@ func (rdata *RDataSOA) Encode(buf *bytes.Buffer) error {
 	return nil
 }
 
-func (rdata *RDataSOA) Decode(data []byte, offset int, length uint16) (int, error) {
-	var newOffset int
-	var err error
-
-	rdata.mName, newOffset, err = decodeDomainName(data, offset)
+func (rdata *RDataSOA) Decode(reader *dnsReader, length uint16) (err error) {
+	rdata.mName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
-	offset += newOffset
 
-	rdata.rName, newOffset, err = decodeDomainName(data, offset)
+	rdata.rName, err = reader.readDomainName()
 	if err != nil {
-		return 0, invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
 	}
-	offset += newOffset
 
-	rdata.serial = decodeUint32(data, offset)
-	rdata.refresh = decodeUint32(data, offset+4)
-	rdata.retry = decodeUint32(data, offset+8)
-	rdata.expire = decodeUint32(data, offset+12)
-	rdata.minimum = decodeUint32(data, offset+16)
+	rdata.serial = reader.readUint32()
+	rdata.refresh = reader.readUint32()
+	rdata.retry = reader.readUint32()
+	rdata.expire = reader.readUint32()
+	rdata.minimum = reader.readUint32()
 
-	return newOffset, nil
+	return nil
 }

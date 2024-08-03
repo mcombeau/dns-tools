@@ -2,6 +2,7 @@ package dns
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"reflect"
 	"testing"
@@ -97,7 +98,8 @@ func TestDecodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := decodeFlags(tt.data)
+			flags := binary.BigEndian.Uint16(tt.data)
+			got := decodeFlags(flags)
 
 			assertFlags(t, got, tt.want, tt.data)
 		})
@@ -201,7 +203,8 @@ func TestDecodeDNSHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := decodeHeader(tt.data)
+			reader := &dnsReader{data: tt.data}
+			got, err := reader.readHeader()
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
