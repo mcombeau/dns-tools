@@ -47,18 +47,18 @@ type Flags struct {
 	ResponseCode       uint16
 }
 
-func decodeHeader(data []byte) (Header, error) {
-	if len(data) < HeaderLength {
+func (reader *dnsReader) readHeader() (Header, error) {
+	if len(reader.data) < HeaderLength {
 		return Header{}, invalidHeaderError("too short")
 	}
 
 	header := Header{
-		Id:                decodeUint16(data, 0),  // bytes 0-1: transaction ID
-		Flags:             decodeFlags(data[2:4]), // bytes 2-3: flags
-		QuestionCount:     decodeUint16(data, 4),  // bytes 4-5: Number of Questions
-		AnswerRRCount:     decodeUint16(data, 6),  // bytes 6-7: Number of Answer Resource Record (RR)
-		NameserverRRCount: decodeUint16(data, 8),  // bytes 8-9: Number of Authority (nameserver) RRs
-		AdditionalRRCount: decodeUint16(data, 10), // bytes 10-11: Number of Additional RRs
+		Id:                reader.readUint16(),              // bytes 0-1: transaction ID
+		Flags:             decodeFlags(reader.readUint16()), // bytes 2-3: flags
+		QuestionCount:     reader.readUint16(),              // bytes 4-5: Number of Questions
+		AnswerRRCount:     reader.readUint16(),              // bytes 6-7: Number of Answer Resource Record (RR)
+		NameserverRRCount: reader.readUint16(),              // bytes 8-9: Number of Authority (nameserver) RRs
+		AdditionalRRCount: reader.readUint16(),              // bytes 10-11: Number of Additional RRs
 	}
 
 	return header, nil
@@ -77,8 +77,7 @@ const (
 	RCodeMask  = 0b00000000_00001111 // Rcode: Bits 0-3
 )
 
-func decodeFlags(data []byte) Flags {
-	flags := uint16(data[0])<<8 | uint16(data[1])
+func decodeFlags(flags uint16) Flags {
 
 	return Flags{
 		Response:           flags&QRMask != 0,

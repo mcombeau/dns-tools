@@ -233,7 +233,9 @@ func TestDecodeResourceRecord(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, _, err := decodeResourceRecord(tt.data, 0)
+			reader := &dnsReader{data: tt.data}
+
+			got, err := reader.readResourceRecord()
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {

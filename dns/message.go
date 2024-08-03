@@ -39,28 +39,33 @@ type Message struct {
 //   - *Message: The decoded DNS message in a structure.
 //   - error: If the message is invalid or decoding fails.
 func DecodeMessage(data []byte) (Message, error) {
-	header, err := decodeHeader(data)
+	reader := &dnsReader{data: data}
+
+	header, err := reader.readHeader()
 	if err != nil {
 		return Message{}, invalidMessageError(err.Error())
 	}
-	offset := HeaderLength
+	if reader.offset != HeaderLength {
+		return Message{}, invalidMessageError("invalid offset after reading header")
 
-	questions, offset, err := decodeQuestions(data, offset, header.QuestionCount)
+	}
+
+	questions, err := reader.readQuestions(header.QuestionCount)
 	if err != nil {
 		return Message{}, invalidMessageError(fmt.Sprintf("question section: %s", err.Error()))
 	}
 
-	answers, offset, err := decodeResourceRecords(data, offset, header.AnswerRRCount)
+	answers, err := reader.readResourceRecords(header.AnswerRRCount)
 	if err != nil {
 		return Message{}, invalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
 	}
 
-	nameServers, offset, err := decodeResourceRecords(data, offset, header.NameserverRRCount)
+	nameServers, err := reader.readResourceRecords(header.NameserverRRCount)
 	if err != nil {
 		return Message{}, invalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
 	}
 
-	additionals, _, err := decodeResourceRecords(data, offset, header.AdditionalRRCount)
+	additionals, err := reader.readResourceRecords(header.AdditionalRRCount)
 	if err != nil {
 		return Message{}, invalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
 	}
@@ -72,32 +77,6 @@ func DecodeMessage(data []byte) (Message, error) {
 		NameServers: nameServers,
 		Additionals: additionals,
 	}, nil
-}
-
-func decodeQuestions(data []byte, offset int, count uint16) ([]Question, int, error) {
-	questions := make([]Question, 0, count)
-	for i := 0; i < int(count); i++ {
-		question, newOffset, err := decodeQuestion(data, offset)
-		if err != nil {
-			return nil, 0, err
-		}
-		questions = append(questions, question)
-		offset = newOffset
-	}
-	return questions, offset, nil
-}
-
-func decodeResourceRecords(data []byte, offset int, count uint16) ([]ResourceRecord, int, error) {
-	records := make([]ResourceRecord, 0, count)
-	for i := 0; i < int(count); i++ {
-		record, newOffset, err := decodeResourceRecord(data, offset)
-		if err != nil {
-			return nil, 0, err
-		}
-		records = append(records, record)
-		offset = newOffset
-	}
-	return records, offset, nil
 }
 
 // EncodeMessage converts a Message structure into DNS message bytes.

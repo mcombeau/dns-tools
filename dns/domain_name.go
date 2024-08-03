@@ -29,83 +29,92 @@ labels are restricted to 63 octets or less.  (The 10 and 01 combinations
 are reserved for future use.)
 */
 
-func decodeDomainName(data []byte, offset int) (string, int, error) {
-	var name string
-	originalOffset := offset
+func (reader *dnsReader) readDomainName() (domainName string, err error) {
 	jumped := false
 	pointerOffset := 0
 
 	for {
-		if offset >= len(data) {
-			return "", 0, invalidDomainNameError("offset out of bounds")
+		if reader.offset >= len(reader.data) {
+			return "", invalidDomainNameError("offset out of bounds")
 		}
 
-		labelIndicator := int(data[offset]) // Read the label length or pointer indicator
+		labelIndicator := int(reader.data[reader.offset]) // Read the label length or pointer indicator
 
 		if labelIndicator == 0 {
 			// we've reached the end of the domain name
-			offset++
-			name += "." // for the root domain
+			reader.offset++
+			domainName += "." // for the root domain
 			break
 		}
 
-		if labelIndicator&0b11000000 == 0b11000000 {
-			// This label indicator byte is a pointer, not a length
-			// This means we have to jump to another part of the message
-
-			// We know this because the first two bits are 1:
-			// labelIndicator = 0b11000011
-			// mask			  = 0b11000000
-			// &			  = 0b11000000
+		if isPointerIndicator(labelIndicator) {
 
 			if !jumped {
 				// Save the current offset if we haven't jumped yet
-				pointerOffset = offset + 2
+				pointerOffset = reader.offset + 2
 			}
 
-			// Calculate the new offset we have to jump to:
-			// The pointer consists of two bytes:
-			// The first byte has its first two bits set to 11, and the remaining 6 bits are the high-order bits of the 14-bit offset.
-			// The second byte contains the low-order bits of the 14-bit offset.
+			newOffset := getJumpOffset(labelIndicator, reader)
 
-			// labelIndicator	=			11000011
-			// mask				= 			11000000
-			// &^				= 			00000011
-			// << 8				= 00000011	00000000
-			// data[offset+1]	= 00000000	10001010
-			// |				= 00000011	10001010 <- new offset
-			newOffset := int(labelIndicator&^0b11000000)<<8 | int(data[offset+1])
-
-			if newOffset >= len(data) {
-				return "", 0, invalidDomainNameError("pointer offset out of bounds")
+			if newOffset >= len(reader.data) {
+				return "", invalidDomainNameError("pointer offset out of bounds")
 			}
 
-			offset = newOffset // Perform actual jump
+			reader.offset = newOffset // Perform actual jump
 			jumped = true
 
 		} else {
 			// Normal label, not a pointer:
 			// labelIndicator indicates the length of the label
-			offset++
+			reader.offset++
 
-			if len(name) > 0 {
-				name += "."
+			if len(domainName) > 0 {
+				domainName += "."
 			}
 
-			if offset+labelIndicator > len(data) {
-				return "", 0, invalidDomainNameError("label offset out of bounds")
+			if reader.offset+labelIndicator > len(reader.data) {
+				return "", invalidDomainNameError("label offset out of bounds")
 			}
 
 			// Add label to domain name
-			name += string(data[offset : offset+labelIndicator])
-			offset += labelIndicator // Move to the next label
+			domainName += string(reader.data[reader.offset : reader.offset+labelIndicator])
+			reader.offset += labelIndicator // Move to the next label
 		}
 	}
 
-	if !jumped {
-		return name, offset - originalOffset, nil
+	if jumped {
+		reader.offset = pointerOffset // Reset reader offset before jump
 	}
-	return name, pointerOffset - originalOffset, nil
+
+	return domainName, nil
+}
+
+func isPointerIndicator(labelIndicator int) bool {
+	// If a label indicator byte indicates a pointer
+	// if the first two bits are 1:
+
+	// labelIndicator = 0b11000011
+	// mask			  = 0b11000000
+	// &			  = 0b11000000
+
+	return labelIndicator&0b11000000 == 0b11000000
+}
+
+func getJumpOffset(pointerIndicator int, reader *dnsReader) int {
+	// Calculate the new offset we have to jump to:
+	// The pointer consists of two bytes:
+	// The first byte contains the pointer indicator with the first two bytes set to 11
+	// and the remaining 6 bits are part of the 14 bit offset it's pointing to
+	// The second byte contains the next 8 bits that are part of the 14 bit offset
+
+	// labelIndicator	=			11000011
+	// mask				= 			11000000
+	// &^				= 			00000011
+	// << 8				= 00000011	00000000
+	// data[offset+1]	= 00000000	10001010
+	// |				= 00000011	10001010 <- new offset
+
+	return int(pointerIndicator&^0b11000000)<<8 | int(reader.data[reader.offset+1])
 }
 
 func encodeDomainName(buf *bytes.Buffer, name string) {
