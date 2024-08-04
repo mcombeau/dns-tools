@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"strings"
@@ -117,18 +116,36 @@ func getJumpOffset(pointerIndicator int, reader *dnsReader) int {
 	return int(pointerIndicator&^0b11000000)<<8 | int(reader.data[reader.offset+1])
 }
 
-func encodeDomainName(buf *bytes.Buffer, name string) {
+func (writer *dnsWriter) writeDomainName(name string) {
 	labels := strings.Split(name, ".")
+	requiredBytes := 0
 
+	// Calculate how many bytes are required to encode the domain name
+	for _, label := range labels {
+		if len(label) > 0 {
+			// 1 for the label indicator + length of label
+			requiredBytes += 1 + len(label)
+		}
+	}
+	requiredBytes += 1 // For the terminating 0
+
+	// Ensure there is enough space to write the domain name
+	if writer.offset+requiredBytes > len(writer.data) {
+		writer.data = append(writer.data, make([]byte, writer.offset+requiredBytes-len(writer.data))...)
+	}
+
+	// Write domain name
 	for _, label := range labels {
 		if len(label) == 0 {
 			continue
 		}
-		buf.WriteByte(byte(len(label)))
-		buf.WriteString(label)
+		writer.data[writer.offset] = byte(len(label))
+		writer.offset++
+		copy(writer.data[writer.offset:], label)
+		writer.offset += len(label)
 	}
-
-	buf.WriteByte(0)
+	writer.data[writer.offset] = 0
+	writer.offset++
 }
 
 // GetReverseDNSDomain returns the reverse DNS domain for the given IP address.

@@ -1,8 +1,6 @@
 package dns
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	"reflect"
 	"testing"
@@ -98,8 +96,8 @@ func TestDecodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			flags := binary.BigEndian.Uint16(tt.data)
-			got := decodeFlags(flags)
+			reader := &dnsReader{data: tt.data}
+			got := reader.readFlags()
 
 			assertFlags(t, got, tt.want, tt.data)
 		})
@@ -361,7 +359,12 @@ func TestEncodeFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := encodeFlags(tt.data)
+			writer := &dnsWriter{
+				data:   make([]byte, 2),
+				offset: 0,
+			}
+			writer.writeFlags(tt.data)
+			got := writer.data
 
 			if len(got) != len(tt.want) {
 				t.Errorf("encodeDNSFlags() bytes length got = %d, want = %d\n", len(got), len(tt.want))
@@ -455,9 +458,12 @@ func TestEncodeDNSHeader(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			encodeHeader(&buf, tt.data)
-			got := buf.Bytes()
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			writer.writeHeader(tt.data)
+			got := writer.data
 
 			if len(got) != len(tt.want) {
 				t.Errorf("encodeDNSHeader() bytes length got = %d, want = %d\n", len(got), len(tt.want))

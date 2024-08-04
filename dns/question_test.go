@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"errors"
 	"reflect"
 	"testing"
@@ -237,9 +236,12 @@ func TestEncodeDNSQuestion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var buf bytes.Buffer
-			encodeQuestion(&buf, tt.question)
-			got := buf.Bytes()
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			writer.writeQuestion(tt.question)
+			got := writer.data
 
 			if len(got) != len(tt.want) {
 				t.Errorf("encodeDNSQuestion() bytes length got = %d, want = %d\n", len(got), len(tt.want))

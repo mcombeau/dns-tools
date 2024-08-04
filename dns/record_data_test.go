@@ -36,7 +36,7 @@ func TestRDataA(t *testing.T) {
 			var got RDataA
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -62,13 +62,16 @@ func TestRDataA(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}
@@ -104,7 +107,7 @@ func TestRDataAAAA(t *testing.T) {
 			var got RDataAAAA
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -130,13 +133,16 @@ func TestRDataAAAA(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}
@@ -172,7 +178,7 @@ func TestRDataCNAME(t *testing.T) {
 			var got RDataCNAME
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -198,13 +204,16 @@ func TestRDataCNAME(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}
@@ -234,7 +243,7 @@ func TestRDataTXT(t *testing.T) {
 			var got RDataTXT
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -260,13 +269,16 @@ func TestRDataTXT(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}
@@ -321,7 +333,7 @@ func TestRDataMX(t *testing.T) {
 			var got RDataMX
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -351,13 +363,16 @@ func TestRDataMX(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}
@@ -413,7 +428,7 @@ func TestRDataSOA(t *testing.T) {
 			var got RDataSOA
 			reader := &dnsReader{data: tt.data}
 
-			err := got.Decode(reader, uint16(len(tt.data)))
+			err := got.ReadRecordData(reader, uint16(len(tt.data)))
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
@@ -458,13 +473,16 @@ func TestRDataSOA(t *testing.T) {
 			}
 
 			// Test Encode
-			var buf bytes.Buffer
-			if err := got.Encode(&buf); err != nil {
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			if err := got.WriteRecordData(writer); err != nil {
 				t.Fatalf("Encode() error = %v, data = %v\n", err, tt.data)
 			}
 
-			if !bytes.Equal(buf.Bytes(), tt.data) {
-				t.Errorf("Encode() got = %v, want = %v\n", buf.Bytes(), tt.data)
+			if !bytes.Equal(writer.data, tt.data) {
+				t.Errorf("Encode() got = %v, want = %v\n", writer.data, tt.data)
 			}
 		})
 	}

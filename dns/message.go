@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -29,6 +28,8 @@ type Message struct {
 	NameServers []ResourceRecord
 	Additionals []ResourceRecord
 }
+
+const MaxDNSMessageSizeOverUDP = 512
 
 // DecodeMessage parses DNS message data and returns a Message structure.
 //
@@ -87,27 +88,18 @@ func DecodeMessage(data []byte) (Message, error) {
 // Returns:
 //   - []byte: The encoded DNS message bytes.
 //   - error: If encoding fails.
-func EncodeMessage(msg Message) ([]byte, error) {
-	buf := new(bytes.Buffer)
-
-	encodeHeader(buf, msg)
-
-	encodeQuestions(msg.Questions, buf)
-	encodeResourceRecords(msg.Answers, buf)
-	encodeResourceRecords(msg.NameServers, buf)
-	encodeResourceRecords(msg.Additionals, buf)
-
-	return buf.Bytes(), nil
-}
-
-func encodeQuestions(questions []Question, buf *bytes.Buffer) {
-	for _, question := range questions {
-		encodeQuestion(buf, question)
+func EncodeMessage(message Message) ([]byte, error) {
+	writer := &dnsWriter{
+		data:   make([]byte, MaxDNSMessageSizeOverUDP),
+		offset: 0,
 	}
-}
 
-func encodeResourceRecords(resourceRecords []ResourceRecord, buf *bytes.Buffer) {
-	for _, rr := range resourceRecords {
-		encodeResourceRecord(buf, rr)
-	}
+	writer.writeHeader(message)
+
+	writer.writeQuestions(message.Questions)
+	writer.writeResourceRecords(message.Answers)
+	writer.writeResourceRecords(message.NameServers)
+	writer.writeResourceRecords(message.Additionals)
+
+	return writer.data, nil
 }
