@@ -1,7 +1,7 @@
 package dns
 
 import (
-	"net"
+	"net/netip"
 	"reflect"
 	"testing"
 )
@@ -66,7 +66,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 						TTL:      300,
 						RDLength: 4,
 						RData: &RDataA{
-							IP: net.ParseIP("93.184.216.34"),
+							IP: netip.AddrFrom4([4]byte{93, 184, 216, 34}), // 93.184.216.34
 						},
 					},
 				},
@@ -129,7 +129,7 @@ func TestDecodeDNSMessage(t *testing.T) {
 						TTL:      300,
 						RDLength: 4,
 						RData: &RDataA{
-							IP: net.ParseIP("93.184.216.34"),
+							IP: netip.AddrFrom4([4]byte{93, 184, 216, 34}), // 93.184.216.34
 						},
 					},
 				},

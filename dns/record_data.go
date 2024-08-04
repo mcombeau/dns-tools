@@ -2,7 +2,7 @@ package dns
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
 	"strconv"
 	"strings"
 )
@@ -18,7 +18,7 @@ type RData interface {
 // ADDRESS:	A 32 bit Internet address.
 
 type RDataA struct {
-	IP net.IP
+	IP netip.Addr
 }
 
 func (rdata *RDataA) String() string {
@@ -26,18 +26,31 @@ func (rdata *RDataA) String() string {
 }
 
 func (rdata *RDataA) WriteRecordData(writer *dnsWriter) error {
-	writer.writeData(rdata.IP.To4())
+	if !rdata.IP.Is4() {
+		return invalidRecordDataError(ErrInvalidIP.Error())
+	}
+	ip4 := rdata.IP.As4()
+	writer.writeData(ip4[:])
 	return nil
 }
 
 func (rdata *RDataA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
-	if ip.To4() == nil {
-		return invalidRecordDataError(fmt.Sprintf("invalid IPv4 address: %v", ip))
+	if length != 4 {
+		return invalidRecordDataError(fmt.Sprintf("invalid length for IPv4 address: %d", length))
 	}
-	reader.offset += int(length)
 
-	rdata.IP = ip
+	var ipArray [4]byte
+	copy(ipArray[:], reader.data[reader.offset:reader.offset+int(length)])
+
+	ip4 := netip.AddrFrom4(ipArray)
+
+	if !ip4.IsValid() || !ip4.Is4() {
+		return invalidRecordDataError(ErrInvalidIP.Error())
+	}
+
+	reader.offset += int(length)
+	rdata.IP = ip4
+
 	return nil
 }
 
@@ -46,7 +59,7 @@ func (rdata *RDataA) ReadRecordData(reader *dnsReader, length uint16) (err error
 // A 128 bit IPv6 address is encoded in the data portion of an AAAA resource record in network byte order (high-order byte first).
 
 type RDataAAAA struct {
-	IP net.IP
+	IP netip.Addr
 }
 
 func (rdata *RDataAAAA) String() string {
@@ -54,18 +67,31 @@ func (rdata *RDataAAAA) String() string {
 }
 
 func (rdata *RDataAAAA) WriteRecordData(writer *dnsWriter) error {
-	writer.writeData(rdata.IP.To16())
+	if !rdata.IP.Is6() {
+		return invalidRecordDataError(ErrInvalidIP.Error())
+	}
+	ip6 := rdata.IP.As16()
+	writer.writeData(ip6[:])
 	return nil
 }
 
 func (rdata *RDataAAAA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
-	if ip.To16() == nil {
-		return invalidRecordDataError(fmt.Sprintf("invalid IPv6 address: %v", ip))
+	if length != 16 {
+		return invalidRecordDataError(fmt.Sprintf("invalid length for IPv6 address: %d", length))
 	}
-	reader.offset += int(length)
 
-	rdata.IP = ip
+	var ipArray [16]byte
+	copy(ipArray[:], reader.data[reader.offset:reader.offset+int(length)])
+
+	ip6 := netip.AddrFrom16(ipArray)
+
+	if !ip6.IsValid() || !ip6.Is6() {
+		return invalidRecordDataError(ErrInvalidIP.Error())
+	}
+
+	reader.offset += int(length)
+	rdata.IP = ip6
+
 	return nil
 }
 
