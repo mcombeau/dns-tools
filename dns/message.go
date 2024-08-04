@@ -30,6 +30,7 @@ type Message struct {
 }
 
 const MaxDNSMessageSizeOverUDP = 512
+const MaxDNSMessageSize = 4096
 
 // DecodeMessage parses DNS message data and returns a Message structure.
 //

@@ -180,32 +180,34 @@ func GetReverseDNSDomain(ip string) (reversedDomain string, err error) {
 
 func reverseIPv4(parsedIP netip.Addr) string {
 	ip4 := parsedIP.As4()
-	octets := make([]string, 4)
+
+	var octets [4]string
 
 	for i := 0; i < 4; i++ {
 		octets[i] = strconv.Itoa(int(ip4[3-i]))
 	}
 
-	return strings.Join(octets, ".") + ".in-addr.arpa."
+	return strings.Join(octets[:], ".") + ".in-addr.arpa."
 }
 
 func reverseIPv6(parsedIP netip.Addr) string {
 	ip6 := parsedIP.As16()
 
-	// Expand IPv6 in case 0s were omitted (e.g. 2001:db8::1)
-	// And append them in reverse order, low to high:
-
-	// ex. parsedIP[i]	= 1100 0101
-	// 0xF				= 0000 1111
-	// & (= low nibble)	= 0000 0101 <- appended first
-
-	// ex. parsedIP[i]		= 1100 0101
-	// >> 4 (= high nibble) = 0000 1100 <- appended second
-
-	nibbles := make([]string, 0, 32)
+	var nibbles [32]string
+	index := 0
 	for i := len(ip6) - 1; i >= 0; i-- {
-		nibbles = append(nibbles, fmt.Sprintf("%x.%x", ip6[i]&0xF, ip6[i]>>4))
+		// Aappend nibbles in reverse order, low to high:
+
+		// ex. ip6[i]		= 1100 0101
+		// 0xF				= 0000 1111
+		// & (= low nibble)	= 0000 0101 <- appended first
+		nibbles[index] = fmt.Sprintf("%x", ip6[i]&0xF)
+		index++
+		// ex. ip6[i]			= 1100 0101
+		// >> 4 (= high nibble) = 0000 1100 <- appended second
+		nibbles[index] = fmt.Sprintf("%x", ip6[i]>>4)
+		index++
 	}
 
-	return strings.Join(nibbles, ".") + ".ip6.arpa."
+	return strings.Join(nibbles[:], ".") + ".ip6.arpa."
 }
