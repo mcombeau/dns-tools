@@ -46,7 +46,7 @@ func DecodeMessage(data []byte) (Message, error) {
 	if err != nil {
 		return Message{}, invalidMessageError(err.Error())
 	}
-	if reader.offset != HeaderLength {
+	if reader.offset != DNSHeaderLength {
 		return Message{}, invalidMessageError("invalid offset after reading header")
 
 	}
@@ -90,7 +90,7 @@ func DecodeMessage(data []byte) (Message, error) {
 //   - error: If encoding fails.
 func EncodeMessage(message Message) ([]byte, error) {
 	writer := &dnsWriter{
-		data:   make([]byte, MaxDNSMessageSizeOverUDP),
+		data:   make([]byte, DNSHeaderLength),
 		offset: 0,
 	}
 

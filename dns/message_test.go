@@ -198,10 +198,6 @@ func TestEncodeDNSMessage(t *testing.T) {
 		0x00, 0x01, // QCLASS: 1 (IN)
 	}
 
-	if len(want) < MaxDNSMessageSizeOverUDP {
-		want = append(want, make([]byte, MaxDNSMessageSizeOverUDP-len(want))...)
-	}
-
 	got, err := EncodeMessage(message)
 
 	if err != nil {

@@ -19,7 +19,7 @@ package dns
 //     |                    ARCOUNT                    |
 //     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-const HeaderLength = 12
+const DNSHeaderLength = 12
 
 type Header struct {
 	Id                uint16
@@ -44,7 +44,7 @@ type Flags struct {
 }
 
 func (reader *dnsReader) readHeader() (Header, error) {
-	if len(reader.data) < HeaderLength {
+	if len(reader.data) < DNSHeaderLength {
 		return Header{}, invalidHeaderError("too short")
 	}
 
