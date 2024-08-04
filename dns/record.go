@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -76,7 +75,7 @@ func (reader *dnsReader) readResourceRecord() (record ResourceRecord, err error)
 		return ResourceRecord{}, invalidResourceRecordError(err.Error())
 	}
 
-	err = rdata.Decode(reader, rdlength)
+	err = rdata.ReadRecordData(reader, rdlength)
 	if err != nil {
 		return ResourceRecord{}, invalidResourceRecordError(err.Error())
 	}
@@ -121,11 +120,17 @@ func getRDataStruct(rtype uint16) (RData, error) {
 	return rdata, nil
 }
 
-func encodeResourceRecord(buf *bytes.Buffer, rr ResourceRecord) {
-	encodeDomainName(buf, rr.Name)
-	buf.Write(encodeUint16(rr.RType))
-	buf.Write(encodeUint16(rr.RClass))
-	buf.Write(encodeUint32(rr.TTL))
-	buf.Write(encodeUint16(rr.RDLength))
-	rr.RData.Encode(buf)
+func (writer *dnsWriter) writeResourceRecords(resourceRecords []ResourceRecord) {
+	for _, record := range resourceRecords {
+		writer.writeResourceRecord(record)
+	}
+}
+
+func (writer *dnsWriter) writeResourceRecord(record ResourceRecord) {
+	writer.writeDomainName(record.Name)
+	writer.writeUint16(record.RType)
+	writer.writeUint16(record.RClass)
+	writer.writeUint32(record.TTL)
+	writer.writeUint16(record.RDLength)
+	record.RData.WriteRecordData(writer)
 }

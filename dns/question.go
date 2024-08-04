@@ -1,9 +1,5 @@
 package dns
 
-import (
-	"bytes"
-)
-
 // Question section format
 // The question section is used to carry the "question" in most queries,
 // i.e., the parameters that define what is being asked.  The section
@@ -58,8 +54,14 @@ func (reader *dnsReader) readQuestion() (question Question, err error) {
 	return question, nil
 }
 
-func encodeQuestion(buf *bytes.Buffer, question Question) {
-	encodeDomainName(buf, question.Name)
-	buf.Write(encodeUint16(question.QType))
-	buf.Write(encodeUint16(question.QClass))
+func (writer *dnsWriter) writeQuestions(questions []Question) {
+	for _, question := range questions {
+		writer.writeQuestion(question)
+	}
+}
+
+func (writer *dnsWriter) writeQuestion(question Question) {
+	writer.writeDomainName(question.Name)
+	writer.writeUint16(question.QType)
+	writer.writeUint16(question.QClass)
 }

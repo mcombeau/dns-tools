@@ -1,9 +1,5 @@
 package dns
 
-import (
-	"bytes"
-)
-
 // Header section format
 // The header contains the following fields:
 
@@ -53,12 +49,12 @@ func (reader *dnsReader) readHeader() (Header, error) {
 	}
 
 	header := Header{
-		Id:                reader.readUint16(),              // bytes 0-1: transaction ID
-		Flags:             decodeFlags(reader.readUint16()), // bytes 2-3: flags
-		QuestionCount:     reader.readUint16(),              // bytes 4-5: Number of Questions
-		AnswerRRCount:     reader.readUint16(),              // bytes 6-7: Number of Answer Resource Record (RR)
-		NameserverRRCount: reader.readUint16(),              // bytes 8-9: Number of Authority (nameserver) RRs
-		AdditionalRRCount: reader.readUint16(),              // bytes 10-11: Number of Additional RRs
+		Id:                reader.readUint16(), // bytes 0-1: transaction ID
+		Flags:             reader.readFlags(),  // bytes 2-3: flags
+		QuestionCount:     reader.readUint16(), // bytes 4-5: Number of Questions
+		AnswerRRCount:     reader.readUint16(), // bytes 6-7: Number of Answer Resource Record (RR)
+		NameserverRRCount: reader.readUint16(), // bytes 8-9: Number of Authority (nameserver) RRs
+		AdditionalRRCount: reader.readUint16(), // bytes 10-11: Number of Additional RRs
 	}
 
 	return header, nil
@@ -77,7 +73,8 @@ const (
 	RCodeMask  = 0b00000000_00001111 // Rcode: Bits 0-3
 )
 
-func decodeFlags(flags uint16) Flags {
+func (reader *dnsReader) readFlags() Flags {
+	flags := reader.readUint16()
 
 	return Flags{
 		Response:           flags&QRMask != 0,
@@ -93,16 +90,16 @@ func decodeFlags(flags uint16) Flags {
 	}
 }
 
-func encodeHeader(buf *bytes.Buffer, msg Message) {
-	buf.Write(encodeUint16(msg.Header.Id))
-	buf.Write(encodeFlags(msg.Header.Flags))
-	buf.Write(encodeUint16(msg.Header.QuestionCount))
-	buf.Write(encodeUint16(msg.Header.AnswerRRCount))
-	buf.Write(encodeUint16(msg.Header.NameserverRRCount))
-	buf.Write(encodeUint16(msg.Header.AdditionalRRCount))
+func (writer *dnsWriter) writeHeader(message Message) {
+	writer.writeUint16(message.Header.Id)
+	writer.writeFlags(message.Header.Flags)
+	writer.writeUint16(message.Header.QuestionCount)
+	writer.writeUint16(message.Header.AnswerRRCount)
+	writer.writeUint16(message.Header.NameserverRRCount)
+	writer.writeUint16(message.Header.AdditionalRRCount)
 }
 
-func encodeFlags(flags Flags) []byte {
+func (writer *dnsWriter) writeFlags(flags Flags) {
 	var result uint16
 	if flags.Response {
 		result |= QRMask
@@ -131,5 +128,5 @@ func encodeFlags(flags Flags) []byte {
 	}
 	result |= flags.ResponseCode & RCodeMask
 
-	return []byte{byte(result >> 8), byte(result & 0xFF)}
+	writer.writeUint16(result)
 }

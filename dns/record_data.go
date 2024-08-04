@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"strconv"
@@ -10,8 +9,8 @@ import (
 
 type RData interface {
 	String() string
-	Encode(buf *bytes.Buffer) error
-	Decode(reader *dnsReader, length uint16) error
+	WriteRecordData(writer *dnsWriter) error
+	ReadRecordData(reader *dnsReader, length uint16) error
 }
 
 // -------------- A
@@ -26,12 +25,12 @@ func (rdata *RDataA) String() string {
 	return rdata.IP.String()
 }
 
-func (rdata *RDataA) Encode(buf *bytes.Buffer) error {
-	buf.Write(rdata.IP)
+func (rdata *RDataA) WriteRecordData(writer *dnsWriter) error {
+	writer.writeData(rdata.IP.To4())
 	return nil
 }
 
-func (rdata *RDataA) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
 	if ip.To4() == nil {
 		return invalidRecordDataError(fmt.Sprintf("invalid IPv4 address: %v", ip))
@@ -54,12 +53,12 @@ func (rdata *RDataAAAA) String() string {
 	return rdata.IP.String()
 }
 
-func (rdata *RDataAAAA) Encode(buf *bytes.Buffer) error {
-	buf.Write(rdata.IP)
+func (rdata *RDataAAAA) WriteRecordData(writer *dnsWriter) error {
+	writer.writeData(rdata.IP.To16())
 	return nil
 }
 
-func (rdata *RDataAAAA) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataAAAA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	ip := net.IP(reader.data[reader.offset : reader.offset+int(length)])
 	if ip.To16() == nil {
 		return invalidRecordDataError(fmt.Sprintf("invalid IPv6 address: %v", ip))
@@ -82,12 +81,12 @@ func (rdata *RDataCNAME) String() string {
 	return rdata.domainName
 }
 
-func (rdata *RDataCNAME) Encode(buf *bytes.Buffer) error {
-	encodeDomainName(buf, rdata.domainName)
+func (rdata *RDataCNAME) WriteRecordData(writer *dnsWriter) error {
+	writer.writeDomainName(rdata.domainName)
 	return nil
 }
 
-func (rdata *RDataCNAME) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataCNAME) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
 		return invalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
@@ -107,12 +106,12 @@ func (rdata *RDataPTR) String() string {
 	return rdata.domainName
 }
 
-func (rdata *RDataPTR) Encode(buf *bytes.Buffer) error {
-	encodeDomainName(buf, rdata.domainName)
+func (rdata *RDataPTR) WriteRecordData(writer *dnsWriter) error {
+	writer.writeDomainName(rdata.domainName)
 	return nil
 }
 
-func (rdata *RDataPTR) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataPTR) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
 		return invalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
@@ -132,12 +131,12 @@ func (rdata *RDataNS) String() string {
 	return rdata.domainName
 }
 
-func (rdata *RDataNS) Encode(buf *bytes.Buffer) error {
-	encodeDomainName(buf, rdata.domainName)
+func (rdata *RDataNS) WriteRecordData(writer *dnsWriter) error {
+	writer.writeDomainName(rdata.domainName)
 	return nil
 }
 
-func (rdata *RDataNS) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataNS) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
 		return invalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
@@ -157,12 +156,12 @@ func (rdata *RDataTXT) String() string {
 	return rdata.text
 }
 
-func (rdata *RDataTXT) Encode(buf *bytes.Buffer) error {
-	buf.WriteString(rdata.text)
+func (rdata *RDataTXT) WriteRecordData(writer *dnsWriter) error {
+	writer.writeData([]byte(rdata.text))
 	return nil
 }
 
-func (rdata *RDataTXT) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataTXT) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.text = string(reader.data[reader.offset : reader.offset+int(length)])
 	return nil
 }
@@ -181,13 +180,13 @@ func (rdata *RDataMX) String() string {
 	return strconv.Itoa(int(rdata.preference)) + " " + rdata.domainName
 }
 
-func (rdata *RDataMX) Encode(buf *bytes.Buffer) error {
-	buf.Write(encodeUint16(rdata.preference))
-	encodeDomainName(buf, rdata.domainName)
+func (rdata *RDataMX) WriteRecordData(writer *dnsWriter) error {
+	writer.writeUint16(rdata.preference)
+	writer.writeDomainName(rdata.domainName)
 	return nil
 }
 
-func (rdata *RDataMX) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataMX) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.preference = reader.readUint16()
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
@@ -230,19 +229,19 @@ func (rdata *RDataSOA) String() string {
 	return strings.Join(soa, " ")
 }
 
-func (rdata *RDataSOA) Encode(buf *bytes.Buffer) error {
-	encodeDomainName(buf, rdata.mName)
-	encodeDomainName(buf, rdata.rName)
+func (rdata *RDataSOA) WriteRecordData(writer *dnsWriter) error {
+	writer.writeDomainName(rdata.mName)
+	writer.writeDomainName(rdata.rName)
 
-	buf.Write(encodeUint32(rdata.serial))
-	buf.Write(encodeUint32(rdata.refresh))
-	buf.Write(encodeUint32(rdata.retry))
-	buf.Write(encodeUint32(rdata.expire))
-	buf.Write(encodeUint32(rdata.minimum))
+	writer.writeUint32(rdata.serial)
+	writer.writeUint32(rdata.refresh)
+	writer.writeUint32(rdata.retry)
+	writer.writeUint32(rdata.expire)
+	writer.writeUint32(rdata.minimum)
 	return nil
 }
 
-func (rdata *RDataSOA) Decode(reader *dnsReader, length uint16) (err error) {
+func (rdata *RDataSOA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.mName, err = reader.readDomainName()
 	if err != nil {
 		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))

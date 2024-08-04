@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"bytes"
 	"errors"
 	"reflect"
 	"testing"
@@ -133,10 +132,12 @@ func TestEncodeName(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var buf bytes.Buffer
-
-			encodeDomainName(&buf, test.data)
-			got := buf.Bytes()
+			writer := &dnsWriter{
+				data:   make([]byte, 1),
+				offset: 0,
+			}
+			writer.writeDomainName(test.data)
+			got := writer.data
 
 			if len(got) != len(test.want) {
 				t.Errorf("encodeDomainName() bytes length got = %d, want = %d, data = %s\n", len(got), len(test.want), test.data)
