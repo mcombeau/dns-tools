@@ -286,3 +286,26 @@ func (rdata *RDataSOA) ReadRecordData(reader *dnsReader, length uint16) (err err
 
 	return nil
 }
+
+// -------------- UNKNOWN
+
+type RDataUnknown struct {
+	raw []byte
+}
+
+func (rdata *RDataUnknown) String() string {
+	return string(rdata.raw)
+}
+
+func (rdata *RDataUnknown) WriteRecordData(writer *dnsWriter) error {
+	writer.writeData(rdata.raw)
+	return nil
+}
+
+func (rdata *RDataUnknown) ReadRecordData(reader *dnsReader, length uint16) (err error) {
+	rdata.raw, err = reader.readUntil(int(length))
+	if err != nil {
+		return err
+	}
+	return nil
+}

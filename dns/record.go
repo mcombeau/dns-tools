@@ -1,9 +1,5 @@
 package dns
 
-import (
-	"fmt"
-)
-
 // Resource record format
 
 // The answer, authority, and additional sections all share the same
@@ -113,9 +109,7 @@ func getRDataStruct(rtype uint16) (RData, error) {
 	case SOA:
 		rdata = &RDataSOA{}
 	default:
-		// TODO: Get a better error type for this
-		// or define a default way of handling unsupported RDATA types
-		return nil, invalidResourceRecordError(fmt.Sprintf("unsupported RDATA type: %s", DNSType(rtype)))
+		rdata = &RDataUnknown{}
 	}
 	return rdata, nil
 }

@@ -229,6 +229,27 @@ func TestDecodeResourceRecord(t *testing.T) {
 			want:      ResourceRecord{},
 			wantError: ErrInvalidResourceRecord,
 		},
+		{
+			name: "Unknown record",
+			data: []byte{
+				0,    // Name: 0
+				0, 3, // RType: 3 (MD - Obsolete)
+				0, 1, // RClass: 1
+				0, 0, 1, 44, // TTL: 300
+				0, 5, // RDLength: 5
+				'h', 'e', 'l', 'l', 'o', // RData: some bytes
+			},
+			want: ResourceRecord{
+				Name:     ".",
+				RType:    MD,
+				RClass:   IN,
+				TTL:      300,
+				RDLength: 5,
+				RData: &RDataUnknown{
+					raw: []byte{'h', 'e', 'l', 'l', 'o'},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

@@ -1,5 +1,7 @@
 package dns
 
+import "fmt"
+
 type dnsReader struct {
 	data   []byte
 	offset int
@@ -40,4 +42,15 @@ func (reader *dnsReader) readUint32() (value uint32) {
 	reader.offset += 4
 
 	return value
+}
+
+func (reader *dnsReader) readUntil(length int) (readBytes []byte, err error) {
+	if reader.offset+length > len(reader.data) {
+		return nil, fmt.Errorf("invalid read length: %w", err)
+	}
+
+	readBytes = reader.data[reader.offset : reader.offset+length]
+	reader.offset += length
+
+	return readBytes, nil
 }
