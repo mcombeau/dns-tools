@@ -15,12 +15,14 @@ go test ./... -v
 To run main:
 
 ```shell
-go run ./cmd/main.go [-x] <domain or ip> [question type]
+go run ./cmd/main.go [-s server] [-p port] [-x] <domain_or_ip> [question_type]
 ```
 
 Options:
 
 - `-h`: show help
+- `-s`: specify the DNS resolver server IP to query (defaults to local resolver)
+- `-p`: specify the DNS resolver server port to query (defaults to 53)
 - `-x`: enable reverse DNS query (default: false)
 
 ---
