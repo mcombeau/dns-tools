@@ -2,10 +2,8 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -16,35 +14,20 @@ import (
 )
 
 func main() {
-	dnsResolver, domain, questionType, err := parseArgs()
+	dnsResolver, domain, questionType, reverseQuery, err := parseArgs()
 	if err != nil {
 		log.Fatalf("Failed to parse args: %v\n", err)
 	}
 
-	message := dns.Message{
-		Header: dns.Header{
-			Id:            generateRandomID(),
-			Flags:         dns.Flags{RecursionDesired: true},
-			QuestionCount: 1,
-		},
-		Questions: []dns.Question{
-			{
-				Name:   domain,
-				QType:  questionType,
-				QClass: dns.IN,
-			},
-		},
-	}
-
-	data, err := dns.EncodeMessage(message)
+	query, err := dns.CreateDNSQuery(domain, questionType, reverseQuery)
 	if err != nil {
-		log.Fatalf("Failed to encode DNS message: %v\n", err)
+		log.Fatalf("Failed to create DNS query: %v\n", err)
 	}
 
 	startTime := time.Now()
 
 	tcpQuery := false
-	response, err := sendDNSQuery("udp", dnsResolver, data)
+	response, err := sendDNSQuery("udp", dnsResolver, query)
 	if err != nil {
 		log.Fatalf("Failed to send DNS query over UDP: %v\n", err)
 	}
@@ -59,7 +42,7 @@ func main() {
 		// fall back to TCP
 
 		tcpQuery = true
-		response, err := sendDNSQuery("tcp", dnsResolver, data)
+		response, err := sendDNSQuery("tcp", dnsResolver, query)
 		if err != nil {
 			log.Fatalf("Failed to send DNS query over TCP: %v\n", err)
 		}
@@ -119,7 +102,7 @@ func sendDNSQuery(transmissionProtocol string, server string, data []byte) ([]by
 	return response, nil
 }
 
-func parseArgs() (dnsResolver string, domain string, questionType uint16, err error) {
+func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, reverseQuery bool, err error) {
 	reverseDNSQuery := flag.Bool("x", false, "Perform a reverse DNS query")
 
 	var server string
@@ -141,27 +124,21 @@ func parseArgs() (dnsResolver string, domain string, questionType uint16, err er
 		os.Exit(0)
 	}
 
+	domainOrIP = flag.Arg(0)
+
+	questionType = dns.A // Default to A
+	if flag.NArg() == 2 {
+		questionType = dns.GetRecordTypeFromTypeString(flag.Arg(1))
+	}
+
+	reverseQuery = *reverseDNSQuery
+
 	dnsResolver, err = getDNSResolver(server, port)
 	if err != nil {
-		return "", "", 0, fmt.Errorf("get DNS resolver: %w", err)
+		return "", "", 0, false, fmt.Errorf("get DNS resolver: %w", err)
 	}
 
-	if *reverseDNSQuery {
-		ip := flag.Arg(0)
-		questionType = dns.PTR
-		domain, err = dns.GetReverseDNSDomain(ip)
-		if err != nil {
-			return "", "", 0, fmt.Errorf("get Reverse DNS Domain from IP address: %w", err)
-		}
-	} else {
-		domain = flag.Arg(0)
-		questionType = dns.A // Default to A
-		if flag.NArg() == 2 {
-			questionType = dns.GetRecordTypeFromTypeString(flag.Arg(1))
-		}
-	}
-
-	return dnsResolver, domain, questionType, nil
+	return dnsResolver, domainOrIP, questionType, reverseQuery, nil
 }
 
 func getDNSResolver(server string, port string) (dnsResolver string, err error) {
@@ -197,15 +174,4 @@ func getDefaultDNSResolver() (server string, err error) {
 	}
 
 	return "", fmt.Errorf("no nameserver found in /etc/resolv.conf")
-}
-
-func generateRandomID() uint16 {
-	bytes := [2]byte{}
-
-	_, err := io.ReadFull(rand.Reader, bytes[:])
-	if err != nil {
-		panic(err)
-	}
-
-	return uint16(bytes[0])<<8 | uint16(bytes[1])
 }
