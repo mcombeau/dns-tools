@@ -2,7 +2,7 @@ package dns
 
 import (
 	"errors"
-	"net"
+	"net/netip"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				TTL:      300,
 				RDLength: 4,
 				RData: &RDataA{
-					IP: net.ParseIP("93.184.216.34"),
+					IP: netip.AddrFrom4([4]byte{93, 184, 216, 34}), // 93.184.216.34
 				},
 			},
 			wantError: nil,
@@ -52,7 +52,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				TTL:      300,
 				RDLength: 16,
 				RData: &RDataAAAA{
-					IP: net.ParseIP("2001:db8::1"),
+					IP: netip.AddrFrom16([16]byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}), //2001:db8::1
 				},
 			},
 			wantError: nil,

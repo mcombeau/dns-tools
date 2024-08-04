@@ -2,7 +2,8 @@ package dns
 
 import (
 	"fmt"
-	"net"
+	"net/netip"
+	"strconv"
 	"strings"
 )
 
@@ -160,37 +161,36 @@ func (writer *dnsWriter) writeDomainName(name string) {
 // Returns:
 //   - string: The reverse DNS domain.
 //   - error: If the IP address is invalid.
-func GetReverseDNSDomain(ip string) (string, error) {
-	parsedIP := net.ParseIP(ip)
-	if parsedIP == nil {
+func GetReverseDNSDomain(ip string) (reversedDomain string, err error) {
+	parsedIP, err := netip.ParseAddr(ip)
+	if err != nil {
 		return "", invalidIPError(ip)
 	}
 
-	var reversedDomain string
-	if parsedIP.To4() != nil {
-		// IPv4 address
+	if parsedIP.Is4() {
 		reversedDomain = reverseIPv4(parsedIP)
-
-	} else {
-		// IPv6 address
+	} else if parsedIP.Is6() {
 		reversedDomain = reverseIPv6(parsedIP)
+	} else {
+		return "", invalidIPError(ip)
 	}
+
 	return reversedDomain, nil
 }
 
-func reverseIPv4(parsedIP net.IP) string {
-	octets := strings.Split(parsedIP.String(), ".")
+func reverseIPv4(parsedIP netip.Addr) string {
+	ip4 := parsedIP.As4()
+	octets := make([]string, 4)
 
-	for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
-		octets[i], octets[j] = octets[j], octets[i]
+	for i := 0; i < 4; i++ {
+		octets[i] = strconv.Itoa(int(ip4[3-i]))
 	}
 
 	return strings.Join(octets, ".") + ".in-addr.arpa."
-
 }
 
-func reverseIPv6(parsedIP net.IP) string {
-	parsedIP = parsedIP.To16()
+func reverseIPv6(parsedIP netip.Addr) string {
+	ip6 := parsedIP.As16()
 
 	// Expand IPv6 in case 0s were omitted (e.g. 2001:db8::1)
 	// And append them in reverse order, low to high:
@@ -203,8 +203,8 @@ func reverseIPv6(parsedIP net.IP) string {
 	// >> 4 (= high nibble) = 0000 1100 <- appended second
 
 	nibbles := make([]string, 0, 32)
-	for i := len(parsedIP) - 1; i >= 0; i-- {
-		nibbles = append(nibbles, fmt.Sprintf("%x.%x", parsedIP[i]&0xF, parsedIP[i]>>4))
+	for i := len(ip6) - 1; i >= 0; i-- {
+		nibbles = append(nibbles, fmt.Sprintf("%x.%x", ip6[i]&0xF, ip6[i]>>4))
 	}
 
 	return strings.Join(nibbles, ".") + ".ip6.arpa."

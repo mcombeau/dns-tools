@@ -3,7 +3,7 @@ package dns
 import (
 	"bytes"
 	"errors"
-	"net"
+	"net/netip"
 	"strconv"
 	"testing"
 )
@@ -19,7 +19,7 @@ func TestRDataA(t *testing.T) {
 			name: "A record",
 			data: []byte{192, 1, 0, 1},
 			want: &RDataA{
-				IP: net.ParseIP("192.1.0.1"),
+				IP: netip.AddrFrom4([4]byte{192, 1, 0, 1}), // 192.1.0.1
 			},
 			wantError: nil,
 		},
@@ -51,7 +51,7 @@ func TestRDataA(t *testing.T) {
 			}
 
 			// Test Decode
-			if !got.IP.Equal(want.IP) {
+			if got.IP != want.IP {
 				t.Errorf("Decode() IP got = %v, want = %v, data = %v\n", got.IP, want.IP, tt.data)
 			}
 
@@ -88,16 +88,14 @@ func TestRDataAAAA(t *testing.T) {
 			name: "AAAA record",
 			data: []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 			want: &RDataAAAA{
-				IP: net.ParseIP("2001:db8::1"),
+				IP: netip.AddrFrom16([16]byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}), //2001:db8::1
 			},
 			wantError: nil,
 		},
 		{
-			name: "Invalid AAAA record",
-			data: []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0},
-			want: &RDataAAAA{
-				IP: net.ParseIP("2001:db8::1"),
-			},
+			name:      "Invalid AAAA record",
+			data:      []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0},
+			want:      &RDataAAAA{},
 			wantError: ErrInvalidRecordData,
 		},
 	}
@@ -122,7 +120,7 @@ func TestRDataAAAA(t *testing.T) {
 			}
 
 			// Test Decode
-			if !got.IP.Equal(want.IP) {
+			if got.IP != want.IP {
 				t.Errorf("Decode() IP got = %v, want = %v, data = %v\n", got.IP, want.IP, tt.data)
 			}
 
