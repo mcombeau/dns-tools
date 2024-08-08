@@ -81,6 +81,17 @@ func TestReadDomainName(t *testing.T) {
 			wantString:      "bar.example.com.",
 			wantFinalOffset: 30 + 2,
 		},
+		{
+			name: "Invalid: circular pointer",
+			data: []byte{
+				3, 'f', 'o', 'o', 0, // "foo." -> 5 bytes
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // "example.com." -> 13 bytes
+				3, 'b', 'a', 'r', 0xc0, 18, // "bar.example.com." using pointer to offset 5 ("example.com.")
+			},
+			offset:          18, // Start of the compressed domain name "baz.example.com"
+			wantString:      "bar.example.com.",
+			wantFinalOffset: 18 + 6,
+		},
 	}
 
 	for _, test := range tests {
