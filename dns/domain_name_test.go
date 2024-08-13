@@ -13,6 +13,7 @@ func TestReadDomainName(t *testing.T) {
 		offset          int
 		wantString      string
 		wantFinalOffset int
+		wantError       error
 	}{
 		{
 			name:            "Simple domain",
@@ -20,6 +21,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          0,
 			wantString:      "example.com.",
 			wantFinalOffset: 0 + 13,
+			wantError:       nil,
 		},
 		{
 			name:            "Subdomain",
@@ -27,6 +29,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          0,
 			wantString:      "www.example.com.",
 			wantFinalOffset: 0 + 17,
+			wantError:       nil,
 		},
 		{
 			name:            "Root domain",
@@ -34,6 +37,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          0,
 			wantString:      ".",
 			wantFinalOffset: 0 + 1,
+			wantError:       nil,
 		},
 		{
 			name: "Compressed domain with pointer",
@@ -44,6 +48,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          17, // Start of the compressed domain name
 			wantString:      "example.com.",
 			wantFinalOffset: 17 + 2,
+			wantError:       nil,
 		},
 		{
 			name: "Compressed subdomain with domain pointer",
@@ -55,6 +60,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          18, // Start of the compressed domain name "bar.example.com"
 			wantString:      "bar.example.com.",
 			wantFinalOffset: 18 + 6,
+			wantError:       nil,
 		},
 		{
 			name: "Multiple compressed domains",
@@ -67,6 +73,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          24, // Start of the compressed domain name "baz.example.com"
 			wantString:      "baz.example.com.",
 			wantFinalOffset: 24 + 6,
+			wantError:       nil,
 		},
 		{
 			name: "Pointer to another pointer to domain",
@@ -80,22 +87,38 @@ func TestReadDomainName(t *testing.T) {
 			offset:          30, // Start of the compressed domain name "bar.example.com"
 			wantString:      "bar.example.com.",
 			wantFinalOffset: 30 + 2,
+			wantError:       nil,
+		},
+		{
+			name: "Invalid: circular pointer",
+			data: []byte{
+				3, 'f', 'o', 'o', 0, // "foo." -> 5 bytes
+				7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // "example.com." -> 13 bytes
+				3, 'b', 'a', 'r', 0xc0, 18, // "bar.example.com." using pointer to offset 18 ("bar")
+			},
+			offset:          18, // Start of the label "bar"
+			wantString:      "",
+			wantFinalOffset: 18 + 6,
+			wantError:       ErrInvalidDomainName,
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			reader := &dnsReader{data: test.data, offset: test.offset}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reader := &dnsReader{data: tt.data, offset: tt.offset}
 			gotString, err := reader.readDomainName()
 
-			if err != nil {
-				t.Fatalf("readDomainName() got error = %v, data = %v, offset = %d\n", err, test.data, test.offset)
+			if tt.wantError != nil {
+				if err == nil || !errors.Is(err, tt.wantError) {
+					t.Fatalf("readDomainName() error = %v, want error = %v, data = %v\n", err.Error(), tt.wantError.Error(), tt.data)
+				}
+				return
 			}
-			if gotString != test.wantString {
-				t.Errorf("readDomainName() string got = %s, want = %s, data = %v, offset = %d\n", gotString, test.wantString, test.data, test.offset)
+			if gotString != tt.wantString {
+				t.Errorf("readDomainName() string got = %s, want = %s, data = %v, offset = %d\n", gotString, tt.wantString, tt.data, tt.offset)
 			}
-			if reader.offset != test.wantFinalOffset {
-				t.Errorf("readDomainName() offset got = %d, want = %d, data = %v, offset = %d\n", reader.offset, test.wantFinalOffset, test.data, test.offset)
+			if reader.offset != tt.wantFinalOffset {
+				t.Errorf("readDomainName() offset got = %d, want = %d, data = %v, offset = %d\n", reader.offset, tt.wantFinalOffset, tt.data, tt.offset)
 			}
 		})
 	}
