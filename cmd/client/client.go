@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
 	"net/netip"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/mcombeau/dns-tools/pkg/dns"
@@ -127,45 +125,10 @@ func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, re
 
 	reverseQuery = *reverseDNSQuery
 
-	dnsResolver, err = getDNSResolver(server, port)
+	dnsResolver, err = dns.GetDNSResolver(server, port)
 	if err != nil {
 		return "", "", 0, false, fmt.Errorf("get DNS resolver: %w", err)
 	}
 
 	return dnsResolver, domainOrIP, questionType, reverseQuery, nil
-}
-
-func getDNSResolver(server string, port string) (dnsResolver string, err error) {
-	if server == "" {
-		server, err = getDefaultDNSResolver()
-		if err != nil {
-			return "", fmt.Errorf("error getting default DNS resolver: %w", err)
-		}
-	}
-	return fmt.Sprintf("%s:%s", server, port), nil
-}
-
-func getDefaultDNSResolver() (server string, err error) {
-	file, err := os.Open("/etc/resolv.conf")
-	if err != nil {
-		return "", fmt.Errorf("cannot open /etc/resolv.conf: %w", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "nameserver") {
-			fields := strings.Fields(line)
-			if len(fields) > 1 {
-				return fields[1], nil
-			}
-		}
-	}
-
-	if err = scanner.Err(); err != nil {
-		return "", fmt.Errorf("error reading /etc/resolv.conf: %w", err)
-	}
-
-	return "", fmt.Errorf("no nameserver found in /etc/resolv.conf")
 }
