@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mcombeau/dns-tools/dns"
+	"github.com/mcombeau/dns-tools/pkg/dns"
 )
 
 func main() {
