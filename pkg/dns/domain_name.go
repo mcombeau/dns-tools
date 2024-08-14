@@ -171,7 +171,7 @@ func MakeFQDN(domain string) (fqdn string) {
 	return domain + "."
 }
 
-// GetReverseDNSDomain returns the reverse DNS domain for the given IP address.
+// GetReverseDomainFromIP returns the reverse DNS domain for the given IP address.
 // Supports both IPv4 ("<reversed-ip>.in-addr.arpa.") and IPv6 ("<reversed-nibbles>.ip6.arpa.").
 // For example:
 //   - IPv4: "192.0.1.2" -> "2.1.0.192.in-addr.arpa."
@@ -183,7 +183,7 @@ func MakeFQDN(domain string) (fqdn string) {
 // Returns:
 //   - string: The reverse DNS domain.
 //   - error: If the IP address is invalid.
-func GetReverseDNSDomain(ip string) (reversedDomain string, err error) {
+func GetReverseDomainFromIP(ip string) (reversedDomain string, err error) {
 	parsedIP, err := netip.ParseAddr(ip)
 	if err != nil {
 		return "", invalidIPError(ip)

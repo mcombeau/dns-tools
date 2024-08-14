@@ -2,21 +2,20 @@ package dns
 
 import (
 	"crypto/rand"
-	"fmt"
 	"io"
 	"log"
 )
 
-func CreateDNSQuery(domainOrIP string, questionType uint16, reverseQuery bool) (query []byte, err error) {
-	if reverseQuery {
-		ip := domainOrIP
-		questionType = PTR // Question type must be PTR for reverse query
-		domainOrIP, err = GetReverseDNSDomain(ip)
-		if err != nil {
-			return []byte{}, fmt.Errorf("get Reverse DNS Domain from IP address: %w", err)
-		}
-	}
-
+// CreateQuery creates a DNS query.
+//
+// Parameters:
+//   - fqdn: the fully qualified domain name for the question section
+//   - questionType: a uint16 representing the desired record (A, AAAA, CNAME, etc)
+//
+// Returns:
+//   - query: a byte slice containing the encoded query
+//   - error: if there is an error during encoding
+func CreateQuery(fqdn string, questionType uint16) (query []byte, err error) {
 	message := Message{
 		Header: Header{
 			Id:            generateRandomID(),
@@ -25,7 +24,7 @@ func CreateDNSQuery(domainOrIP string, questionType uint16, reverseQuery bool) (
 		},
 		Questions: []Question{
 			{
-				Name:   domainOrIP,
+				Name:   fqdn,
 				QType:  questionType,
 				QClass: IN,
 			},

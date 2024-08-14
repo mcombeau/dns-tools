@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/netip"
 	"os"
 	"strings"
 	"time"
@@ -14,12 +15,17 @@ import (
 )
 
 func main() {
-	dnsResolver, domain, questionType, reverseQuery, err := parseArgs()
+	dnsResolver, domainOrIP, questionType, reverseQuery, err := parseArgs()
 	if err != nil {
 		log.Fatalf("Failed to parse args: %v\n", err)
 	}
 
-	query, err := dns.CreateDNSQuery(domain, questionType, reverseQuery)
+	domain, err := parseQueryDomain(domainOrIP, reverseQuery, questionType)
+	if err != nil {
+		log.Fatalf("Bad DNS query: %v\n", err)
+	}
+
+	query, err := dns.CreateQuery(domain, questionType)
 	if err != nil {
 		log.Fatalf("Failed to create DNS query: %v\n", err)
 	}
@@ -58,6 +64,34 @@ func main() {
 	dns.PrintBasicQueryInfo(domain, questionType)
 	dns.PrintMessage(decodedMessage)
 	dns.PrintQueryInfo(dnsResolver, queryTime, tcpQuery, len(response))
+}
+
+func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16) (fqdn string, err error) {
+	var domain string
+
+	_, err = netip.ParseAddr(domainOrIP)
+
+	if err != nil { // Not an IP address
+		if reverseQuery {
+			return "", fmt.Errorf("Reverse DNS query must be an IP address: %v", err)
+		}
+
+		domain = dns.MakeFQDN(domainOrIP)
+
+	} else { // IP address
+
+		if !reverseQuery {
+			return "", fmt.Errorf("Query must be a reverse query (-x) for IP address")
+		} else if questionType != dns.PTR {
+			return "", fmt.Errorf("Question type must be PTR (%d) for reverse query", dns.PTR)
+		}
+
+		domain, err = dns.GetReverseDomainFromIP(domainOrIP)
+		if err != nil {
+			return "", fmt.Errorf("Failed to get reverse query domain: %v)", err)
+		}
+	}
+	return domain, nil
 }
 
 func sendDNSQuery(transmissionProtocol string, server string, data []byte) (response []byte, err error) {
@@ -129,6 +163,9 @@ func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, re
 	questionType = dns.A // Default to A
 	if flag.NArg() == 2 {
 		questionType = dns.GetRecordTypeFromTypeString(flag.Arg(1))
+		if questionType == 0 {
+			return "", "", 0, false, fmt.Errorf("invalid query: unknown question type: %s", flag.Arg(1))
+		}
 	}
 
 	reverseQuery = *reverseDNSQuery

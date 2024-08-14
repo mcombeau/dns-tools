@@ -55,7 +55,7 @@ func resolveWithPublicDNS(serverName string) (ip string, err error) {
 	}
 	defer conn.Close()
 
-	query, err := dns.CreateDNSQuery(serverName, dns.A, false)
+	query, err := dns.CreateQuery(serverName, dns.A)
 	if err != nil {
 		return "", err
 	}

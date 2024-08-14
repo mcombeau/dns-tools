@@ -71,7 +71,7 @@ func extractAuthorityServerIPs(dnsMessage dns.Message) (serverList []string) {
 	for _, nameServerRecord := range dnsMessage.NameServers {
 		if nameServerRecord.RType == dns.NS {
 			nsRecord := nameServerRecord.RData.String()
-			nameServerQuery, err := dns.CreateDNSQuery(nsRecord, dns.A, false)
+			nameServerQuery, err := dns.CreateQuery(nsRecord, dns.A)
 			if err != nil {
 				continue
 			}
