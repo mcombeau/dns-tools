@@ -153,6 +153,24 @@ func (writer *dnsWriter) writeDomainName(name string) {
 	writer.offset++
 }
 
+// IsFQDN checks if a domain name is fully qualified:
+// -> example.com is not fully qualified
+// -> example.com. is fully quallified
+func IsFQDN(domain string) bool {
+	if domain == "" || domain[len(domain)-1] != '.' {
+		return false
+	}
+	return true
+}
+
+// MakeFQDN turns a domain name into a fully qualified domain name if it is not already
+func MakeFQDN(domain string) (fqdn string) {
+	if IsFQDN(domain) {
+		return domain
+	}
+	return domain + "."
+}
+
 // GetReverseDNSDomain returns the reverse DNS domain for the given IP address.
 // Supports both IPv4 ("<reversed-ip>.in-addr.arpa.") and IPv6 ("<reversed-nibbles>.ip6.arpa.").
 // For example:

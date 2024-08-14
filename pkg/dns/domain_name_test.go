@@ -245,5 +245,62 @@ func TestGetReverseDNSDomain(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestIsFQDN(t *testing.T) {
+	tests := []struct {
+		name   string
+		domain string
+		want   bool
+	}{
+		{
+			name:   "Non-FQDN",
+			domain: "example.com",
+			want:   false,
+		},
+		{
+			name:   "FQDN",
+			domain: "example.com.",
+			want:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsFQDN(tt.domain)
+
+			if got != tt.want {
+				t.Errorf("IsFQDN() got = %t, want = %t, domain = %s\n", got, tt.want, tt.domain)
+			}
+		})
+	}
+}
+
+func TestMakeFQDN(t *testing.T) {
+	tests := []struct {
+		name   string
+		domain string
+		want   string
+	}{
+		{
+			name:   "Already FQDN",
+			domain: "example.com.",
+			want:   "example.com.",
+		},
+		{
+			name:   "Non-FQDN",
+			domain: "example.com",
+			want:   "example.com.",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := MakeFQDN(tt.domain)
+
+			if got != tt.want {
+				t.Errorf("MakeFQDN() got = %s, want = %s, domain = %s\n", got, tt.want, tt.domain)
+			}
+		})
+	}
 }
