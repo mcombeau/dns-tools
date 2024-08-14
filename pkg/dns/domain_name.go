@@ -55,6 +55,12 @@ func (reader *dnsReader) readDomainName() (domainName string, err error) {
 				pointerOffset = reader.offset + 2
 			}
 
+			// The jump offset is over 2 bytes, make sure we're not going to go
+			// out of bounds when we try to ge the offset to jump to
+			if reader.offset+1 >= len(reader.data) {
+				return "", invalidDomainNameError("offset out of bounds")
+			}
+
 			newOffset := getJumpOffset(labelIndicator, reader)
 
 			if newOffset >= reader.offset { // cannot jump forward

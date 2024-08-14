@@ -125,6 +125,34 @@ func TestReadDomainName(t *testing.T) {
 	}
 }
 
+func FuzzReadDomain(f *testing.F) {
+
+	f.Add([]byte{3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0})
+	f.Add([]byte{
+		3, 'w', 'w', 'w', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0, // "www.example.com."
+		0xc0, 4, // Pointer to offset 4 ("example.com.")
+	})
+	f.Add([]byte{
+		3, 'f', 'o', 'o', 0,
+		7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
+		3, 'b', 'a', 'r', 0xc0, 5, // "bar.example.com." using pointer to offset 5 ("example.com.")
+	})
+
+	f.Fuzz(func(t *testing.T, data []byte) {
+		reader := &dnsReader{data: data, offset: 0}
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("panic occurred: %v", r)
+			}
+		}()
+
+		_, err := reader.readDomainName()
+		if err != nil {
+			t.Logf("Error: %v", err)
+		}
+	})
+}
+
 func TestEncodeName(t *testing.T) {
 
 	tests := []struct {
