@@ -69,7 +69,7 @@ func main() {
 func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16) (fqdn string, err error) {
 	var domain string
 
-	_, err = netip.ParseAddr(domainOrIP)
+	ip, err := netip.ParseAddr(domainOrIP)
 
 	if err != nil { // Not an IP address
 		if reverseQuery {
@@ -86,7 +86,7 @@ func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16)
 			return "", fmt.Errorf("Question type must be PTR (%d) for reverse query", dns.PTR)
 		}
 
-		domain, err = dns.GetReverseDomainFromIP(domainOrIP)
+		domain, err = dns.GetReverseDomainFromIP(ip)
 		if err != nil {
 			return "", fmt.Errorf("Failed to get reverse query domain: %v)", err)
 		}

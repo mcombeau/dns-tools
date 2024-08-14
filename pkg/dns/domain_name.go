@@ -173,9 +173,13 @@ func MakeFQDN(domain string) (fqdn string) {
 
 // GetReverseDomainFromIP returns the reverse DNS domain for the given IP address.
 // Supports both IPv4 ("<reversed-ip>.in-addr.arpa.") and IPv6 ("<reversed-nibbles>.ip6.arpa.").
+//
 // For example:
 //   - IPv4: "192.0.1.2" -> "2.1.0.192.in-addr.arpa."
 //   - IPv6: "2001:db8::1" -> "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa."
+//
+// If the address is an IPv4 address mapped as IPv6, the IPv4 address will be unmapped and treated
+// as IPv4 to get the correct reverse domain.
 //
 // Parameters:
 //   - ip: The IP address to convert.
@@ -183,18 +187,14 @@ func MakeFQDN(domain string) (fqdn string) {
 // Returns:
 //   - string: The reverse DNS domain.
 //   - error: If the IP address is invalid.
-func GetReverseDomainFromIP(ip string) (reversedDomain string, err error) {
-	parsedIP, err := netip.ParseAddr(ip)
-	if err != nil {
-		return "", invalidIPError(ip)
-	}
-
-	if parsedIP.Is4() {
-		reversedDomain = reverseIPv4(parsedIP)
-	} else if parsedIP.Is6() {
-		reversedDomain = reverseIPv6(parsedIP)
+func GetReverseDomainFromIP(ip netip.Addr) (reversedDomain string, err error) {
+	if ip.Is4() {
+		reversedDomain = reverseIPv4(ip)
+	} else if ip.Is4In6() {
+		ipv4 := ip.Unmap()
+		reversedDomain = reverseIPv4(ipv4)
 	} else {
-		return "", invalidIPError(ip)
+		reversedDomain = reverseIPv6(ip)
 	}
 
 	return reversedDomain, nil
