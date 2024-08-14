@@ -6,12 +6,11 @@ import (
 	"testing"
 )
 
-func TestCreateDNSQuery(t *testing.T) {
+func TestCreateQuery(t *testing.T) {
 	tests := []struct {
 		name         string
 		domain       string
 		questionType uint16
-		reverseQuery bool
 		want         []byte
 		wantError    error
 	}{
@@ -19,7 +18,6 @@ func TestCreateDNSQuery(t *testing.T) {
 			name:         "Regular query",
 			domain:       "example.com.",
 			questionType: A,
-			reverseQuery: false,
 			want: []byte{
 				0x00, 0x00, // ID bytes
 				0x01, 0x00, // Flags: recursion desired
@@ -37,9 +35,8 @@ func TestCreateDNSQuery(t *testing.T) {
 		},
 		{
 			name:         "Reverse query",
-			domain:       "1.1.1.1",
-			questionType: A,
-			reverseQuery: true,
+			domain:       "1.1.1.1.in-addr.arpa.",
+			questionType: PTR,
 			want: []byte{
 				0x00, 0x00, // ID bytes
 				0x01, 0x00, // Flags: recursion desired
@@ -56,20 +53,12 @@ func TestCreateDNSQuery(t *testing.T) {
 			},
 			wantError: nil,
 		},
-		{
-			name:         "Invalid IP for reverse query",
-			domain:       "1.1.1.1.1",
-			questionType: A,
-			reverseQuery: true,
-			want:         []byte{},
-			wantError:    ErrInvalidIP,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := CreateDNSQuery(tt.domain, tt.questionType, tt.reverseQuery)
+			got, err := CreateQuery(tt.domain, tt.questionType)
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {

@@ -2,6 +2,7 @@ package dns
 
 import (
 	"errors"
+	"net/netip"
 	"reflect"
 	"testing"
 )
@@ -192,12 +193,6 @@ func TestGetReverseDNSDomain(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:      "IPv4 invalid address",
-			ip:        "192.0.1.2.3",
-			want:      "",
-			wantError: ErrInvalidIP,
-		},
-		{
 			name:      "IPv6 full hex",
 			ip:        "2001:0db8:85a3:1234:1234:8a2e:0370:7334",
 			want:      "4.3.3.7.0.7.3.0.e.2.a.8.4.3.2.1.4.3.2.1.3.a.5.8.8.b.d.0.1.0.0.2.ip6.arpa.",
@@ -221,17 +216,13 @@ func TestGetReverseDNSDomain(t *testing.T) {
 			want:      "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.b.d.0.1.0.0.2.ip6.arpa.",
 			wantError: nil,
 		},
-		{
-			name:      "IPv6 invalid address",
-			ip:        "2001:0db8:85a3:1234:1234:8a2e:0370:7334:1234:1234",
-			want:      "",
-			wantError: ErrInvalidIP,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetReverseDNSDomain(tt.ip)
+			ipAddr := netip.MustParseAddr(tt.ip)
+
+			got, err := GetReverseDomainFromIP(ipAddr)
 
 			if tt.wantError != nil {
 				if err == nil || !errors.Is(err, tt.wantError) {
