@@ -10,7 +10,7 @@ func TestParseRootServerHints(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
-		want      []RootServer
+		want      []Server
 		wantError error
 	}{
 		{
@@ -20,7 +20,7 @@ func TestParseRootServerHints(t *testing.T) {
 A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
       `,
-			want: []RootServer{
+			want: []Server{
 				{
 					Fqdn: "A.ROOT-SERVERS.NET.",
 					IPv4: netip.MustParseAddr("198.41.0.4"),
@@ -40,7 +40,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
 ; FORMERLY NS1.ISI.EDU 
 ;
       `,
-			want: []RootServer{
+			want: []Server{
 				{
 					Fqdn: "A.ROOT-SERVERS.NET.",
 					IPv4: netip.MustParseAddr("198.41.0.4"),
@@ -59,7 +59,7 @@ A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 ; FORMERLY NS1.ISI.EDU 
 ;
       `,
-			want: []RootServer{
+			want: []Server{
 				{
 					Fqdn: "A.ROOT-SERVERS.NET.",
 					IPv4: netip.MustParseAddr("198.41.0.4"),
@@ -73,7 +73,7 @@ A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 .                        3600000      NS    A.ROOT-SERVERS.NET.
 A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
       `,
-			want: []RootServer{
+			want: []Server{
 				{
 					Fqdn: "A.ROOT-SERVERS.NET.",
 					IPv6: netip.MustParseAddr("2001:503:ba3e::2:30"),
@@ -88,7 +88,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
 A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 A.ROOT-SERVERS.NET.      3600000      AAAA
       `,
-			want: []RootServer{
+			want: []Server{
 				{
 					Fqdn: "A.ROOT-SERVERS.NET.",
 					IPv4: netip.MustParseAddr("198.41.0.4"),
@@ -102,7 +102,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA
 .                        3600000      NS    A.ROOT-SERVERS.NET.
 A.ROOT-SERVERS.NET.      3600000      A     198.41.0.
       `,
-			want:      []RootServer{},
+			want:      []Server{},
 			wantError: nil,
 		},
 		{
@@ -111,7 +111,7 @@ A.ROOT-SERVERS.NET.      3600000      A     198.41.0.
 A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
       `,
-			want:      []RootServer{},
+			want:      []Server{},
 			wantError: nil,
 		},
 		{
@@ -120,7 +120,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
 .                        3600000      A.ROOT-SERVERS.NET.
 A.ROOT-SERVERS.NET.      3600000      198.41.0.4
       `,
-			want:      []RootServer{},
+			want:      []Server{},
 			wantError: nil,
 		},
 	}
