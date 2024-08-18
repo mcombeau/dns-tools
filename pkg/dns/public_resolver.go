@@ -3,32 +3,44 @@ package dns
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 )
 
-func GetDNSResolver(server string, port string) (dnsResolver string, err error) {
-	if server == "" {
-		server, err = GetDefaultResolver()
-		if err != nil {
-			return "", fmt.Errorf("error getting default DNS resolver: %w", err)
-		}
-	}
-	return fmt.Sprintf("%s:%s", server, port), nil
-}
+const defaultDNSPort = "53"
 
-func GetDefaultResolver() (server string, err error) {
+// TODO: Instead of only returning the first resolver IP found in
+// /etc/resolv.conf, return an array of all of them
+
+// GetDefaultPublicResolver returns the first entry in /etc/resolv.conf
+//
+// Returns:
+// - A string with the IP of the default resolver
+func GetDefaultPublicResolver() (server string, err error) {
 	file, err := os.Open("/etc/resolv.conf")
 	if err != nil {
 		return "", fmt.Errorf("cannot open /etc/resolv.conf: %w", err)
 	}
 	defer file.Close()
 
+	server, err = parseFirstResolvConfServerIP(file)
+	if err != nil {
+		return "", err
+	}
+
+	return server, nil
+}
+
+func parseFirstResolvConfServerIP(file io.Reader) (ip string, err error) {
 	scanner := bufio.NewScanner(file)
+
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
+
 		if strings.HasPrefix(line, "nameserver") {
 			fields := strings.Fields(line)
+
 			if len(fields) > 1 {
 				return fields[1], nil
 			}

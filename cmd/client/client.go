@@ -125,10 +125,13 @@ func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, re
 
 	reverseQuery = *reverseDNSQuery
 
-	dnsResolver, err = dns.GetDNSResolver(server, port)
-	if err != nil {
-		return "", "", 0, false, fmt.Errorf("get DNS resolver: %w", err)
+	if server == "" {
+		server, err = dns.GetDefaultPublicResolver()
+		if err != nil {
+			return "", "", 0, false, fmt.Errorf("get default public DNS resolver: %w", err)
+		}
 	}
+	dnsResolver = fmt.Sprintf("%s:%s", server, port)
 
 	return dnsResolver, domainOrIP, questionType, reverseQuery, nil
 }
