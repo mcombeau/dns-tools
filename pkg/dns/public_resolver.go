@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const defaultDNSPort = "53"
+const defaultDNSPort = 53
 
 // TODO: Instead of only returning the first resolver IP found in
 // /etc/resolv.conf, return an array of all of them
