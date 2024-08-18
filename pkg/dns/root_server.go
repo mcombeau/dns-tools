@@ -8,16 +8,10 @@ import (
 	"strings"
 )
 
-type RootServer struct {
-	Fqdn string
-	IPv4 netip.Addr
-	IPv6 netip.Addr
-}
-
-func ParseRootServerHints(file io.Reader) (rootServers []RootServer, err error) {
+func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {
 	scanner := bufio.NewScanner(file)
 
-	var currentServer RootServer
+	var currentServer Server
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
@@ -37,7 +31,7 @@ func ParseRootServerHints(file io.Reader) (rootServers []RootServer, err error) 
 			if currentServer.Fqdn != "" && (currentServer.IPv4.IsValid() || currentServer.IPv6.IsValid()) {
 				rootServers = append(rootServers, currentServer)
 			}
-			currentServer = RootServer{Fqdn: MakeFQDN(fields[3])}
+			currentServer = Server{Fqdn: MakeFQDN(fields[3])}
 		case A:
 			currentServer.IPv4, err = netip.ParseAddr(fields[3])
 			if err != nil {
