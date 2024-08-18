@@ -12,6 +12,7 @@ var (
 	ErrInvalidRecordData     = fmt.Errorf("invalid record data")
 	ErrInvalidResourceRecord = fmt.Errorf("invalid resource record")
 	ErrInvalidMessage        = fmt.Errorf("invalid DNS message")
+	ErrNoRootServersFound    = fmt.Errorf("no root servers found")
 )
 
 func invalidMessageError(detail string) error {

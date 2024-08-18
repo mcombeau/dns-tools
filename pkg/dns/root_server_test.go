@@ -103,7 +103,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA
 A.ROOT-SERVERS.NET.      3600000      A     198.41.0.
       `,
 			want:      []Server{},
-			wantError: nil,
+			wantError: ErrNoRootServersFound,
 		},
 		{
 			name: "Invalid input with no FQDN",
@@ -112,7 +112,7 @@ A.ROOT-SERVERS.NET.      3600000      A     198.41.0.4
 A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
       `,
 			want:      []Server{},
-			wantError: nil,
+			wantError: ErrNoRootServersFound,
 		},
 		{
 			name: "Invalid input with missing type field",
@@ -121,7 +121,7 @@ A.ROOT-SERVERS.NET.      3600000      AAAA  2001:503:ba3e::2:30
 A.ROOT-SERVERS.NET.      3600000      198.41.0.4
       `,
 			want:      []Server{},
-			wantError: nil,
+			wantError: ErrNoRootServersFound,
 		},
 	}
 

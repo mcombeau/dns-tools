@@ -2,7 +2,6 @@ package dns
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"net/netip"
@@ -76,7 +75,7 @@ func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {
 	}
 
 	if len(rootServers) < 1 {
-		return nil, fmt.Errorf("no root servers found")
+		return nil, ErrNoRootServersFound
 	}
 
 	return rootServers, nil
