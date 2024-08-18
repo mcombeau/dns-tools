@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"net/netip"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -17,19 +19,38 @@ const defaultDNSPort = 53
 //
 // Returns:
 // - A string with the IP of the default resolver
-func GetDefaultPublicResolver() (server string, err error) {
+func GetDefaultPublicResolver() (server netip.AddrPort, err error) {
 	file, err := os.Open("/etc/resolv.conf")
 	if err != nil {
-		return "", fmt.Errorf("cannot open /etc/resolv.conf: %w", err)
+		return server, fmt.Errorf("cannot open /etc/resolv.conf: %w", err)
 	}
 	defer file.Close()
 
-	server, err = parseFirstResolvConfServerIP(file)
+	serverString, err := parseFirstResolvConfServerIP(file)
 	if err != nil {
-		return "", err
+		return server, err
 	}
 
-	return server, nil
+	return IPStringToAddrPort(serverString)
+}
+
+func IPStringToAddrPort(ip string) (ipAddrPort netip.AddrPort, err error) {
+	ipSplit := strings.Split(ip, ":")
+
+	addr, err := netip.ParseAddr(ipSplit[0])
+	if err != nil {
+		return ipAddrPort, err
+	}
+	port := defaultDNSPort
+	if len(ipSplit) > 1 {
+		port, err = strconv.Atoi(ipSplit[1])
+		if err != nil {
+			return ipAddrPort, err
+		}
+	}
+
+	ipAddrPort = netip.AddrPortFrom(addr, uint16(port))
+	return ipAddrPort, err
 }
 
 func parseFirstResolvConfServerIP(file io.Reader) (ip string, err error) {

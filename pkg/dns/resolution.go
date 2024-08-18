@@ -3,9 +3,7 @@ package dns
 import (
 	"fmt"
 	"log"
-	"net"
 	"net/netip"
-	"time"
 )
 
 // ResolveQuery resolves a DNS query by querying servers, starting with the root rootServers
@@ -41,15 +39,15 @@ func queryServers(serverList []Server, dnsRequest []byte) (response []byte, err 
 
 	for _, server := range serverList {
 
-		serverAddr, err := server.getValidIPAddress()
+		serverAddrPort, err := server.getValidIPAddress()
 		if err != nil {
 			log.Printf("--> Moving on: server has no valid IP address: %v", err)
 			continue
 		}
 
-		log.Printf("--> Querying server %s (IP: %v) for %s", server.Fqdn, serverAddr, domainQuery)
+		log.Printf("--> Querying server %s (IP: %v) for %s", server.Fqdn, serverAddrPort, domainQuery)
 
-		response, err := sendDNSQuery(serverAddr, dnsRequest)
+		response, err := QueryResponse("udp", serverAddrPort, dnsRequest)
 		if err != nil {
 			log.Printf("failed to query server %s: %v", server, err)
 			continue
@@ -128,30 +126,4 @@ func extractAuthorityServerIPsFromAdditionals(dnsMessage Message) (serverList []
 		}
 	}
 	return serverList
-}
-
-func sendDNSQuery(server netip.Addr, dnsRequest []byte) (response []byte, err error) {
-	serverAddrPort := netip.AddrPortFrom(server, defaultDNSPort)
-
-	serverAddr := net.UDPAddrFromAddrPort(serverAddrPort)
-
-	conn, err := net.DialUDP("udp", nil, serverAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial server: %w", err)
-	}
-	defer conn.Close()
-
-	_, err = conn.Write(dnsRequest)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send DNS request to server: %w", err)
-	}
-
-	receivedResponse := [4096]byte{}
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-	n, err := conn.Read(receivedResponse[:])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response from root server: %w", err)
-	}
-
-	return receivedResponse[:n], nil
 }

@@ -3,43 +3,55 @@ package dns
 import (
 	"fmt"
 	"net"
+	"net/netip"
 	"time"
 )
 
-func SendQuery(transmissionProtocol string, server string, data []byte) (response []byte, err error) {
-	conn, err := net.Dial(transmissionProtocol, server)
+// QueryResponse sends a DNS query to the specified server using either TCP or UDP.
+func QueryResponse(transmissionProtocol string, serverAddrPort netip.AddrPort, dnsRequest []byte) (response []byte, err error) {
+	var conn net.Conn
+
+	// Dial the server using the specified protocol
+	switch transmissionProtocol {
+	case "tcp":
+		conn, err = net.DialTCP("tcp", nil, net.TCPAddrFromAddrPort(serverAddrPort))
+	case "udp":
+		conn, err = net.DialUDP("udp", nil, net.UDPAddrFromAddrPort(serverAddrPort))
+	default:
+		return nil, fmt.Errorf("unsupported transmission protocol: %s", transmissionProtocol)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to DNS server: %v", err)
 	}
 	defer conn.Close()
 
 	if transmissionProtocol == "tcp" {
-		// Messages sent over TCP connections use server port 53 (decimal).
-		// The message is prefixed with a two byte length field which gives
-		// the message length, excluding the two byte length field.
-
-		length := uint16(len(data))    // ex. 00000001	00101100
-		highByte := byte(length >> 8)  // ex.			00000001
-		lowByte := byte(length & 0xFF) // ex. 			00101100
-
-		data = append([]byte{highByte, lowByte}, data...)
+		// Add length prefix for TCP
+		length := uint16(len(dnsRequest))
+		highByte := byte(length >> 8)
+		lowByte := byte(length & 0xFF)
+		dnsRequest = append([]byte{highByte, lowByte}, dnsRequest...)
 	}
 
-	_, err = conn.Write(data)
+	// Send the DNS request
+	_, err = conn.Write(dnsRequest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send DNS query: %v", err)
+		return nil, fmt.Errorf("failed to send DNS request: %v", err)
 	}
 
+	// Set a read deadline
 	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 
-	receivedResponse := [MaxDNSMessageSize]byte{}
+	// Read the response
+	receivedResponse := [4096]byte{}
 	n, err := conn.Read(receivedResponse[:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to read DNS response: %v", err)
 	}
 
 	if transmissionProtocol == "tcp" {
-		// Skip the first two length prefix bytes
+		// Skip the first two length prefix bytes for TCP
 		response = receivedResponse[2:n]
 	} else {
 		response = receivedResponse[:n]

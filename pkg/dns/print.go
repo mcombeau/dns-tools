@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"net/netip"
 	"strings"
 	"time"
 )
@@ -13,9 +14,9 @@ import (
 //   - queryTime: The duration of the query.
 //   - tcpQuery: Indicates if the query was over TCP (true) or UDP (false).
 //   - messageLength: The length of the message.
-func PrintQueryInfo(dnsServer string, queryTime time.Duration, tcpQuery bool, messageLength int) {
+func PrintQueryInfo(dnsServer netip.AddrPort, queryTime time.Duration, tcpQuery bool, messageLength int) {
 	fmt.Printf("\n;; Query time: %v\n", queryTime)
-	fmt.Printf(";; SERVER: %s ", dnsServer)
+	fmt.Printf(";; SERVER: %s ", dnsServer.String())
 	if tcpQuery {
 		fmt.Printf("(TCP)\n")
 	} else {

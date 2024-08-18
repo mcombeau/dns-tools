@@ -30,7 +30,7 @@ func main() {
 	startTime := time.Now()
 
 	tcpQuery := false
-	response, err := dns.SendQuery("udp", dnsResolver, query)
+	response, err := dns.QueryResponse("udp", dnsResolver, query)
 	if err != nil {
 		log.Fatalf("Failed to send DNS query over UDP: %v\n", err)
 	}
@@ -45,7 +45,7 @@ func main() {
 		// fall back to TCP
 
 		tcpQuery = true
-		response, err := dns.SendQuery("tcp", dnsResolver, query)
+		response, err := dns.QueryResponse("tcp", dnsResolver, query)
 		if err != nil {
 			log.Fatalf("Failed to send DNS query over TCP: %v\n", err)
 		}
@@ -91,7 +91,7 @@ func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16)
 	return domain, nil
 }
 
-func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, reverseQuery bool, err error) {
+func parseArgs() (resolverAddrPort netip.AddrPort, domainOrIP string, questionType uint16, reverseQuery bool, err error) {
 	reverseDNSQuery := flag.Bool("x", false, "Perform a reverse DNS query")
 
 	var server string
@@ -119,19 +119,20 @@ func parseArgs() (dnsResolver string, domainOrIP string, questionType uint16, re
 	if flag.NArg() == 2 {
 		questionType = dns.GetRecordTypeFromTypeString(flag.Arg(1))
 		if questionType == 0 {
-			return "", "", 0, false, fmt.Errorf("invalid query: unknown question type: %s", flag.Arg(1))
+			return resolverAddrPort, "", 0, false, fmt.Errorf("invalid query: unknown question type: %s", flag.Arg(1))
 		}
 	}
 
 	reverseQuery = *reverseDNSQuery
 
 	if server == "" {
-		server, err = dns.GetDefaultPublicResolver()
-		if err != nil {
-			return "", "", 0, false, fmt.Errorf("get default public DNS resolver: %w", err)
-		}
+		resolverAddrPort, err = dns.GetDefaultPublicResolver()
+	} else {
+		resolverAddrPort, err = dns.IPStringToAddrPort(fmt.Sprintf("%s:%s", server, port))
 	}
-	dnsResolver = fmt.Sprintf("%s:%s", server, port)
+	if err != nil {
+		return resolverAddrPort, "", 0, false, fmt.Errorf("get public DNS resolver: %w", err)
+	}
 
-	return dnsResolver, domainOrIP, questionType, reverseQuery, nil
+	return resolverAddrPort, domainOrIP, questionType, reverseQuery, nil
 }
