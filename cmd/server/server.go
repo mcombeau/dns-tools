@@ -73,6 +73,7 @@ func startUDPServer() (err error) {
 }
 
 func handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+
 	response, err := dns.ResolveQuery(request)
 	if err != nil {
 		log.Printf("failed to resolve DNS request from client %v: %v", clientAddr, err)

@@ -7,10 +7,12 @@ import (
 	"net/netip"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 var (
 	RootServers []Server
+	serverIndex uint32
 	once        sync.Once
 )
 
@@ -23,6 +25,15 @@ func InitializeRootServers(file io.Reader) (err error) {
 	})
 
 	return err
+}
+
+// GetNextRootServer returns the next root server using round-robin selection
+func GetNextRootServer() Server {
+	// Atomically increment the serverIndex and get the new value
+	// prevents race conditions if called in goroutine
+	index := atomic.AddUint32(&serverIndex, 1)
+
+	return RootServers[index%uint32(len(RootServers))]
 }
 
 func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {

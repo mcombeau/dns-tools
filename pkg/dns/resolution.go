@@ -21,11 +21,9 @@ import (
 func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	log.Printf("Resolving DNS query (len: %d): %v", len(dnsRequest), dnsRequest)
 
-	// TODO: right now, we query servers in order in the list. If there are more than one,
-	// we should we should distribute queries among the available (root) servers
-	// rather than consistently querying a single server.
+	rootServer := GetNextRootServer()
 
-	response, err = queryServers(RootServers, dnsRequest)
+	response, err = queryServers([]Server{rootServer}, dnsRequest)
 	if err != nil {
 		return nil, err
 	}
