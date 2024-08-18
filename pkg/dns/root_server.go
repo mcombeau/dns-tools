@@ -2,11 +2,29 @@ package dns
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net/netip"
 	"strings"
+	"sync"
 )
+
+var (
+	RootServers []Server
+	once        sync.Once
+)
+
+// InitializeRootServers initializes the RootServers global variable.
+// This function should be called once, typically during server startup.
+func InitializeRootServers(file io.Reader) (err error) {
+
+	once.Do(func() {
+		RootServers, err = ParseRootServerHints(file)
+	})
+
+	return err
+}
 
 func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {
 	scanner := bufio.NewScanner(file)
@@ -55,6 +73,10 @@ func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {
 
 	if err := scanner.Err(); err != nil {
 		return nil, err
+	}
+
+	if len(rootServers) < 1 {
+		return nil, fmt.Errorf("no root servers found")
 	}
 
 	return rootServers, nil

@@ -25,30 +25,28 @@ const ServerIP = "0.0.0.0"
 const ServerPort = 5553
 
 func main() {
-	rootServers, err := loadRootServers(RootServerHintsFile)
+	err := loadRootServers(RootServerHintsFile)
 	if err != nil {
-		log.Fatalf("Failed to load root servers: %v", err)
+		log.Fatalf("Failed to initialize root servers with file %s: %v", RootServerHintsFile, err)
 	}
 
-	if err := startUDPServer(rootServers); err != nil {
+	if err := startUDPServer(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
 
-func loadRootServers(filename string) (rootServers []dns.Server, err error) {
-	log.Printf("Loading root servers from: %s\n", filename)
-
+func loadRootServers(filename string) (err error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Printf("Error opening %s: %v\n", filename, err)
+		return fmt.Errorf("Error opening %s: %v\n", filename, err)
 		// TODO: if error with root server hints file, try bootstrapping via public DNS
 	}
 	defer file.Close()
 
-	return dns.ParseRootServerHints(file)
+	return dns.InitializeRootServers(file)
 }
 
-func startUDPServer(rootServers []dns.Server) (err error) {
+func startUDPServer() (err error) {
 	addr := net.UDPAddr{
 		Port: ServerPort,
 		IP:   net.ParseIP(ServerIP),
@@ -70,12 +68,12 @@ func startUDPServer(rootServers []dns.Server) (err error) {
 			continue
 		}
 
-		go handleRequest(conn, clientAddr, buffer[:n], rootServers)
+		go handleRequest(conn, clientAddr, buffer[:n])
 	}
 }
 
-func handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte, rootServers []dns.Server) {
-	response, err := dns.ResolveQuery(rootServers, request)
+func handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+	response, err := dns.ResolveQuery(request)
 	if err != nil {
 		log.Printf("failed to resolve DNS request from client %v: %v", clientAddr, err)
 		return

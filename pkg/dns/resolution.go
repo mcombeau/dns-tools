@@ -18,10 +18,14 @@ import (
 // Returns:
 // - response: the DNS message containing the authoritative answer
 // - err: an error if no response was found
-func ResolveQuery(rootServers []Server, dnsRequest []byte) (response []byte, err error) {
+func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	log.Printf("Resolving DNS query (len: %d): %v", len(dnsRequest), dnsRequest)
 
-	response, err = queryServers(rootServers, dnsRequest)
+	// TODO: right now, we query servers in order in the list. If there are more than one,
+	// we should we should distribute queries among the available (root) servers
+	// rather than consistently querying a single server.
+
+	response, err = queryServers(RootServers, dnsRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -39,13 +43,9 @@ func queryServers(serverList []Server, dnsRequest []byte) (response []byte, err 
 
 	for _, server := range serverList {
 
-		var serverAddr netip.Addr
-		if server.IPv4.IsValid() {
-			serverAddr = server.IPv4
-		} else if server.IPv6.IsValid() {
-			serverAddr = server.IPv6
-		} else {
-			log.Printf("Server %s has no valid IPv4 or IPv6 address", server.Fqdn)
+		serverAddr, err := server.getValidIPAddress()
+		if err != nil {
+			log.Printf("--> Moving on: server has no valid IP address: %v", err)
 			continue
 		}
 
