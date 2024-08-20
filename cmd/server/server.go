@@ -73,6 +73,7 @@ func startUDPServer() (err error) {
 }
 
 func handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+	log.Printf("Handling client %v request: %v\n", clientAddr, request)
 
 	response, err := dns.ResolveQuery(request)
 	if err != nil {
