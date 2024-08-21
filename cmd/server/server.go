@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/mcombeau/dns-tools/pkg/dns"
 )
@@ -47,6 +51,8 @@ func loadRootServers(filename string) (err error) {
 }
 
 func startUDPServer() (err error) {
+	var wg sync.WaitGroup
+
 	addr := net.UDPAddr{
 		Port: ServerPort,
 		IP:   net.ParseIP(ServerIP),
@@ -60,19 +66,38 @@ func startUDPServer() (err error) {
 
 	log.Printf("DNS resolver server listening on port: %d", addr.Port)
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		log.Println("Shutdown signal received, closing UDP connection...")
+		conn.Close()
+	}()
+
 	buffer := [dns.MaxUDPMessageLength]byte{}
 	for {
 		n, clientAddr, err := conn.ReadFromUDP(buffer[:])
 		if err != nil {
-			log.Printf("error reading from UDP: %v", err)
+			if errors.Is(err, net.ErrClosed) {
+				log.Println("Server listener connection closed")
+				break // Exit the loop if the connection is closed
+			}
+			log.Printf("Error reading from UDP: %v", err)
 			continue
 		}
 
-		go handleRequest(conn, clientAddr, buffer[:n])
+		wg.Add(1)
+		go handleRequest(&wg, conn, clientAddr, buffer[:n])
 	}
+
+	wg.Wait()
+	log.Println("Server shutdown gracefully")
+	return nil
 }
 
-func handleRequest(conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+func handleRequest(wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+	defer wg.Done()
 	log.Printf("Handling client %v request: %v\n", clientAddr, request)
 
 	response, err := dns.ResolveQuery(request)
