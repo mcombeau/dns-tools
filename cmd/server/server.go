@@ -13,17 +13,6 @@ import (
 	"github.com/mcombeau/dns-tools/pkg/dns"
 )
 
-// TODO: Gameplan:
-// - Setup server as listener on port 5553 (arbitrary choice of port)
-// - Bootstrap with root servers
-// - When a query arrives:
-// 		- query root servers, parse response,
-// 		- query next server, parse response,
-// 		- etc until authoritative response.
-// Later:
-// 		- add caching
-//		- handle multiple concurrent client requests
-
 const RootServerHintsFile = "config/named.root"
 const ServerIP = "0.0.0.0"
 const ServerPort = 5553
@@ -64,7 +53,7 @@ func startUDPServer() (err error) {
 	}
 	defer conn.Close()
 
-	log.Printf("DNS resolver server listening on port: %d", addr.Port)
+	log.Printf("DNS resolver UDP server listening on port: %d", addr.Port)
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -81,7 +70,7 @@ func startUDPServer() (err error) {
 		if err != nil {
 			if errors.Is(err, net.ErrClosed) {
 				log.Println("Server listener connection closed")
-				break // Exit the loop if the connection is closed
+				break
 			}
 			log.Printf("Error reading from UDP: %v", err)
 			continue

@@ -104,3 +104,24 @@ func EncodeMessage(message Message) ([]byte, error) {
 
 	return writer.data, nil
 }
+
+// ContainsAuthoritativeAnswer returns true if:
+// the message header indicates the presence of an answer
+// or if the authority section contains a SOA record
+func (message *Message) ContainsAuthoritativeAnswer() bool {
+	return message.Header.AnswerRRCount > 0 ||
+		(message.Header.NameserverRRCount == 1 &&
+			message.NameServers[0].RType == SOA)
+}
+
+// ContainsAdditionalSection returns true if:
+// the message header indicates the presence of an additional section
+func (message *Message) ContainsAdditionalSection() bool {
+	return message.Header.AdditionalRRCount > 0
+}
+
+// ContainsAuthoritySection returns true if:
+// the message header indicates the presence of an authority section
+func (message *Message) ContainsAuthoritySection() bool {
+	return message.Header.NameserverRRCount > 0
+}
