@@ -100,7 +100,7 @@ func TestReadDomainName(t *testing.T) {
 			offset:          18, // Start of the label "bar"
 			wantString:      "",
 			wantFinalOffset: 18 + 6,
-			wantError:       ErrInvalidDomainName,
+			wantError:       ErrTooManyPointersCompressedDomain,
 		},
 	}
 

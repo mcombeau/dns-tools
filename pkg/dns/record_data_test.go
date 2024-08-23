@@ -27,7 +27,7 @@ func TestRDataA(t *testing.T) {
 			name:      "Invalid A record",
 			data:      []byte{192, 1, 0, 1, 1},
 			want:      &RDataA{},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrInvalidIP,
 		},
 	}
 
@@ -93,10 +93,10 @@ func TestRDataAAAA(t *testing.T) {
 			wantError: nil,
 		},
 		{
-			name:      "Invalid AAAA record",
+			name:      "Invalid AAAA record: bad IP",
 			data:      []byte{32, 1, 13, 184, 0, 0, 0, 0, 0, 0, 0, 0},
 			want:      &RDataAAAA{},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrInvalidIP,
 		},
 	}
 
@@ -167,7 +167,7 @@ func TestRDataCNAME(t *testing.T) {
 			want: &RDataCNAME{
 				domainName: "example.com.",
 			},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrOffsetOutOfBounds,
 		},
 	}
 
@@ -311,7 +311,7 @@ func TestRDataMX(t *testing.T) {
 				preference: 10,
 				domainName: "mx1.example.com.",
 			},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrOffsetOutOfBounds,
 		},
 		{
 			name: "Invalid MX record: missing field",
@@ -322,7 +322,7 @@ func TestRDataMX(t *testing.T) {
 				preference: 10,
 				domainName: "mx1.example.com.",
 			},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrOffsetOutOfBounds,
 		},
 	}
 
@@ -417,7 +417,7 @@ func TestRDataSOA(t *testing.T) {
 				0, 0, 1, 0, // Minimum: 256
 			},
 			want:      &RDataSOA{},
-			wantError: ErrInvalidRecordData,
+			wantError: ErrOffsetOutOfBounds,
 		},
 	}
 

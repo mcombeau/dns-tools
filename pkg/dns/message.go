@@ -45,31 +45,30 @@ func DecodeMessage(data []byte) (Message, error) {
 
 	header, err := reader.readHeader()
 	if err != nil {
-		return Message{}, invalidMessageError(err.Error())
+		return Message{}, fmt.Errorf("invalid message: %w", err)
 	}
 	if reader.offset != DNSHeaderLength {
-		return Message{}, invalidMessageError("invalid offset after reading header")
-
+		return Message{}, fmt.Errorf("invalid message: %w after reading header", ErrOffsetOutOfBounds)
 	}
 
 	questions, err := reader.readQuestions(header.QuestionCount)
 	if err != nil {
-		return Message{}, invalidMessageError(fmt.Sprintf("question section: %s", err.Error()))
+		return Message{}, fmt.Errorf("invalid message: question section: %w", err)
 	}
 
 	answers, err := reader.readResourceRecords(header.AnswerRRCount)
 	if err != nil {
-		return Message{}, invalidMessageError(fmt.Sprintf("answer section: %s", err.Error()))
+		return Message{}, fmt.Errorf("invalid message: answer section: %w", err)
 	}
 
 	nameServers, err := reader.readResourceRecords(header.NameserverRRCount)
 	if err != nil {
-		return Message{}, invalidMessageError(fmt.Sprintf("authority section: %s", err.Error()))
+		return Message{}, fmt.Errorf("invalid message: authority section: %w", err)
 	}
 
 	additionals, err := reader.readResourceRecords(header.AdditionalRRCount)
 	if err != nil {
-		return Message{}, invalidMessageError(fmt.Sprintf("additional section: %s", err.Error()))
+		return Message{}, fmt.Errorf("invalid message: additional section: %w", err)
 	}
 
 	return Message{

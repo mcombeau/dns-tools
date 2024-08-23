@@ -214,7 +214,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				93, 184, 216, 34, // RData: 93.184.216.34
 			},
 			want:      ResourceRecord{},
-			wantError: ErrInvalidResourceRecord,
+			wantError: ErrInvalidLengthTooShort,
 		},
 		{
 			name: "Invalid A record: missing data field",
@@ -227,7 +227,7 @@ func TestDecodeResourceRecord(t *testing.T) {
 				// Missing RData
 			},
 			want:      ResourceRecord{},
-			wantError: ErrInvalidResourceRecord,
+			wantError: ErrInvalidLengthTooShort,
 		},
 		{
 			name: "Unknown record",

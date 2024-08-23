@@ -70,7 +70,7 @@ func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16)
 
 	if err != nil { // Not an IP address
 		if reverseQuery {
-			return "", fmt.Errorf("Reverse DNS query must be an IP address: %v", err)
+			return "", fmt.Errorf("reverse DNS query must be an IP address: %w", err)
 		}
 
 		domain = dns.MakeFQDN(domainOrIP)
@@ -78,14 +78,14 @@ func parseQueryDomain(domainOrIP string, reverseQuery bool, questionType uint16)
 	} else { // IP address
 
 		if !reverseQuery {
-			return "", fmt.Errorf("Query must be a reverse query (-x) for IP address")
+			return "", fmt.Errorf("query must be a reverse query (-x) for IP address")
 		} else if questionType != dns.PTR {
-			return "", fmt.Errorf("Question type must be PTR (%d) for reverse query", dns.PTR)
+			return "", fmt.Errorf("question type must be PTR (%d) for reverse query", dns.PTR)
 		}
 
 		domain, err = dns.GetReverseDomainFromIP(ip)
 		if err != nil {
-			return "", fmt.Errorf("Failed to get reverse query domain: %v)", err)
+			return "", fmt.Errorf("failed to get reverse query domain: %v)", err)
 		}
 	}
 	return domain, nil
@@ -131,7 +131,7 @@ func parseArgs() (resolverAddrPort netip.AddrPort, domainOrIP string, questionTy
 		resolverAddrPort, err = dns.IPStringToAddrPort(fmt.Sprintf("%s:%s", server, port))
 	}
 	if err != nil {
-		return resolverAddrPort, "", 0, false, fmt.Errorf("get public DNS resolver: %w", err)
+		return resolverAddrPort, "", 0, false, fmt.Errorf("get DNS resolver: %w", err)
 	}
 
 	return resolverAddrPort, domainOrIP, questionType, reverseQuery, nil

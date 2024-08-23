@@ -2,8 +2,8 @@ package dns
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
-	"log"
 )
 
 // CreateQuery creates a DNS query.
@@ -33,7 +33,7 @@ func CreateQuery(fqdn string, questionType uint16) (query []byte, err error) {
 
 	query, err = EncodeMessage(message)
 	if err != nil {
-		log.Fatalf("Failed to encode DNS message: %v\n", err)
+		return nil, fmt.Errorf("encoding error: %w", err)
 	}
 
 	return query, nil

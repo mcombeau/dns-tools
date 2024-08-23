@@ -1,44 +1,13 @@
 package dns
 
 import (
-	"fmt"
+	"errors"
 )
 
 var (
-	ErrInvalidDomainName     = fmt.Errorf("invalid domain name")
-	ErrInvalidIP             = fmt.Errorf("invalid IP")
-	ErrInvalidHeader         = fmt.Errorf("invalid header")
-	ErrInvalidQuestion       = fmt.Errorf("invalid question")
-	ErrInvalidRecordData     = fmt.Errorf("invalid record data")
-	ErrInvalidResourceRecord = fmt.Errorf("invalid resource record")
-	ErrInvalidMessage        = fmt.Errorf("invalid DNS message")
-	ErrNoRootServersFound    = fmt.Errorf("no root servers found")
+	ErrInvalidIP                       = errors.New("invalid IP address")
+	ErrInvalidLengthTooShort           = errors.New("length too short")
+	ErrNoRootServersFound              = errors.New("no root servers found")
+	ErrOffsetOutOfBounds               = errors.New("offset out of bounds")
+	ErrTooManyPointersCompressedDomain = errors.New("too many pointers in compressed domain")
 )
-
-func invalidMessageError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidMessage, detail)
-}
-
-func invalidDomainNameError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidDomainName, detail)
-}
-
-func invalidIPError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidIP, detail)
-}
-
-func invalidHeaderError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidHeader, detail)
-}
-
-func invalidQuestionError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidQuestion, detail)
-}
-
-func invalidRecordDataError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidRecordData, detail)
-}
-
-func invalidResourceRecordError(detail string) error {
-	return fmt.Errorf("%w: %s", ErrInvalidResourceRecord, detail)
-}

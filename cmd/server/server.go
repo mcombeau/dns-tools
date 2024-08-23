@@ -24,14 +24,14 @@ func main() {
 	}
 
 	if err := startUDPServer(); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.Fatalf("Failed to start UDP server: %v", err)
 	}
 }
 
 func loadRootServers(filename string) (err error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return fmt.Errorf("Error opening %s: %v\n", filename, err)
+		return fmt.Errorf("Error opening %s: %w\n", filename, err)
 		// TODO: if error with root server hints file, try bootstrapping via public DNS
 	}
 	defer file.Close()
@@ -91,13 +91,13 @@ func handleRequest(wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAdd
 
 	response, err := dns.ResolveQuery(request)
 	if err != nil {
-		log.Printf("failed to resolve DNS request from client %v: %v", clientAddr, err)
+		log.Printf("Failed to resolve DNS request from client %v: %v", clientAddr, err)
 		response = createServFailResponse(request, clientAddr)
 	}
 
 	_, err = conn.WriteToUDP(response, clientAddr)
 	if err != nil {
-		log.Printf("failed to send response to client %v: %v", clientAddr, err)
+		log.Printf("Failed to send response to client %v: %v", clientAddr, err)
 		return
 	}
 }
@@ -105,7 +105,7 @@ func handleRequest(wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAdd
 func createServFailResponse(request []byte, clientAddr *net.UDPAddr) (response []byte) {
 	responseMessage, err := dns.DecodeMessage(request)
 	if err != nil {
-		log.Printf("failed to create response for client %v: %v", clientAddr, err)
+		log.Printf("Failed to create response for client %v: %v", clientAddr, err)
 		return
 	}
 	responseMessage.Header.Flags.ResponseCode = dns.SERVFAIL

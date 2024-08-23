@@ -1,5 +1,7 @@
 package dns
 
+import "fmt"
+
 // Question section format
 // The question section is used to carry the "question" in most queries,
 // i.e., the parameters that define what is being asked.  The section
@@ -38,11 +40,11 @@ func (reader *dnsReader) readQuestions(count uint16) (questions []Question, err 
 func (reader *dnsReader) readQuestion() (question Question, err error) {
 	name, err := reader.readDomainName()
 	if err != nil {
-		return Question{}, invalidQuestionError(err.Error())
+		return Question{}, fmt.Errorf("invalid question: %w", err)
 	}
 
 	if len(reader.data) < reader.offset+4 {
-		return Question{}, invalidQuestionError("too short")
+		return Question{}, fmt.Errorf("invalid question: %w", ErrInvalidLengthTooShort)
 	}
 
 	question = Question{

@@ -36,7 +36,7 @@ func (reader *dnsReader) readDomainName() (domainName string, err error) {
 
 	for {
 		if reader.offset >= len(reader.data) {
-			return "", invalidDomainNameError("offset out of bounds")
+			return "", fmt.Errorf("invalid domain name: %w", ErrOffsetOutOfBounds)
 		}
 
 		labelIndicator := int(reader.data[reader.offset]) // Read the label length or pointer indicator
@@ -58,15 +58,15 @@ func (reader *dnsReader) readDomainName() (domainName string, err error) {
 			// The jump offset is over 2 bytes, make sure we're not going to go
 			// out of bounds when we try to ge the offset to jump to
 			if reader.offset+1 >= len(reader.data) {
-				return "", invalidDomainNameError("offset out of bounds")
+				return "", fmt.Errorf("invalid domain name: %w", ErrOffsetOutOfBounds)
 			}
 
 			newOffset := getJumpOffset(labelIndicator, reader)
 
 			if newOffset >= reader.offset { // cannot jump forward
-				return "", invalidDomainNameError("pointer offset out of bounds")
+				return "", fmt.Errorf("invalid domain name: pointer %w", ErrOffsetOutOfBounds)
 			} else if jumpCount >= 10 {
-				return "", invalidDomainNameError("bad encoding: too many pointers in compressed domain")
+				return "", fmt.Errorf("invalid domain name: %w", ErrTooManyPointersCompressedDomain)
 			}
 
 			reader.offset = newOffset // Perform actual jump
@@ -83,7 +83,7 @@ func (reader *dnsReader) readDomainName() (domainName string, err error) {
 			}
 
 			if reader.offset+labelIndicator > len(reader.data) {
-				return "", invalidDomainNameError("label offset out of bounds")
+				return "", fmt.Errorf("invalid domain name: label %w", ErrOffsetOutOfBounds)
 			}
 
 			// Add label to domain name

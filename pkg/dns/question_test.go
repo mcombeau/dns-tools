@@ -105,7 +105,7 @@ func TestReadDNSQuestion(t *testing.T) {
 				0, 1, // QClass: 1 (IN)
 			},
 			want:      Question{},
-			wantError: ErrInvalidQuestion,
+			wantError: ErrOffsetOutOfBounds,
 		},
 		{
 			name: "Invalid question: too short",
@@ -114,7 +114,7 @@ func TestReadDNSQuestion(t *testing.T) {
 				0, 1, // QType: 1 (A)
 			},
 			want:      Question{},
-			wantError: ErrInvalidQuestion,
+			wantError: ErrInvalidLengthTooShort,
 		},
 	}
 

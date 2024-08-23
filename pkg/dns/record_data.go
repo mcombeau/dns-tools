@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"net"
 	"net/netip"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ func (rdata *RDataA) String() string {
 
 func (rdata *RDataA) WriteRecordData(writer *dnsWriter) error {
 	if !rdata.IP.Is4() {
-		return invalidRecordDataError(ErrInvalidIP.Error())
+		return fmt.Errorf("invalid A record data: %w", ErrInvalidIP)
 	}
 	ip4 := rdata.IP.As4()
 	writer.writeData(ip4[:])
@@ -35,8 +36,8 @@ func (rdata *RDataA) WriteRecordData(writer *dnsWriter) error {
 }
 
 func (rdata *RDataA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	if length != 4 {
-		return invalidRecordDataError(fmt.Sprintf("invalid length for IPv4 address: %d", length))
+	if length != net.IPv4len {
+		return fmt.Errorf("invalid A record data length: expected %d, has %d: %w", net.IPv4len, length, ErrInvalidIP)
 	}
 
 	var ipArray [4]byte
@@ -45,7 +46,7 @@ func (rdata *RDataA) ReadRecordData(reader *dnsReader, length uint16) (err error
 	ip4 := netip.AddrFrom4(ipArray)
 
 	if !ip4.IsValid() || !ip4.Is4() {
-		return invalidRecordDataError(ErrInvalidIP.Error())
+		return fmt.Errorf("invalid A record data: %w", ErrInvalidIP)
 	}
 
 	reader.offset += int(length)
@@ -68,7 +69,7 @@ func (rdata *RDataAAAA) String() string {
 
 func (rdata *RDataAAAA) WriteRecordData(writer *dnsWriter) error {
 	if !rdata.IP.Is6() {
-		return invalidRecordDataError(ErrInvalidIP.Error())
+		return fmt.Errorf("invalid AAAA record data: %w", ErrInvalidIP)
 	}
 	ip6 := rdata.IP.As16()
 	writer.writeData(ip6[:])
@@ -76,17 +77,17 @@ func (rdata *RDataAAAA) WriteRecordData(writer *dnsWriter) error {
 }
 
 func (rdata *RDataAAAA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	if length != 16 {
-		return invalidRecordDataError(fmt.Sprintf("invalid length for IPv6 address: %d", length))
+	if length != net.IPv6len {
+		return fmt.Errorf("invalid AAAA record data length: expected %d, has %d: %w", net.IPv6len, length, ErrInvalidIP)
 	}
 
-	var ipArray [16]byte
+	var ipArray [net.IPv6len]byte
 	copy(ipArray[:], reader.data[reader.offset:reader.offset+int(length)])
 
 	ip6 := netip.AddrFrom16(ipArray)
 
 	if !ip6.IsValid() || !ip6.Is6() {
-		return invalidRecordDataError(ErrInvalidIP.Error())
+		return fmt.Errorf("invalid AAAA record data: %w", ErrInvalidIP)
 	}
 
 	reader.offset += int(length)
@@ -115,7 +116,7 @@ func (rdata *RDataCNAME) WriteRecordData(writer *dnsWriter) error {
 func (rdata *RDataCNAME) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("CNAME RData: %s", err.Error()))
+		return fmt.Errorf("invalid CNAME record data: %w", err)
 	}
 	return nil
 }
@@ -140,7 +141,7 @@ func (rdata *RDataPTR) WriteRecordData(writer *dnsWriter) error {
 func (rdata *RDataPTR) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("PTR RData: %s", err.Error()))
+		return fmt.Errorf("invalid PTR record data: %w", err)
 	}
 	return nil
 }
@@ -165,7 +166,7 @@ func (rdata *RDataNS) WriteRecordData(writer *dnsWriter) error {
 func (rdata *RDataNS) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("NS RData: %s", err.Error()))
+		return fmt.Errorf("invalid NS record data: %w", err)
 	}
 	return nil
 }
@@ -216,7 +217,7 @@ func (rdata *RDataMX) ReadRecordData(reader *dnsReader, length uint16) (err erro
 	rdata.preference = reader.readUint16()
 	rdata.domainName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("MX RData: %s", err.Error()))
+		return fmt.Errorf("invalid MX record data: %w", err)
 	}
 	return nil
 }
@@ -270,12 +271,12 @@ func (rdata *RDataSOA) WriteRecordData(writer *dnsWriter) error {
 func (rdata *RDataSOA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
 	rdata.mName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return fmt.Errorf("invalid SOA record data: %w", err)
 	}
 
 	rdata.rName, err = reader.readDomainName()
 	if err != nil {
-		return invalidRecordDataError(fmt.Sprintf("SOA RData: %s", err.Error()))
+		return fmt.Errorf("invalid SOA record data: %w", err)
 	}
 
 	rdata.serial = reader.readUint32()

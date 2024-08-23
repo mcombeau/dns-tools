@@ -1,5 +1,7 @@
 package dns
 
+import "fmt"
+
 // Resource record format
 
 // The answer, authority, and additional sections all share the same
@@ -51,11 +53,11 @@ func (reader *dnsReader) readResourceRecords(count uint16) (records []ResourceRe
 func (reader *dnsReader) readResourceRecord() (record ResourceRecord, err error) {
 	name, err := reader.readDomainName()
 	if err != nil {
-		return ResourceRecord{}, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, fmt.Errorf("invalid resource record: %w", err)
 	}
 
 	if len(reader.data) < reader.offset+10 {
-		return ResourceRecord{}, invalidResourceRecordError("too short")
+		return ResourceRecord{}, fmt.Errorf("invalid resource record: %w", ErrInvalidLengthTooShort)
 	}
 	rtype := reader.readUint16()
 	rclass := reader.readUint16()
@@ -63,17 +65,17 @@ func (reader *dnsReader) readResourceRecord() (record ResourceRecord, err error)
 	rdlength := reader.readUint16()
 
 	if len(reader.data) < reader.offset+int(rdlength) {
-		return ResourceRecord{}, invalidResourceRecordError("invalid RData length: too short")
+		return ResourceRecord{}, fmt.Errorf("invalid resource record data: %w", ErrInvalidLengthTooShort)
 	}
 
 	rdata, err := getRDataStruct(rtype)
 	if err != nil {
-		return ResourceRecord{}, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, fmt.Errorf("invalid resource record data: %w", err)
 	}
 
 	err = rdata.ReadRecordData(reader, rdlength)
 	if err != nil {
-		return ResourceRecord{}, invalidResourceRecordError(err.Error())
+		return ResourceRecord{}, fmt.Errorf("invalid resource record data: %w", err)
 	}
 
 	record = ResourceRecord{

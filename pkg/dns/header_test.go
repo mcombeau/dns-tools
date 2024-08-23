@@ -194,7 +194,7 @@ func TestDecodeDNSHeader(t *testing.T) {
 				0x00, 0x02, // Answer RR Count: 2
 				0x00, 0x03, // Nameserver RR Count: 3
 			},
-			wantError: ErrInvalidHeader,
+			wantError: ErrInvalidLengthTooShort,
 			want:      nil,
 		},
 	}

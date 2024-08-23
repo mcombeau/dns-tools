@@ -1,5 +1,7 @@
 package dns
 
+import "fmt"
+
 // Header section format
 // The header contains the following fields:
 
@@ -45,7 +47,7 @@ type Flags struct {
 
 func (reader *dnsReader) readHeader() (Header, error) {
 	if len(reader.data) < DNSHeaderLength {
-		return Header{}, invalidHeaderError("too short")
+		return Header{}, fmt.Errorf("invalid header: %w", ErrInvalidLengthTooShort)
 	}
 
 	header := Header{
