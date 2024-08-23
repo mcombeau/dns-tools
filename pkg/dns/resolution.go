@@ -1,12 +1,13 @@
 package dns
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/netip"
 )
 
-const MaxRecursionDepth = 5
+const MaxRecursionDepth = 10
 
 // ResolveQuery resolves a DNS query by querying servers, starting with the root rootServers
 // until an authoritative answer is found.
@@ -21,31 +22,36 @@ const MaxRecursionDepth = 5
 func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	log.Printf("Resolving DNS query (len: %d): %v", len(dnsRequest), dnsRequest)
 
+	dnsParsedRequest, err := DecodeMessage(dnsRequest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse client request: %w", err)
+	}
+
+	queryDomain := dnsParsedRequest.Questions[0].Name
+
 	// TODO: cache answers and check cache before querying servers
 
 	// TODO: ping root server here to check if it's alive and if not get next root server again?
 	rootServer := GetNextRootServer()
 
-	response, err = queryServers([]Server{rootServer}, dnsRequest, 0)
+	response, err = queryServers([]Server{rootServer}, dnsRequest, queryDomain, 0)
 	if err != nil {
+		if errors.Is(err, ErrServFailToResolveQuery) {
+			dnsParsedRequest.Header.Flags.ResponseCode = SERVFAIL
+			return EncodeMessage(dnsParsedRequest)
+		}
+		log.Printf("failed to resolve query: %v", err)
 		return nil, err
 	}
 
 	return response, nil
 }
 
-func queryServers(serverList []Server, dnsRequest []byte, depth int) (response []byte, err error) {
+func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, depth int) (response []byte, err error) {
 
 	if depth >= MaxRecursionDepth {
 		return nil, fmt.Errorf("recursion depth exceeded")
 	}
-
-	dnsParsedRequest, err := DecodeMessage(dnsRequest)
-	if err != nil {
-		log.Printf("failed to parse client request: %v", err)
-		return nil, err
-	}
-	domainQuery := dnsParsedRequest.Questions[0].Name
 
 	for _, server := range serverList {
 
@@ -55,7 +61,7 @@ func queryServers(serverList []Server, dnsRequest []byte, depth int) (response [
 			continue
 		}
 
-		log.Printf("--> Querying server %s (IP: %v) for %s", server.Fqdn, serverAddrPort, domainQuery)
+		log.Printf("--> Querying server %s (IP: %v) for %s", server.Fqdn, serverAddrPort, queryDomain)
 
 		response, err := QueryResponse("udp", serverAddrPort, dnsRequest)
 		if err != nil {
@@ -70,7 +76,7 @@ func queryServers(serverList []Server, dnsRequest []byte, depth int) (response [
 		}
 
 		if dnsParsedResponse.ContainsAuthoritativeAnswer() {
-			log.Printf("--> Got authoritative answer from server %s for %s", server, domainQuery)
+			log.Printf("--> Got authoritative answer from server %s for %s", server, queryDomain)
 			fmt.Println("-------------------")
 			PrintMessage(dnsParsedResponse)
 			fmt.Println("-------------------")
@@ -79,26 +85,38 @@ func queryServers(serverList []Server, dnsRequest []byte, depth int) (response [
 		}
 
 		if dnsParsedResponse.ContainsAdditionalSection() {
-			log.Printf("--> Got no answer from server %s for %s, but got additional records", server, domainQuery)
+			log.Printf("--> Got no answer from server %s for %s, but got additional records", server, queryDomain)
 			authorityServers := extractNameServerIPs(dnsParsedResponse.Additionals)
 			if len(authorityServers) > 0 {
-				return queryServers(authorityServers, dnsRequest, depth+1)
+				return queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
 			} else {
-				return nil, fmt.Errorf("could not parse additional section in response from server %s", server)
+				fmt.Println("------------------- ADDITIONAL SECTION IS EMPTY?")
+				PrintMessage(dnsParsedResponse)
+				fmt.Println("-------------------")
+
+				return nil, fmt.Errorf("%w: could not parse additional section in response from server %s", ErrServFailToResolveQuery, server)
 			}
 		}
 
 		if dnsParsedResponse.ContainsAuthoritySection() {
-			log.Printf("--> Got no answer or additional records from server %s for %s, but got NS records", server, domainQuery)
+			log.Printf("--> Got no answer or additional records from server %s for %s, but got NS records", server, queryDomain)
 			authorityServers := resolveNameServerRecords(dnsParsedResponse, server, depth+1)
 			if len(authorityServers) > 0 {
-				return queryServers(authorityServers, dnsRequest, depth+1)
+				return queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
 			} else {
-				return nil, fmt.Errorf("could not parse authority section in response from server %s", server)
+				fmt.Println("------------------- AUTHORITY SECTION IS EMPTY?")
+				PrintMessage(dnsParsedResponse)
+				fmt.Println("-------------------")
+				return nil, fmt.Errorf("%w: could not parse authority section in response from server %s", ErrServFailToResolveQuery, server)
 			}
 		}
+
+		if dnsParsedResponse.Header.Flags.ResponseCode == REFUSED {
+			return nil, ErrServFailToResolveQueryRefused
+		}
 	}
-	return nil, fmt.Errorf("failed to resolve DNS query")
+
+	return nil, fmt.Errorf("%w: break in the chain", ErrServFailToResolveQuery)
 }
 
 func resolveNameServerRecords(dnsMessage Message, originalServer Server, depth int) (serverList []Server) {
@@ -116,14 +134,28 @@ func resolveNameServerRecords(dnsMessage Message, originalServer Server, depth i
 
 			// Query the server the response came from instead of going back up to root
 			fmt.Printf("\t\t--> querying original server %v for nsRecord: %s\n", originalServer, nsRecord)
-			response, err := queryServers([]Server{originalServer}, nameServerQuery, depth)
+			response, err := queryServers([]Server{originalServer}, nameServerQuery, nsRecord, depth)
 			if err != nil {
-				continue
+				log.Printf("Failed to query original server %v for %s: %v", originalServer, nsRecord, err)
+
+				// If original server refuses the request, query root server
+				if err == ErrServFailToResolveQueryRefused {
+					rootServer := GetNextRootServer()
+
+					response, err = queryServers([]Server{rootServer}, nameServerQuery, nsRecord, depth)
+					if err != nil {
+						log.Printf("Failed to query original server %v for %s: %v", originalServer, nsRecord, err)
+						continue
+					}
+				}
 			}
+
 			parsedResponse, err := DecodeMessage(response)
 			if err != nil {
+				log.Printf("Failed to decode message from server %v for %s: %v", originalServer, nsRecord, err)
 				continue
 			}
+
 			fmt.Printf("\t\t--> got response from servers for nsRecord: %s: %s\n", nsRecord, parsedResponse.Answers[0].RData.String())
 
 			serverList = append(serverList, extractNameServerIPs(parsedResponse.Answers)...)

@@ -37,7 +37,7 @@ var dnsResponseCodeNames = map[uint16]string{
 	SERVFAIL:  "SERVFAIL",
 	NXDOMAIN:  "NXDOMAIN",
 	NOTIMP:    "NOTIMP",
-	REFUSED:   "REFUSEd",
+	REFUSED:   "REFUSED",
 	YXDOMAIN:  "YXDOMAIN",
 	YXRRSET:   "YXRRSET",
 	NXRRSET:   "NXRRSET",

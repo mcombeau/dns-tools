@@ -92,23 +92,12 @@ func handleRequest(wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAdd
 	response, err := dns.ResolveQuery(request)
 	if err != nil {
 		log.Printf("Failed to resolve DNS request from client %v: %v", clientAddr, err)
-		response = createServFailResponse(request, clientAddr)
 	}
 
+	log.Printf("Sending response to client %v", clientAddr)
 	_, err = conn.WriteToUDP(response, clientAddr)
 	if err != nil {
 		log.Printf("Failed to send response to client %v: %v", clientAddr, err)
 		return
 	}
-}
-
-func createServFailResponse(request []byte, clientAddr *net.UDPAddr) (response []byte) {
-	responseMessage, err := dns.DecodeMessage(request)
-	if err != nil {
-		log.Printf("Failed to create response for client %v: %v", clientAddr, err)
-		return
-	}
-	responseMessage.Header.Flags.ResponseCode = dns.SERVFAIL
-	response, _ = dns.EncodeMessage(responseMessage)
-	return response
 }
