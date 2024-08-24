@@ -41,8 +41,6 @@ func getRootServersFromFile(filename string) (rootServers []Server, err error) {
 
 // GetNextRootServer returns the next root server using round-robin selection
 func (resolver *Resolver) GetNextRootServer() Server {
-	log.Printf("GETTING NEXT ROOT SERVER")
-	log.Printf("ROOT SERVERS: %v", resolver.RootServers)
 	// Atomically increment the serverIndex and get the new value
 	// prevents race conditions if called in goroutine
 	index := atomic.AddUint32(&serverIndex, 1)

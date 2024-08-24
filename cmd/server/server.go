@@ -24,8 +24,6 @@ func main() {
 		log.Fatalf("Failed to create resolver: %v", err)
 	}
 
-	log.Printf("Resolver root servers %v", resolver.RootServers)
-
 	err = startUDPServer(resolver)
 	if err != nil {
 		log.Fatalf("Failed to start UDP server: %v", err)
