@@ -165,26 +165,32 @@ func resolveNameServerRecords(dnsMessage Message, originalServer Server, depth i
 }
 
 func extractNameServerIPs(dnsResourceRecord []ResourceRecord) (serverList []Server) {
+	serverMap := make(map[string]int)
+
 	for _, record := range dnsResourceRecord {
 		serverName := record.Name
 		ipString := record.RData.String()
 
-		var nameServer Server
+		index, exists := serverMap[serverName]
+		if !exists {
+			serverList = append(serverList, Server{Fqdn: serverName})
+			index = len(serverList) - 1
+			serverMap[serverName] = index
+		}
 
 		switch record.RType {
 		case A:
 			serverAddr, err := netip.ParseAddr(ipString)
 			if err == nil {
-				nameServer = Server{Fqdn: MakeFQDN(serverName), IPv4: serverAddr}
+				serverList[index].IPv4 = serverAddr
 			}
 		case AAAA:
 			serverAddr, err := netip.ParseAddr(ipString)
 			if err == nil {
-				nameServer = Server{Fqdn: MakeFQDN(serverName), IPv6: serverAddr}
+				serverList[index].IPv6 = serverAddr
 			}
 		}
-		serverList = append(serverList, nameServer)
-		log.Printf("\t--> got NS record: %v", nameServer)
+		log.Printf("\t--> got NS record: %v", serverList[index])
 	}
 	return serverList
 }
