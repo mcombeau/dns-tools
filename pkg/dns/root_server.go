@@ -17,26 +17,26 @@ var (
 	once        sync.Once
 )
 
-// InitializeRootServers initializes the RootServers global variable.
+// initializeRootServers initializes the RootServers global variable.
 // This function should be called once, typically during server startup.
-func (resolver *Resolver) InitializeRootServers(file io.Reader) (err error) {
+func initializeRootServers(file io.Reader) (rootServers []Server, err error) {
 
 	once.Do(func() {
-		resolver.RootServers, err = ParseRootServerHints(file)
+		rootServers, err = ParseRootServerHints(file)
 	})
 
-	return err
+	return rootServers, err
 }
 
-func (resolver *Resolver) LoadRootServers(filename string) (err error) {
+func getRootServersFromFile(filename string) (rootServers []Server, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return fmt.Errorf("Error opening %s: %w\n", filename, err)
+		return nil, fmt.Errorf("Error opening %s: %w\n", filename, err)
 		// TODO: if error with root server hints file, try bootstrapping via public DNS
 	}
 	defer file.Close()
 
-	return resolver.InitializeRootServers(file)
+	return initializeRootServers(file)
 }
 
 // GetNextRootServer returns the next root server using round-robin selection

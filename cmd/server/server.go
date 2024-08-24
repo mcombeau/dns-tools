@@ -19,12 +19,11 @@ const ServerPort = 5553
 
 func main() {
 
-	resolver := dns.NewResolver()
-
-	err := resolver.LoadRootServers(RootServerHintsFile)
+	resolver, err := dns.NewResolver(RootServerHintsFile)
 	if err != nil {
-		log.Fatalf("Failed to initialize root servers with file %s: %v", RootServerHintsFile, err)
+		log.Fatalf("Failed to create resolver: %v", err)
 	}
+
 	log.Printf("Resolver root servers %v", resolver.RootServers)
 
 	err = startUDPServer(resolver)

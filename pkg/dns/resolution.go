@@ -15,8 +15,17 @@ type Resolver struct {
 	QueryFunc func(string, netip.AddrPort, []byte) ([]byte, error)
 }
 
-func NewResolver() (resolver *Resolver) {
-	return &Resolver{MaxRecursionDepth: 10, QueryFunc: QueryResponse}
+func NewResolver(rootServerHintsFileName string) (resolver *Resolver, err error) {
+	rootServers, err := getRootServersFromFile(rootServerHintsFileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize root servers with file %s: %w", rootServerHintsFileName, err)
+	}
+	resolver = &Resolver{
+		MaxRecursionDepth: 10,
+		RootServers:       rootServers,
+		QueryFunc:         QueryResponse,
+	}
+	return resolver, nil
 }
 
 // ResolveQuery resolves a DNS query by querying servers, starting with the root rootServers

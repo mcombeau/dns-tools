@@ -1,13 +1,14 @@
 package dns_test
 
 import (
-	"log"
 	"net/netip"
 	"reflect"
 	"testing"
 
 	"github.com/mcombeau/dns-tools/pkg/dns"
 )
+
+const testRootServerHintsFile = "../../config/named.root"
 
 func TestResolveQuery(t *testing.T) {
 	// Define the test cases
@@ -49,10 +50,9 @@ func TestResolveQuery(t *testing.T) {
 		},
 	}
 
-	resolver := dns.NewResolver()
-	err := resolver.LoadRootServers("../../config/named.root")
+	resolver, err := dns.NewResolver(testRootServerHintsFile)
 	if err != nil {
-		log.Fatalf("Root servers not loaded into resolver: %v: %v", resolver.RootServers, err)
+		t.Fatalf("Root servers not loaded into resolver: %v: %v", resolver.RootServers, err)
 	}
 
 	// Restore the original query function after the tests complete
