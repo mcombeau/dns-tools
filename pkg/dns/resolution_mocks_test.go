@@ -68,9 +68,9 @@ var mockResponseAdditionalSectionToNoErrorAnswer = func(transmissionProtocol str
 
 	switch mockFunctionCalledCount {
 	case 0:
-		response = createARecordAdditionalResponse(parsedRequest, "192.0.0.1")
+		response = createARecordAdditionalResponse(parsedRequest, "abc.example.com.", "192.0.0.1")
 	case 1:
-		response = createARecordAdditionalResponse(parsedRequest, "192.0.0.2")
+		response = createARecordAdditionalResponse(parsedRequest, "def.example.com.", "192.0.0.2")
 	case 2:
 		response = createNoErrorAuthoritativeAnswer(parsedRequest, authoritativeAnswerIP)
 	default:
@@ -90,11 +90,11 @@ var mockResponseAuthoritySectionToNoErrorAnswer = func(transmissionProtocol stri
 
 	switch mockFunctionCalledCount {
 	case 0:
-		response = createNSResponse(parsedRequest, "ns0.example.com.")
+		response = createNSResponse(parsedRequest, "ghi.example.com.")
 	case 1:
 		response = createNoErrorAuthoritativeAnswer(parsedRequest, "192.0.0.1")
 	case 2:
-		response = createARecordAdditionalResponse(parsedRequest, "192.0.0.2")
+		response = createARecordAdditionalResponse(parsedRequest, "jkl.example.com.", "192.0.0.2")
 	case 3:
 		response = createNoErrorAuthoritativeAnswer(parsedRequest, authoritativeAnswerIP)
 	default:
@@ -170,7 +170,7 @@ func createNoErrorAuthoritativeAnswer(message dns.Message, ip string) dns.Messag
 	return message
 }
 
-func createARecordAdditionalResponse(message dns.Message, ip string) dns.Message {
+func createARecordAdditionalResponse(message dns.Message, name string, ip string) dns.Message {
 	resetResourceRecords(&message)
 
 	message.Header.AdditionalRRCount = 1
