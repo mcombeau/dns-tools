@@ -101,20 +101,20 @@ func (rdata *RDataAAAA) ReadRecordData(reader *dnsReader, length uint16) (err er
 // CNAME:	A <domain-name> which specifies the canonical or primary name for the owner.  The owner name is an alias.
 
 type RDataCNAME struct {
-	domainName string
+	DomainName string
 }
 
 func (rdata *RDataCNAME) String() string {
-	return rdata.domainName
+	return rdata.DomainName
 }
 
 func (rdata *RDataCNAME) WriteRecordData(writer *dnsWriter) error {
-	writer.writeDomainName(rdata.domainName)
+	writer.writeDomainName(rdata.DomainName)
 	return nil
 }
 
 func (rdata *RDataCNAME) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.domainName, err = reader.readDomainName()
+	rdata.DomainName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid CNAME record data: %w", err)
 	}
@@ -126,20 +126,20 @@ func (rdata *RDataCNAME) ReadRecordData(reader *dnsReader, length uint16) (err e
 // PTRDNAME:	A <domain-name> which points to some location in the domain name space.
 
 type RDataPTR struct {
-	domainName string
+	DomainName string
 }
 
 func (rdata *RDataPTR) String() string {
-	return rdata.domainName
+	return rdata.DomainName
 }
 
 func (rdata *RDataPTR) WriteRecordData(writer *dnsWriter) error {
-	writer.writeDomainName(rdata.domainName)
+	writer.writeDomainName(rdata.DomainName)
 	return nil
 }
 
 func (rdata *RDataPTR) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.domainName, err = reader.readDomainName()
+	rdata.DomainName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid PTR record data: %w", err)
 	}
@@ -151,20 +151,20 @@ func (rdata *RDataPTR) ReadRecordData(reader *dnsReader, length uint16) (err err
 // NSDNAME:	A <domain-name> which specifies a host which should be authoritative for the specified class and domain.
 
 type RDataNS struct {
-	domainName string
+	DomainName string
 }
 
 func (rdata *RDataNS) String() string {
-	return rdata.domainName
+	return rdata.DomainName
 }
 
 func (rdata *RDataNS) WriteRecordData(writer *dnsWriter) error {
-	writer.writeDomainName(rdata.domainName)
+	writer.writeDomainName(rdata.DomainName)
 	return nil
 }
 
 func (rdata *RDataNS) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.domainName, err = reader.readDomainName()
+	rdata.DomainName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid NS record data: %w", err)
 	}
@@ -176,20 +176,20 @@ func (rdata *RDataNS) ReadRecordData(reader *dnsReader, length uint16) (err erro
 // TXT-DATA:	One or more <character-string>s.
 
 type RDataTXT struct {
-	text string
+	Text string
 }
 
 func (rdata *RDataTXT) String() string {
-	return rdata.text
+	return rdata.Text
 }
 
 func (rdata *RDataTXT) WriteRecordData(writer *dnsWriter) error {
-	writer.writeData([]byte(rdata.text))
+	writer.writeData([]byte(rdata.Text))
 	return nil
 }
 
 func (rdata *RDataTXT) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.text = string(reader.data[reader.offset : reader.offset+int(length)])
+	rdata.Text = string(reader.data[reader.offset : reader.offset+int(length)])
 	return nil
 }
 
@@ -199,23 +199,23 @@ func (rdata *RDataTXT) ReadRecordData(reader *dnsReader, length uint16) (err err
 // EXCHANGE:	A <domain-name> which specifies a host willing to act as a mail exchange for the owner name.
 
 type RDataMX struct {
-	preference uint16
-	domainName string
+	Preference uint16
+	DomainName string
 }
 
 func (rdata *RDataMX) String() string {
-	return strconv.Itoa(int(rdata.preference)) + " " + rdata.domainName
+	return strconv.Itoa(int(rdata.Preference)) + " " + rdata.DomainName
 }
 
 func (rdata *RDataMX) WriteRecordData(writer *dnsWriter) error {
-	writer.writeUint16(rdata.preference)
-	writer.writeDomainName(rdata.domainName)
+	writer.writeUint16(rdata.Preference)
+	writer.writeDomainName(rdata.DomainName)
 	return nil
 }
 
 func (rdata *RDataMX) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.preference = reader.readUint16()
-	rdata.domainName, err = reader.readDomainName()
+	rdata.Preference = reader.readUint16()
+	rdata.DomainName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid MX record data: %w", err)
 	}
@@ -233,57 +233,57 @@ func (rdata *RDataMX) ReadRecordData(reader *dnsReader, length uint16) (err erro
 // MINIMUM:	The unsigned 32 bit minimum TTL field that should be exported with any RR from this zone.
 
 type RDataSOA struct {
-	mName   string
-	rName   string
-	serial  uint32
-	refresh uint32
-	retry   uint32
-	expire  uint32
-	minimum uint32
+	MName   string
+	RName   string
+	Serial  uint32
+	Refresh uint32
+	Retry   uint32
+	Expire  uint32
+	Minimum uint32
 }
 
 func (rdata *RDataSOA) String() string {
 	soa := []string{
-		rdata.mName,
-		rdata.rName,
-		strconv.Itoa(int(rdata.serial)),
-		strconv.Itoa(int(rdata.refresh)),
-		strconv.Itoa(int(rdata.retry)),
-		strconv.Itoa(int(rdata.expire)),
-		strconv.Itoa(int(rdata.minimum)),
+		rdata.MName,
+		rdata.RName,
+		strconv.Itoa(int(rdata.Serial)),
+		strconv.Itoa(int(rdata.Refresh)),
+		strconv.Itoa(int(rdata.Retry)),
+		strconv.Itoa(int(rdata.Expire)),
+		strconv.Itoa(int(rdata.Minimum)),
 	}
 
 	return strings.Join(soa, " ")
 }
 
 func (rdata *RDataSOA) WriteRecordData(writer *dnsWriter) error {
-	writer.writeDomainName(rdata.mName)
-	writer.writeDomainName(rdata.rName)
+	writer.writeDomainName(rdata.MName)
+	writer.writeDomainName(rdata.RName)
 
-	writer.writeUint32(rdata.serial)
-	writer.writeUint32(rdata.refresh)
-	writer.writeUint32(rdata.retry)
-	writer.writeUint32(rdata.expire)
-	writer.writeUint32(rdata.minimum)
+	writer.writeUint32(rdata.Serial)
+	writer.writeUint32(rdata.Refresh)
+	writer.writeUint32(rdata.Retry)
+	writer.writeUint32(rdata.Expire)
+	writer.writeUint32(rdata.Minimum)
 	return nil
 }
 
 func (rdata *RDataSOA) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.mName, err = reader.readDomainName()
+	rdata.MName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid SOA record data: %w", err)
 	}
 
-	rdata.rName, err = reader.readDomainName()
+	rdata.RName, err = reader.readDomainName()
 	if err != nil {
 		return fmt.Errorf("invalid SOA record data: %w", err)
 	}
 
-	rdata.serial = reader.readUint32()
-	rdata.refresh = reader.readUint32()
-	rdata.retry = reader.readUint32()
-	rdata.expire = reader.readUint32()
-	rdata.minimum = reader.readUint32()
+	rdata.Serial = reader.readUint32()
+	rdata.Refresh = reader.readUint32()
+	rdata.Retry = reader.readUint32()
+	rdata.Expire = reader.readUint32()
+	rdata.Minimum = reader.readUint32()
 
 	return nil
 }
@@ -291,20 +291,20 @@ func (rdata *RDataSOA) ReadRecordData(reader *dnsReader, length uint16) (err err
 // -------------- UNKNOWN
 
 type RDataUnknown struct {
-	raw []byte
+	Raw []byte
 }
 
 func (rdata *RDataUnknown) String() string {
-	return string(rdata.raw)
+	return string(rdata.Raw)
 }
 
 func (rdata *RDataUnknown) WriteRecordData(writer *dnsWriter) error {
-	writer.writeData(rdata.raw)
+	writer.writeData(rdata.Raw)
 	return nil
 }
 
 func (rdata *RDataUnknown) ReadRecordData(reader *dnsReader, length uint16) (err error) {
-	rdata.raw, err = reader.readUntil(int(length))
+	rdata.Raw, err = reader.readUntil(int(length))
 	if err != nil {
 		return err
 	}

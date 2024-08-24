@@ -157,7 +157,7 @@ func TestRDataCNAME(t *testing.T) {
 			name: "CNAME record",
 			data: []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0},
 			want: &RDataCNAME{
-				domainName: "example.com.",
+				DomainName: "example.com.",
 			},
 			wantError: nil,
 		},
@@ -165,7 +165,7 @@ func TestRDataCNAME(t *testing.T) {
 			name: "Invalid CNAME record",
 			data: []byte{7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm'},
 			want: &RDataCNAME{
-				domainName: "example.com.",
+				DomainName: "example.com.",
 			},
 			wantError: ErrOffsetOutOfBounds,
 		},
@@ -191,14 +191,14 @@ func TestRDataCNAME(t *testing.T) {
 			}
 
 			// Test Decode
-			if got.domainName != want.domainName {
-				t.Errorf("Decode() domain name got = %s, want = %s, data = %v\n", got.domainName, want.domainName, tt.data)
+			if got.DomainName != want.DomainName {
+				t.Errorf("Decode() domain name got = %s, want = %s, data = %v\n", got.DomainName, want.DomainName, tt.data)
 			}
 
 			// Test String
 			gotString := got.String()
-			if gotString != want.domainName {
-				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, want.domainName, tt.data)
+			if gotString != want.DomainName {
+				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, want.DomainName, tt.data)
 			}
 
 			// Test Encode
@@ -230,7 +230,7 @@ func TestRDataTXT(t *testing.T) {
 				't', 'e', 's', 't', // TXT data: "test"
 			},
 			want: &RDataTXT{
-				text: "test",
+				Text: "test",
 			},
 			wantError: nil,
 		},
@@ -256,14 +256,14 @@ func TestRDataTXT(t *testing.T) {
 			}
 
 			// Test Decode
-			if got.text != want.text {
-				t.Errorf("Decode() text got = %s, want = %s, data = %v\n", got.text, want.text, tt.data)
+			if got.Text != want.Text {
+				t.Errorf("Decode() text got = %s, want = %s, data = %v\n", got.Text, want.Text, tt.data)
 			}
 
 			// Test String
 			gotString := got.String()
-			if gotString != want.text {
-				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, want.text, tt.data)
+			if gotString != want.Text {
+				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, want.Text, tt.data)
 			}
 
 			// Test Encode
@@ -296,8 +296,8 @@ func TestRDataMX(t *testing.T) {
 				3, 'm', 'x', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
 			},
 			want: &RDataMX{
-				preference: 10,
-				domainName: "mx1.example.com.",
+				Preference: 10,
+				DomainName: "mx1.example.com.",
 			},
 			wantError: nil,
 		},
@@ -308,8 +308,8 @@ func TestRDataMX(t *testing.T) {
 				3, 'm', 'x', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm',
 			},
 			want: &RDataMX{
-				preference: 10,
-				domainName: "mx1.example.com.",
+				Preference: 10,
+				DomainName: "mx1.example.com.",
 			},
 			wantError: ErrOffsetOutOfBounds,
 		},
@@ -319,8 +319,8 @@ func TestRDataMX(t *testing.T) {
 				3, 'm', 'x', '1', 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0,
 			},
 			want: &RDataMX{
-				preference: 10,
-				domainName: "mx1.example.com.",
+				Preference: 10,
+				DomainName: "mx1.example.com.",
 			},
 			wantError: ErrOffsetOutOfBounds,
 		},
@@ -346,16 +346,16 @@ func TestRDataMX(t *testing.T) {
 			}
 
 			// Test Decode
-			if got.preference != want.preference {
-				t.Errorf("Decode() preference got = %d, want = %d, data = %v\n", got.preference, want.preference, tt.data)
+			if got.Preference != want.Preference {
+				t.Errorf("Decode() preference got = %d, want = %d, data = %v\n", got.Preference, want.Preference, tt.data)
 			}
-			if got.domainName != want.domainName {
-				t.Errorf("Decode() domainName got = %s, want = %s, data = %v\n", got.domainName, want.domainName, tt.data)
+			if got.DomainName != want.DomainName {
+				t.Errorf("Decode() domainName got = %s, want = %s, data = %v\n", got.DomainName, want.DomainName, tt.data)
 			}
 
 			// Test String
 			gotString := got.String()
-			wantString := strconv.Itoa(int(want.preference)) + " " + want.domainName
+			wantString := strconv.Itoa(int(want.Preference)) + " " + want.DomainName
 			if gotString != wantString {
 				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, wantString, tt.data)
 			}
@@ -395,13 +395,13 @@ func TestRDataSOA(t *testing.T) {
 				0, 0, 1, 0, // Minimum: 256
 			},
 			want: &RDataSOA{
-				mName:   "ns1.example.com.",
-				rName:   "admin.example.com.",
-				serial:  202,
-				refresh: 300,
-				retry:   100,
-				expire:  2560,
-				minimum: 256,
+				MName:   "ns1.example.com.",
+				RName:   "admin.example.com.",
+				Serial:  202,
+				Refresh: 300,
+				Retry:   100,
+				Expire:  2560,
+				Minimum: 256,
 			},
 			wantError: nil,
 		},
@@ -441,31 +441,31 @@ func TestRDataSOA(t *testing.T) {
 			}
 
 			// Test Decode
-			if got.mName != want.mName {
-				t.Errorf("Decode() mName got = %s, want = %s, data = %v\n", got.mName, want.mName, tt.data)
+			if got.MName != want.MName {
+				t.Errorf("Decode() mName got = %s, want = %s, data = %v\n", got.MName, want.MName, tt.data)
 			}
-			if got.rName != want.rName {
-				t.Errorf("Decode() rName got = %s, want = %s, data = %v\n", got.rName, want.rName, tt.data)
+			if got.RName != want.RName {
+				t.Errorf("Decode() rName got = %s, want = %s, data = %v\n", got.RName, want.RName, tt.data)
 			}
-			if got.serial != want.serial {
-				t.Errorf("Decode() serial got = %d, want = %d, data = %v\n", got.serial, want.serial, tt.data)
+			if got.Serial != want.Serial {
+				t.Errorf("Decode() serial got = %d, want = %d, data = %v\n", got.Serial, want.Serial, tt.data)
 			}
-			if got.refresh != want.refresh {
-				t.Errorf("Decode() refresh got = %d, want = %d, data = %v\n", got.refresh, want.refresh, tt.data)
+			if got.Refresh != want.Refresh {
+				t.Errorf("Decode() refresh got = %d, want = %d, data = %v\n", got.Refresh, want.Refresh, tt.data)
 			}
-			if got.retry != want.retry {
-				t.Errorf("Decode() retry got = %d, want = %d, data = %v\n", got.retry, want.retry, tt.data)
+			if got.Retry != want.Retry {
+				t.Errorf("Decode() retry got = %d, want = %d, data = %v\n", got.Retry, want.Retry, tt.data)
 			}
-			if got.expire != want.expire {
-				t.Errorf("Decode() expire got = %d, want = %d, data = %v\n", got.expire, want.expire, tt.data)
+			if got.Expire != want.Expire {
+				t.Errorf("Decode() expire got = %d, want = %d, data = %v\n", got.Expire, want.Expire, tt.data)
 			}
-			if got.minimum != want.minimum {
-				t.Errorf("Decode() minimum got = %d, want = %d, data = %v\n", got.minimum, want.minimum, tt.data)
+			if got.Minimum != want.Minimum {
+				t.Errorf("Decode() minimum got = %d, want = %d, data = %v\n", got.Minimum, want.Minimum, tt.data)
 			}
 
 			// Test String
 			gotString := got.String()
-			wantString := want.mName + " " + want.rName + " " + strconv.Itoa(int(want.serial)) + " " + strconv.Itoa(int(want.refresh)) + " " + strconv.Itoa(int(want.retry)) + " " + strconv.Itoa(int(want.expire)) + " " + strconv.Itoa(int(want.minimum))
+			wantString := want.MName + " " + want.RName + " " + strconv.Itoa(int(want.Serial)) + " " + strconv.Itoa(int(want.Refresh)) + " " + strconv.Itoa(int(want.Retry)) + " " + strconv.Itoa(int(want.Expire)) + " " + strconv.Itoa(int(want.Minimum))
 			if gotString != wantString {
 				t.Errorf("String() got = \"%s\", want = \"%s\", data = %v\n", gotString, wantString, tt.data)
 			}

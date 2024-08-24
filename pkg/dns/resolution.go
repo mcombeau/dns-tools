@@ -7,7 +7,17 @@ import (
 	"net/netip"
 )
 
-const MaxRecursionDepth = 10
+type Resolver struct {
+	MaxRecursionDepth int
+	RootServers       []Server
+
+	// Query function reference for testing mock injection
+	QueryFunc func(string, netip.AddrPort, []byte) ([]byte, error)
+}
+
+func NewResolver() (resolver *Resolver) {
+	return &Resolver{MaxRecursionDepth: 10, QueryFunc: QueryResponse}
+}
 
 // ResolveQuery resolves a DNS query by querying servers, starting with the root rootServers
 // until an authoritative answer is found.
@@ -19,7 +29,7 @@ const MaxRecursionDepth = 10
 // Returns:
 // - response: the DNS message containing the authoritative answer
 // - err: an error if no response was found
-func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
+func (resolver *Resolver) ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	log.Printf("Resolving DNS query (len: %d): %v", len(dnsRequest), dnsRequest)
 
 	dnsParsedRequest, err := DecodeMessage(dnsRequest)
@@ -32,9 +42,9 @@ func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	// TODO: cache answers and check cache before querying servers
 
 	// TODO: ping root server here to check if it's alive and if not get next root server again?
-	rootServer := GetNextRootServer()
+	rootServer := resolver.GetNextRootServer()
 
-	response, err = queryServers([]Server{rootServer}, dnsRequest, queryDomain, 0)
+	response, err = resolver.queryServers([]Server{rootServer}, dnsRequest, queryDomain, 0)
 	if err != nil {
 		if errors.Is(err, ErrServFailToResolveQuery) {
 			dnsParsedRequest.Header.Flags.ResponseCode = SERVFAIL
@@ -47,9 +57,9 @@ func ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 	return response, nil
 }
 
-func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, depth int) (response []byte, err error) {
+func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, queryDomain string, depth int) (response []byte, err error) {
 
-	if depth >= MaxRecursionDepth {
+	if depth >= resolver.MaxRecursionDepth {
 		return nil, fmt.Errorf("recursion depth exceeded")
 	}
 
@@ -63,7 +73,7 @@ func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, de
 
 		log.Printf("--> Querying server %s (IP: %v) for %s", server.Fqdn, serverAddrPort, queryDomain)
 
-		response, err := QueryResponse("udp", serverAddrPort, dnsRequest)
+		response, err := resolver.QueryFunc("udp", serverAddrPort, dnsRequest)
 		if err != nil {
 			log.Printf("failed to query server %s: %v", server, err)
 			continue
@@ -88,7 +98,7 @@ func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, de
 			log.Printf("--> Got no answer from server %s for %s, but got additional records", server, queryDomain)
 			authorityServers := extractNameServerIPs(dnsParsedResponse.Additionals)
 			if len(authorityServers) > 0 {
-				return queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
+				return resolver.queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
 			} else {
 				fmt.Println("------------------- ADDITIONAL SECTION IS EMPTY?")
 				PrintMessage(dnsParsedResponse)
@@ -100,9 +110,9 @@ func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, de
 
 		if dnsParsedResponse.ContainsAuthoritySection() {
 			log.Printf("--> Got no answer or additional records from server %s for %s, but got NS records", server, queryDomain)
-			authorityServers := resolveNameServerRecords(dnsParsedResponse, server, depth+1)
+			authorityServers := resolver.resolveNameServerRecords(dnsParsedResponse, server, depth+1)
 			if len(authorityServers) > 0 {
-				return queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
+				return resolver.queryServers(authorityServers, dnsRequest, queryDomain, depth+1)
 			} else {
 				fmt.Println("------------------- AUTHORITY SECTION IS EMPTY?")
 				PrintMessage(dnsParsedResponse)
@@ -119,7 +129,7 @@ func queryServers(serverList []Server, dnsRequest []byte, queryDomain string, de
 	return nil, fmt.Errorf("%w: break in the chain", ErrServFailToResolveQuery)
 }
 
-func resolveNameServerRecords(dnsMessage Message, originalServer Server, depth int) (serverList []Server) {
+func (resolver *Resolver) resolveNameServerRecords(dnsMessage Message, originalServer Server, depth int) (serverList []Server) {
 	for _, nameServerRecord := range dnsMessage.NameServers {
 		if nameServerRecord.RType == NS {
 			nsRecord := nameServerRecord.RData.String()
@@ -134,15 +144,15 @@ func resolveNameServerRecords(dnsMessage Message, originalServer Server, depth i
 
 			// Query the server the response came from instead of going back up to root
 			fmt.Printf("\t\t--> querying original server %v for nsRecord: %s\n", originalServer, nsRecord)
-			response, err := queryServers([]Server{originalServer}, nameServerQuery, nsRecord, depth)
+			response, err := resolver.queryServers([]Server{originalServer}, nameServerQuery, nsRecord, depth)
 			if err != nil {
 				log.Printf("Failed to query original server %v for %s: %v", originalServer, nsRecord, err)
 
 				// If original server refuses the request, query root server
 				if err == ErrServFailToResolveQueryRefused {
-					rootServer := GetNextRootServer()
+					rootServer := resolver.GetNextRootServer()
 
-					response, err = queryServers([]Server{rootServer}, nameServerQuery, nsRecord, depth)
+					response, err = resolver.queryServers([]Server{rootServer}, nameServerQuery, nsRecord, depth)
 					if err != nil {
 						log.Printf("Failed to query original server %v for %s: %v", originalServer, nsRecord, err)
 						continue

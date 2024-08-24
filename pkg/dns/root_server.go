@@ -2,38 +2,52 @@ package dns
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net/netip"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 )
 
 var (
-	RootServers []Server
 	serverIndex uint32
 	once        sync.Once
 )
 
 // InitializeRootServers initializes the RootServers global variable.
 // This function should be called once, typically during server startup.
-func InitializeRootServers(file io.Reader) (err error) {
+func (resolver *Resolver) InitializeRootServers(file io.Reader) (err error) {
 
 	once.Do(func() {
-		RootServers, err = ParseRootServerHints(file)
+		resolver.RootServers, err = ParseRootServerHints(file)
 	})
 
 	return err
 }
 
+func (resolver *Resolver) LoadRootServers(filename string) (err error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return fmt.Errorf("Error opening %s: %w\n", filename, err)
+		// TODO: if error with root server hints file, try bootstrapping via public DNS
+	}
+	defer file.Close()
+
+	return resolver.InitializeRootServers(file)
+}
+
 // GetNextRootServer returns the next root server using round-robin selection
-func GetNextRootServer() Server {
+func (resolver *Resolver) GetNextRootServer() Server {
+	log.Printf("GETTING NEXT ROOT SERVER")
+	log.Printf("ROOT SERVERS: %v", resolver.RootServers)
 	// Atomically increment the serverIndex and get the new value
 	// prevents race conditions if called in goroutine
 	index := atomic.AddUint32(&serverIndex, 1)
 
-	return RootServers[index%uint32(len(RootServers))]
+	return resolver.RootServers[index%uint32(len(resolver.RootServers))]
 }
 
 func ParseRootServerHints(file io.Reader) (rootServers []Server, err error) {

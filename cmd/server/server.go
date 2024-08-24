@@ -18,28 +18,22 @@ const ServerIP = "0.0.0.0"
 const ServerPort = 5553
 
 func main() {
-	err := loadRootServers(RootServerHintsFile)
+
+	resolver := dns.NewResolver()
+
+	err := resolver.LoadRootServers(RootServerHintsFile)
 	if err != nil {
 		log.Fatalf("Failed to initialize root servers with file %s: %v", RootServerHintsFile, err)
 	}
+	log.Printf("Resolver root servers %v", resolver.RootServers)
 
-	if err := startUDPServer(); err != nil {
+	err = startUDPServer(resolver)
+	if err != nil {
 		log.Fatalf("Failed to start UDP server: %v", err)
 	}
 }
 
-func loadRootServers(filename string) (err error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return fmt.Errorf("Error opening %s: %w\n", filename, err)
-		// TODO: if error with root server hints file, try bootstrapping via public DNS
-	}
-	defer file.Close()
-
-	return dns.InitializeRootServers(file)
-}
-
-func startUDPServer() (err error) {
+func startUDPServer(resolver *dns.Resolver) (err error) {
 	var wg sync.WaitGroup
 
 	addr := net.UDPAddr{
@@ -77,7 +71,7 @@ func startUDPServer() (err error) {
 		}
 
 		wg.Add(1)
-		go handleRequest(&wg, conn, clientAddr, buffer[:n])
+		go handleRequest(resolver, &wg, conn, clientAddr, buffer[:n])
 	}
 
 	wg.Wait()
@@ -85,11 +79,11 @@ func startUDPServer() (err error) {
 	return nil
 }
 
-func handleRequest(wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
+func handleRequest(resolver *dns.Resolver, wg *sync.WaitGroup, conn *net.UDPConn, clientAddr *net.UDPAddr, request []byte) {
 	defer wg.Done()
 	log.Printf("Handling client %v request: %v\n", clientAddr, request)
 
-	response, err := dns.ResolveQuery(request)
+	response, err := resolver.ResolveQuery(request)
 	if err != nil {
 		log.Printf("Failed to resolve DNS request from client %v: %v", clientAddr, err)
 	}
