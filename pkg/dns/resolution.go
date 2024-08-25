@@ -19,10 +19,18 @@ type Resolver struct {
 	QueryFunc func(string, netip.AddrPort, []byte) ([]byte, error)
 }
 
-func NewResolver(rootServerHintsFileName string) (resolver *Resolver, err error) {
-	rootServers, err := getRootServersFromFile(rootServerHintsFileName)
+// NewResolver creates a resolver structure given a root server hints file
+//
+// Parameters:
+//   - rootServerHintsFilePath: the path to a root server hints file
+//
+// Returns:
+//   - resolver: a pointer to the new resolver structure
+//   - err: an error if there was an issue parsing the root server hints file
+func NewResolver(rootServerHintsFilePath string) (resolver *Resolver, err error) {
+	rootServers, err := getRootServersFromFile(rootServerHintsFilePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize root servers with file %s: %w", rootServerHintsFileName, err)
+		return nil, fmt.Errorf("failed to initialize root servers with file %s: %w", rootServerHintsFilePath, err)
 	}
 
 	resolver = &Resolver{
@@ -40,12 +48,12 @@ func NewResolver(rootServerHintsFileName string) (resolver *Resolver, err error)
 // there was no satifactory resolution.
 //
 // Parameters:
-// - rootServers: the list of root servers to start querying
-// - dnsRequest: the request to find an answer for
+//   - rootServers: the list of root servers to start querying
+//   - dnsRequest: the request to find an answer for
 //
 // Returns:
-// - response: the DNS message containing the authoritative answer
-// - err: an error if no response was found
+//   - response: the DNS message containing the authoritative answer
+//   - err: an error if no response was found
 func (resolver *Resolver) ResolveQuery(dnsRequest []byte) (response []byte, err error) {
 
 	dnsParsedRequest, err := DecodeMessage(dnsRequest)
@@ -73,6 +81,22 @@ func (resolver *Resolver) ResolveQuery(dnsRequest []byte) (response []byte, err 
 	return response, nil
 }
 
+// QueryServers is a recursive function that queries a list of servers until
+// it encounters a satisfactory answer from an authoritative nameserver.
+// If the response it receives contains to answer but a reference to a nameserver,
+// it will attempt to resolve the IP of the nameserver in order to send its
+// original query to it.
+//
+// Parameters:
+//   - serverList: a list of servers to query (usually starts with the root servers)
+//   - dnsRequest: the request containing the question to resolve
+//   - queryDomain: the domain that is being queried for (used for more readable logs)
+//   - depth: the current recursion depth
+//
+// Returns:
+//   - response: the response (authoritative) as a slice of bytes
+//   - err: an error if an error was encountered (the ErrServFailToResolveQuery error indicates
+//     the caller should answer the client with a SERVFAIL message)
 func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, queryDomain string, depth int) (response []byte, err error) {
 
 	if depth >= resolver.MaxRecursionDepth {
@@ -147,6 +171,10 @@ func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, q
 	return nil, fmt.Errorf("%w: break in the chain", ErrServFailToResolveQuery)
 }
 
+// resolveNameServerRecords resolves and returns a list of DNS servers for the NS records
+// in the provided DNS message. It first checks the cache and then queries the original
+// server or root servers if necessary. The function handles recursive queries and
+// returns a list of servers with the resolved IP addresses.
 func (resolver *Resolver) resolveNameServerRecords(dnsMessage Message, originalServer Server, depth int) (serverList []Server) {
 	for _, nameServerRecord := range dnsMessage.NameServers {
 		if nameServerRecord.RType == NS {
@@ -195,6 +223,9 @@ func (resolver *Resolver) resolveNameServerRecords(dnsMessage Message, originalS
 	return serverList
 }
 
+// extractNameServerIPs processes DNS resource records to extract server names and their
+// corresponding IPv4 and IPv6 addresses. It caches each name server with its TTL and
+// returns a list of Server structs containing the resolved IP addresses.
 func (resolver *Resolver) extractNameServerIPs(dnsResourceRecord []ResourceRecord) (serverList []Server) {
 	serverMap := make(map[string]int)
 
