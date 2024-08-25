@@ -13,7 +13,8 @@ type Resolver struct {
 	MaxRecursionDepth int
 	RootServers       []Server
 	NameServerCache   map[string]CachedServer
-	cacheMutex        sync.RWMutex
+	AnswerCache       map[string]CachedAnswer
+	CacheMutex        sync.RWMutex
 
 	// Query function reference for testing mock injection: default is QueryResponse()
 	QueryFunc func(string, netip.AddrPort, []byte) ([]byte, error)
@@ -37,6 +38,7 @@ func NewResolver(rootServerHintsFilePath string) (resolver *Resolver, err error)
 		MaxRecursionDepth: 10,
 		RootServers:       rootServers,
 		NameServerCache:   make(map[string]CachedServer),
+		AnswerCache:       make(map[string]CachedAnswer),
 		QueryFunc:         QueryResponse,
 	}
 
@@ -63,6 +65,16 @@ func (resolver *Resolver) ResolveQuery(dnsRequest []byte) (response []byte, err 
 
 	queryDomain := dnsParsedRequest.Questions[0].Name
 	log.Printf("\n-----------------\nQuestion: %s: Start resolution\n-----------------", queryDomain)
+
+	// Check cache before attempting to query servers
+	if cachedAnswerRecords, found := resolver.getCachedAnswerRecords(queryDomain); found {
+		log.Printf("--> Found cached answer for %s", queryDomain)
+
+		dnsParsedRequest.Header.AnswerRRCount = uint16(len(cachedAnswerRecords))
+		dnsParsedRequest.Answers = cachedAnswerRecords
+
+		return EncodeMessage(dnsParsedRequest)
+	}
 
 	// TODO: ping root server here to check if it's alive and if not get next root server again?
 	rootServer := resolver.GetNextRootServer()
@@ -129,6 +141,8 @@ func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, q
 			log.Printf("==>[depth %d] Question: %s: Got authoritative answer from server %s", depth, queryDomain, server)
 			for i, answer := range dnsParsedResponse.Answers {
 				log.Printf("[depth %d]=============> Question: %s: [ANSWER %d] %s: %s", depth, queryDomain, i, DNSType(answer.RType).String(), answer.RData.String())
+				// Cache the authoritative answer
+				resolver.cacheAnswerRecord(queryDomain, answer)
 			}
 			// log.Println("-------------------")
 			// PrintMessage(dnsParsedResponse)
