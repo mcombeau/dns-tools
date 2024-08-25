@@ -119,6 +119,21 @@ func (message *Message) ContainsAdditionalSection() bool {
 	return message.Header.AdditionalRRCount > 0
 }
 
+// ContainsAdditionalSectionWithIPAddresses returns true if:
+// the message header indicates the presence of an additional section
+// and the additional section contains A or AAAA records
+func (message *Message) ContainsAdditionalSectionWithIPAddresses() bool {
+
+	if message.Header.AdditionalRRCount > 0 {
+		for _, record := range message.Additionals {
+			if record.RType == A || record.RType == AAAA {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // ContainsAuthoritySection returns true if:
 // the message header indicates the presence of an authority section
 func (message *Message) ContainsAuthoritySection() bool {
