@@ -15,37 +15,43 @@ func TestResolveQuery(t *testing.T) {
 	testCases := []struct {
 		name         string
 		mockFunction func(string, netip.AddrPort, []byte) ([]byte, error)
+		queryFqdn    string
 		wantResponse dns.Message
 		wantError    error
 	}{
 		{
 			name:         "Test immediate NoError answer",
 			mockFunction: mockResponseImmediateNoErrorAnswer,
-			wantResponse: createNoErrorAuthoritativeAnswer(testQuery, authoritativeAnswerIP),
+			queryFqdn:    "example.com.",
+			wantResponse: createNoErrorAuthoritativeAnswer(updateTestQueryDomain("example.com."), authoritativeAnswerIP),
 			wantError:    nil,
 		},
 		{
 			name:         "Test response: additional -> NoError answer",
 			mockFunction: mockResponseAdditionalSectionToNoErrorAnswer,
-			wantResponse: createNoErrorAuthoritativeAnswer(testQuery, authoritativeAnswerIP),
+			queryFqdn:    "toto.example.com.",
+			wantResponse: createNoErrorAuthoritativeAnswer(updateTestQueryDomain("toto.example.com."), authoritativeAnswerIP),
 			wantError:    nil,
 		},
 		{
 			name:         "Test response: authority NS -> NoError answer -> NoError answer",
 			mockFunction: mockResponseAuthoritySectionToNoErrorAnswer,
-			wantResponse: createNoErrorAuthoritativeAnswer(testQuery, authoritativeAnswerIP),
+			queryFqdn:    "titi.example.com.",
+			wantResponse: createNoErrorAuthoritativeAnswer(updateTestQueryDomain("titi.example.com."), authoritativeAnswerIP),
 			wantError:    nil,
 		},
 		{
 			name:         "Test immediate SOA answer",
 			mockFunction: mockResponseImmediateSOAAnswer,
-			wantResponse: createSOAAuthoritativeAnswer(testQuery, dns.NOERROR),
+			queryFqdn:    "tata.example.com.",
+			wantResponse: createSOAAuthoritativeAnswer(updateTestQueryDomain("tata.example.com."), dns.NOERROR),
 			wantError:    nil,
 		},
 		{
 			name:         "Test immediate NXDOMAIN answer",
 			mockFunction: mockResponseImmediateNxDomainAnswer,
-			wantResponse: createSOAAuthoritativeAnswer(testQuery, dns.NXDOMAIN),
+			queryFqdn:    "tutu.example.com.",
+			wantResponse: createSOAAuthoritativeAnswer(updateTestQueryDomain("tutu.example.com."), dns.NXDOMAIN),
 			wantError:    nil,
 		},
 	}
@@ -60,7 +66,7 @@ func TestResolveQuery(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			testQueryBytes, _ := dns.EncodeMessage(testQuery)
+			testQueryBytes, _ := dns.EncodeMessage(updateTestQueryDomain(tc.queryFqdn))
 			want, _ := dns.EncodeMessage(tc.wantResponse)
 
 			// Inject the mock QueryResponse function for the current test case
@@ -93,4 +99,9 @@ func TestResolveQuery(t *testing.T) {
 
 		})
 	}
+}
+
+func updateTestQueryDomain(fqdn string) dns.Message {
+	testQuery.Questions[0].Name = fqdn
+	return testQuery
 }
