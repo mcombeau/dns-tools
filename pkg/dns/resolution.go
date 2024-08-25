@@ -113,7 +113,7 @@ func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, q
 			return response, nil
 		}
 
-		if dnsParsedResponse.ContainsAdditionalSection() {
+		if dnsParsedResponse.ContainsAdditionalSectionWithIPAddresses() {
 			log.Printf("[depth %d]==> Got additional records response from server %s for %s", depth, server, queryDomain)
 
 			authorityServers := resolver.extractNameServerIPs(dnsParsedResponse.Additionals)
