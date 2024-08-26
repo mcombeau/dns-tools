@@ -117,6 +117,7 @@ func (resolver *Resolver) queryServers(serverList []Server, dnsRequest []byte, q
 
 	for _, server := range serverList {
 
+		// TODO: If IPv6 doesn't work, fall back to IPv4
 		serverAddrPort, err := server.getValidIPAddress()
 		if err != nil {
 			log.Printf("[depth %d]==> Question: %s: Moving on: server has no valid IP address: %v", depth, queryDomain, err)
