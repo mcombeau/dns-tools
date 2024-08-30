@@ -2,23 +2,25 @@ package dns
 
 import (
 	"bufio"
-	"fmt"
+	_ "embed"
 	"io"
 	"log"
 	"net/netip"
-	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 )
+
+//go:embed config/named.root
+var rootServerHintsFile string
 
 var (
 	serverIndex uint32
 	once        sync.Once
 )
 
-// initializeRootServers initializes the RootServers global variable.
-// This function should be called once, typically during server startup.
+// initializeRootServers initializes extracts the IPs of the root servers from the embeded rootServerHintsFile.
+// This function should be called once, typically during resolver startup.
 func initializeRootServers(file io.Reader) (rootServers []Server, err error) {
 
 	once.Do(func() {
@@ -26,17 +28,6 @@ func initializeRootServers(file io.Reader) (rootServers []Server, err error) {
 	})
 
 	return rootServers, err
-}
-
-func getRootServersFromFile(filename string) (rootServers []Server, err error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, fmt.Errorf("Error opening %s: %w\n", filename, err)
-		// TODO: if error with root server hints file, try bootstrapping via public DNS
-	}
-	defer file.Close()
-
-	return initializeRootServers(file)
 }
 
 // GetNextRootServer returns the next root server using round-robin selection

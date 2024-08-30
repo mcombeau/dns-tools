@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/netip"
+	"strings"
 	"sync"
 	"time"
 )
@@ -29,7 +30,9 @@ type Resolver struct {
 //   - resolver: a pointer to the new resolver structure
 //   - err: an error if there was an issue parsing the root server hints file
 func NewResolver(rootServerHintsFilePath string) (resolver *Resolver, err error) {
-	rootServers, err := getRootServersFromFile(rootServerHintsFilePath)
+
+	rootServerReader := strings.NewReader(rootServerHintsFile)
+	rootServers, err := initializeRootServers(rootServerReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize root servers with file %s: %w", rootServerHintsFilePath, err)
 	}
