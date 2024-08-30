@@ -128,7 +128,7 @@ func parseArgs() (resolverAddrPort netip.AddrPort, domainOrIP string, questionTy
 	if server == "" {
 		resolverAddrPort, err = dns.GetDefaultPublicResolver()
 	} else {
-		resolverAddrPort, err = dns.IPStringToAddrPort(fmt.Sprintf("%s:%s", server, port))
+		resolverAddrPort, err = dns.ParseIPToAddrPort(fmt.Sprintf("%s:%s", server, port))
 	}
 	if err != nil {
 		return resolverAddrPort, "", 0, false, fmt.Errorf("get DNS resolver: %w", err)
