@@ -13,10 +13,10 @@ type Server struct {
 }
 
 func (server Server) getValidIPAddress() (ip netip.AddrPort, err error) {
-	if server.IPv6.IsValid() {
-		return netip.AddrPortFrom(server.IPv6, defaultDNSPort), nil
-	} else if server.IPv4.IsValid() {
+	if server.IPv4.IsValid() {
 		return netip.AddrPortFrom(server.IPv4, defaultDNSPort), nil
+	} else if server.IPv6.IsValid() {
+		return netip.AddrPortFrom(server.IPv6, defaultDNSPort), nil
 	} else {
 		return ip, ErrInvalidIP
 	}

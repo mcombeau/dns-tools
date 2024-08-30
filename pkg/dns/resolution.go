@@ -64,10 +64,11 @@ func (resolver *Resolver) ResolveQuery(dnsRequest []byte) (response []byte, err 
 	}
 
 	queryDomain := dnsParsedRequest.Questions[0].Name
+	queryType := dnsParsedRequest.Questions[0].QType
 	log.Printf("\n-----------------\nQuestion: %s: Start resolution\n-----------------", queryDomain)
 
 	// Check cache before attempting to query servers
-	if cachedAnswerRecords, found := resolver.getCachedAnswerRecords(queryDomain); found {
+	if cachedAnswerRecords, found := resolver.getCachedAnswerRecords(queryDomain, queryType); found {
 		log.Printf("--> Found cached answer for %s", queryDomain)
 
 		dnsParsedRequest.Header.AnswerRRCount = uint16(len(cachedAnswerRecords))

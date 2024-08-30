@@ -80,7 +80,7 @@ func (resolver *Resolver) cacheAnswerRecord(fqdn string, answer ResourceRecord) 
 }
 
 // Retrieves all valid cached answer records for a given FQDN.
-func (resolver *Resolver) getCachedAnswerRecords(fqdn string) (records []ResourceRecord, success bool) {
+func (resolver *Resolver) getCachedAnswerRecords(fqdn string, qType uint16) (records []ResourceRecord, success bool) {
 	resolver.CacheMutex.Lock()
 	defer resolver.CacheMutex.Unlock()
 
@@ -94,13 +94,18 @@ func (resolver *Resolver) getCachedAnswerRecords(fqdn string) (records []Resourc
 	for _, cachedRecord := range cached.Answers {
 		if time.Now().Before(cachedRecord.ExpiresAt) {
 			updatedRecords = append(updatedRecords, cachedRecord)
-			records = append(records, cachedRecord.Record)
+			if qType == cachedRecord.Record.RType {
+				records = append(records, cachedRecord.Record)
+			}
 		}
 	}
 
 	if len(updatedRecords) > 0 {
 		// Update the cache with only valid records
 		resolver.AnswerCache[fqdn] = CachedAnswer{Answers: updatedRecords}
+	}
+
+	if len(records) > 0 {
 		return records, true
 	}
 
